@@ -1,0 +1,32 @@
+{
+  "name": "fproject",
+  "version": "1.0.0",
+  "description": "This project is a minimal book-exchange site scaffolded into your existing Express/EJS app.",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "db:init": "node scripts/init-db.js",
+    "hash:pw": "node scripts/hash-password.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "body-parser": "^2.2.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "mysql2": "^3.15.2",
+    "nodemon": "^3.1.10",
+    "socket.io": "^4.7.2"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://git.informatics.buu.ac.th/65160132/project-65160132.git"
+  }
+}

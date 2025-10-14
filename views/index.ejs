@@ -1,0 +1,23 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Book Exchange</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <h1>Book Exchange</h1>
+    <a href="/books">View all books</a> | <a href="/books/new">Add a book</a> | <a href="/auth/login">Admin</a>
+    <h2>Recent books</h2>
+    <ul>
+      <% if (books && books.length) { %>
+        <% books.forEach(b => { %>
+          <li><a href="/books/<%= b.id %>"><%= b.title %></a> — <%= b.author %></li>
+        <% }) %>
+      <% } else { %>
+        <li>No books yet</li>
+      <% } %>
+    </ul>
+  </body>
+  </html>
+ดี

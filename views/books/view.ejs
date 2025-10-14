@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title><%= book.title %></title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat.js"></script>
+  </head>
+  <body>
+    <h1><%= book.title %></h1>
+    <p><strong>Author:</strong> <%= book.author %></p>
+    <p><%= book.description %></p>
+    <a href="/books">Back</a>
+
+    <hr />
+    <h3>Chat about this book</h3>
+    <div id="chatWindow"></div>
+    <input id="chatUser" placeholder="Your name" />
+    <input id="chatMsg" placeholder="Message" />
+    <button id="chatSend">Send</button>
+
+    <script>
+      const ROOM = 'book-<%= book.id %>';
+      window.room = ROOM;
+    </script>
+  </body>
+</html>

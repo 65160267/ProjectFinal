@@ -4,20 +4,31 @@
     <meta charset="utf-8" />
     <title>Book Exchange</title>
     <link rel="stylesheet" href="/css/style.css" />
-  </head>
   <body>
-    <h1>Book Exchange</h1>
-    <a href="/books">View all books</a> | <a href="/books/new">Add a book</a> | <a href="/auth/login">Admin</a>
-    <h2>Recent books</h2>
-    <ul>
-      <% if (books && books.length) { %>
-        <% books.forEach(b => { %>
-          <li><a href="/books/<%= b.id %>"><%= b.title %></a> — <%= b.author %></li>
-        <% }) %>
-      <% } else { %>
-        <li>No books yet</li>
-      <% } %>
-    </ul>
+    <div class="container">
+      <div class="card">
+        <h1>Book Exchange</h1>
+        <p class="muted"><a href="/books">View all books</a> | <a href="/books/new">Add a book</a> | <a href="/auth/login">Admin</a></p>
+
+        <h2 style="margin-top:18px">Recent books</h2>
+        <table>
+          <thead><tr><th>Title</th><th>Author</th></tr></thead>
+          <tbody>
+          <% if (books && books.length) { %>
+            <% books.forEach(b => { %>
+              <tr>
+                <td><a href="/books/<%= b.id %>"><%= b.title %></a></td>
+                <td><%= b.author %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="2">No books yet</td></tr>
+          <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
   </body>
   </html>
 ดี

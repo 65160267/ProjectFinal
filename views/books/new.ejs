@@ -5,13 +5,28 @@
     <title>Add Book</title>
   </head>
   <body>
-    <h1>Add Book</h1>
-    <form action="/books/create" method="post">
-      <label>Title: <input name="title" required /></label><br />
-      <label>Author: <input name="author" required /></label><br />
-      <label>Description:<br /><textarea name="description"></textarea></label><br />
-      <button type="submit">Create</button>
-    </form>
-    <a href="/books">Back</a>
+    <div class="container">
+      <div class="card">
+        <h1>Add Book</h1>
+        <form action="/books/create" method="post">
+          <div class="field">
+            <label>Title</label>
+            <input name="title" required />
+          </div>
+          <div class="field">
+            <label>Author</label>
+            <input name="author" required />
+          </div>
+          <div class="field">
+            <label>Description</label>
+            <textarea name="description"></textarea>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-primary" type="submit">Create</button>
+            <a class="btn btn-ghost" href="/books">Back</a>
+          </div>
+        </form>
+      </div>
+    </div>
   </body>
   </html>

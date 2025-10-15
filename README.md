@@ -28,3 +28,18 @@ If you want, I can:
 - Persist chat messages to the DB.
 - Add admin UI to delete/edit books and view messages.
 - Harden auth and add user accounts.
+
+How to test the admin login locally:
+
+- Start the app (PowerShell):
+
+```powershell
+npm install; npm run dev
+```
+
+- Open your browser at: http://localhost:3000/auth/login
+- Default dev credentials (if not configured via env):
+	- Username: admin
+	- Password: password
+
+You can set env vars `ADMIN_USER` and `ADMIN_PASSWORD` or `ADMIN_PW_HASH` before starting the server to change credentials.

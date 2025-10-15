@@ -1,2 +1,72 @@
-body { font-family: Arial, sans-serif; margin: 20px; }
-#chatWindow { border: 1px solid #ccc; padding: 8px; height: 200px; overflow: auto; }
+:root{
+	--bg:#fff7ed; /* very light orange */
+	--muted:#7c5a3a;
+	--card:#fff;
+	--accent:#f6a97a; /* light orange */
+	--accent-600:#f78f4d;
+	--accent-700:#e5792f;
+	--danger:#ffdddd;
+	--success:#ecfdf5;
+	--input-border:#ecd3c0;
+	--text:#2b2b2b;
+}
+html,body{height:100%}
+body{
+	font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+	margin:0; background:var(--bg); color:var(--text); padding:20px; box-sizing:border-box;
+}
+
+/* container */
+.container{max-width:980px;margin:24px auto;padding:18px}
+
+/* card */
+.card{background:var(--card); border-radius:12px; box-shadow:0 6px 20px rgba(28,20,10,0.06); padding:18px}
+
+/* headings */
+h1,h2,h3{color:var(--muted);margin:0 0 12px}
+
+/* forms */
+label{display:block;font-size:14px;margin-bottom:6px;color:var(--muted)}
+input[type="text"],input[type="password"],input[type="email"],textarea,select{
+	width:100%; padding:10px 12px; border-radius:8px; border:1px solid var(--input-border); background:#fff; box-sizing:border-box; font-size:14px; color:var(--text)
+}
+textarea{min-height:120px}
+.field{margin-bottom:14px}
+
+/* buttons */
+.btn{display:inline-block;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+.btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-600));color:#fff}
+.btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--muted)}
+.btn-danger{background:#ff6b6b;color:#fff}
+
+/* alerts */
+.alert{padding:10px 12px;border-radius:8px;margin-bottom:12px}
+.alert-error{background:var(--danger);color:#9b1c1c;border:1px solid #f5c2c2}
+.alert-success{background:var(--success);color:#065f46;border:1px solid #b7f3da}
+
+/* small helpers */
+.muted{color:#6b5841;font-size:13px}
+a{color:var(--accent-700);text-decoration:underline}
+
+/* chat window */
+#chatWindow{border:1px solid #f0d9c8;padding:10px;height:200px;overflow:auto;background:#fff}
+
+/* responsive */
+@media (max-width:600px){.container{padding:12px;margin:12px}.card{padding:12px}}
+
+/* form specific to auth pages */
+.auth-card{max-width:420px;margin:18px auto}
+.auth-footer{font-size:13px;color:#6b5841;margin-top:10px}
+
+/* focus */
+input:focus,textarea:focus{outline:none;box-shadow:0 0 0 4px rgba(247,169,122,0.12);border-color:var(--accent-700)}
+
+/* subtle table styles (books list) */
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px 10px;border-bottom:1px solid #f3e7dd;text-align:left}
+
+/* small badge */
+.badge{display:inline-block;padding:4px 8px;border-radius:999px;background:#fff4ed;color:var(--accent-700);font-weight:600;font-size:12px}
+
+/* keep legacy minimal rule for pages that expect basic style */
+body .legacy-minor{margin:20px}

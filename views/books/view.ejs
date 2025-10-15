@@ -7,21 +7,27 @@
     <script src="/js/chat.js"></script>
   </head>
   <body>
-    <h1><%= book.title %></h1>
-    <p><strong>Author:</strong> <%= book.author %></p>
-    <p><%= book.description %></p>
-    <a href="/books">Back</a>
+    <div class="container">
+      <div class="card">
+        <h1><%= book.title %></h1>
+        <p><strong>Author:</strong> <%= book.author %></p>
+        <p><%= book.description %></p>
+        <a class="btn btn-ghost" href="/books">Back</a>
 
-    <hr />
-    <h3>Chat about this book</h3>
-    <div id="chatWindow"></div>
-    <input id="chatUser" placeholder="Your name" />
-    <input id="chatMsg" placeholder="Message" />
-    <button id="chatSend">Send</button>
+        <hr style="margin:18px 0" />
+        <h3>Chat about this book</h3>
+        <div id="chatWindow"></div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <input id="chatUser" placeholder="Your name" style="flex:0 0 160px" />
+          <input id="chatMsg" placeholder="Message" style="flex:1" />
+          <button id="chatSend" class="btn btn-primary">Send</button>
+        </div>
 
-    <script>
-      const ROOM = 'book-<%= book.id %>';
-      window.room = ROOM;
-    </script>
+        <script>
+          const ROOM = 'book-<%= book.id %>';
+          window.room = ROOM;
+        </script>
+      </div>
+    </div>
   </body>
 </html>

@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Swap A Book — Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <% 
+      // ป้องกันกรณีที่ controller ไม่ส่งตัวแปรเหล่านี้มา (ลดโอกาสเกิด ReferenceError)
+      if (typeof featured === 'undefined') featured = [];
+      if (typeof recommendedA === 'undefined') recommendedA = [];
+      if (typeof recommendedB === 'undefined') recommendedB = [];
+    %>
+    <!-- Header -->
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">SwapABook</div>
+        <form class="search" action="/" method="get">
+          <input name="q" placeholder="Search for books" />
+          <button type="submit">🔍</button>
+        </form>
+        <nav class="header-actions">
+          <a href="/books" title="Cart">🛍️</a>
+          <a href="/auth/logout" title="Logout">🔓</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <!-- compact welcome + stats -->
+      <section class="container">
+        <div class="card" style="padding:20px">
+          <h2>ยินดีต้อนรับ, <%= user && user.username ? user.username : 'User' %></h2>
+          <p class="muted">นี่คือแดชบอร์ดของคุณ สถิติภาพรวมด้านล่าง</p>
+          <div style="display:flex;gap:16px;margin-top:12px">
+            <div class="card" style="flex:1;padding:12px">
+              <h4>หนังสือทั้งหมด</h4>
+              <p style="font-size:20px;font-weight:700;margin:6px 0"><%= stats && stats.booksCount ? stats.booksCount : 0 %></p>
+            </div>
+            <div class="card" style="flex:1;padding:12px">
+              <h4>ผู้ใช้ทั้งหมด</h4>
+              <p style="font-size:20px;font-weight:700;margin:6px 0"><%= stats && stats.usersCount ? stats.usersCount : 0 %></p>
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <a class="btn btn-primary" href="/books">จัดการหนังสือ</a>
+            <a class="btn btn-ghost" href="/auth/logout" style="margin-left:8px">ออกจากระบบ</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer (minimal) -->
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %> By Weerapat Tapaothong</div>
+      </div>
+    </footer>
+
+    <script>
+      // apply background images from data-thumb attributes
+      document.querySelectorAll('.thumb[data-thumb], .small-thumb[data-thumb]').forEach(el => {
+        const url = el.getAttribute('data-thumb') || '/images/placeholder.png';
+        el.style.backgroundImage = `url(${url})`;
+      });
+    </script>
+
+  </body>
+</html>

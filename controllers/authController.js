@@ -37,7 +37,7 @@ exports.login = async (req, res) => {
         req.session.username = user.username;
         req.session.isAdmin = (user.role === 'admin');
         console.log(`User logged in: id=${user.id} username=${user.username} isAdmin=${req.session.isAdmin}`);
-        return res.redirect('/books');
+  return res.redirect('/dashboard');
       }
     }
 
@@ -50,9 +50,9 @@ exports.login = async (req, res) => {
         if (password !== (process.env.ADMIN_PASSWORD || 'password')) return res.render('auth/login', { error: 'Invalid credentials', message: null });
       }
       req.session.isAdmin = true;
-      req.session.username = ADMIN_USER;
-      console.log(`Admin fallback login: username=${ADMIN_USER}`);
-      return res.redirect('/books');
+  req.session.username = ADMIN_USER;
+  console.log(`Admin fallback login: username=${ADMIN_USER}`);
+  return res.redirect('/dashboard');
     }
 
     // not found anywhere
@@ -64,7 +64,12 @@ exports.login = async (req, res) => {
 };
 
 exports.logout = (req, res) => {
-  req.session.destroy(() => res.redirect('/'));
+  req.session.destroy((err) => {
+    if (err) console.error('Session destroy error:', err);
+    // clear session cookie (default name used by express-session)
+    try { res.clearCookie('connect.sid'); } catch (e) { /* ignore */ }
+    return res.redirect('/auth/login');
+  });
 };
 
 // Registration handlers

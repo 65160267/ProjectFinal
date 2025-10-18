@@ -4,34 +4,77 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>All Books</title>
+    <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <div class="container">
-      <div class="card">
-        <h1>All Books</h1>
-        <p class="muted"><a href="/">Home</a> | <a class="btn btn-ghost" href="/books/new">Add book</a></p>
+    <!-- Header -->
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">SwapABook</div>
+        <form class="search" action="/" method="get">
+          <input name="q" placeholder="Search for books" />
+          <button type="submit">🔍</button>
+        </form>
+        <nav class="header-actions">
+          <a href="/books" title="Cart">🛍️</a>
+          <% if (typeof user !== 'undefined' && user && user.id) { %>
+            <a href="/auth/logout" title="Logout">🔓</a>
+          <% } else { %>
+            <a href="/auth/login" title="Login">🔓</a>
+          <% } %>
+        </nav>
+      </div>
+    </header>
 
-        <table>
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Author</th>
-            </tr>
-          </thead>
-          <tbody>
+    <main class="container marketplace-main">
+      <aside class="market-sidebar card">
+        <h3>Marketplace</h3>
+        <ul class="muted">
+          <li><a href="/dashboard" style="color:inherit;text-decoration:none">🏠 หน้าหลัก</a></li>
+          <li><a href="/books" style="color:inherit;text-decoration:none">📄 รายการของฉัน</a></li>
+          <li><a href="/books/new" style="color:inherit;text-decoration:none">➕ เพิ่มรายการใหม่</a></li>
+        </ul>
+      </aside>
+      <section class="market-content">
+        <div class="card">
+          <h2>รายการทั้งหมด</h2>
+          <div class="product-grid">
             <% if (books && books.length) { %>
               <% books.forEach(function(b) { %>
-                <tr>
-                  <td><a href="/books/<%= b.id %>"><%= b.title %></a></td>
-                  <td><%= b.author %></td>
-                </tr>
+                <div class="product-card">
+                  <div class="product-thumb" data-thumb="<%= b.thumbnail || '/images/placeholder.png' %>"></div>
+                  <div class="product-body">
+                    <div class="product-title"><a href="/books/<%= b.id %>"><%= b.title %></a></div>
+                    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                      <div class="product-tags">แลกกับ: <span class="badge"><%= b.tags || 'n/a' %></span></div>
+                      <% if (b.condition) { %>
+                        <div class="pill condition"><%= (b.condition === 'new' ? 'ใหม่' : (b.condition === 'good' ? 'ดี' : 'ผ่านการใช้งาน')) %></div>
+                      <% } %>
+                    </div>
+                    <div class="product-meta" style="margin-top:6px"><%= b.location || 'Unknown' %></div>
+                    <div style="margin-top:10px"><a class="btn btn-ghost" href="/books/<%= b.id %>">ดูรายละเอียด</a></div>
+                  </div>
+                </div>
               <% }); %>
             <% } else { %>
-              <tr><td colspan="2">No books</td></tr>
+              <p class="muted empty-state">No books found.</p>
             <% } %>
-          </tbody>
-        </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      document.querySelectorAll('.product-thumb[data-thumb]').forEach(el => {
+        const url = el.getAttribute('data-thumb') || '/images/placeholder.png';
+        el.style.backgroundImage = `url(${url})`;
+      });
+    </script>
+    <!-- Footer (minimal) -->
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %> By Weerapat Tapaothong</div>
       </div>
-    </div>
+    </footer>
   </body>
 </html>

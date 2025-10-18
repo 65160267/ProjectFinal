@@ -5,7 +5,18 @@ const router = express.Router();
 
 exports.listBooks = async (req, res) => {
   try {
-    const [rows] = await db.pool.query('SELECT id, title, author, description FROM books ORDER BY id DESC');
+    // select all columns; compute friendly fields in JS to avoid referencing missing columns
+    const [rows] = await db.pool.query('SELECT * FROM books ORDER BY id DESC');
+    rows.forEach(b => {
+      const thumb = (b.image || b.thumbnail || '/images/placeholder.png');
+      if (thumb && typeof thumb === 'string') {
+        b.thumbnail = (thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb);
+      } else {
+        b.thumbnail = '/images/placeholder.png';
+      }
+      b.tags = b.tags || b.category || b.wanted || '';
+      // condition and location left as-is
+    });
     res.render('books/list', { books: rows });
   } catch (err) {
     res.status(500).send('DB error: ' + err.message);
@@ -63,7 +74,9 @@ exports.createBook = async (req, res) => {
       return res.status(500).send('No writable columns found in books table');
     }
 
-    const sql = `INSERT INTO books (${insertCols.join(',')}) VALUES (${insertPlaceholders.join(',')})`;
+  // wrap column names in backticks to avoid reserved-word collisions (e.g., `condition`)
+  const safeCols = insertCols.map(c => '`' + c + '`').join(',');
+  const sql = `INSERT INTO books (${safeCols}) VALUES (${insertPlaceholders.join(',')})`;
     await db.pool.query(sql, insertValues);
 
     // redirect to dashboard so newly posted item appears there
@@ -77,9 +90,13 @@ exports.createBook = async (req, res) => {
 exports.viewBook = async (req, res) => {
   const id = req.params.id;
   try {
-    const [rows] = await db.pool.query('SELECT id, title, author, description FROM books WHERE id = ?', [id]);
+  const [rows] = await db.pool.query(`SELECT id, title, author, description, COALESCE(image, thumbnail, '') AS thumbnail, COALESCE(tags, category, wanted, '') AS tags, location, \`condition\` FROM books WHERE id = ?`, [id]);
     if (!rows.length) return res.status(404).send('Book not found');
-    res.render('books/view', { book: rows[0] });
+    const book = rows[0];
+    if (book.thumbnail && typeof book.thumbnail === 'string') {
+      if (!book.thumbnail.startsWith('/') && !book.thumbnail.startsWith('http')) book.thumbnail = '/uploads/' + book.thumbnail;
+    }
+    res.render('books/view', { book });
   } catch (err) {
     res.status(500).send('DB error: ' + err.message);
   }

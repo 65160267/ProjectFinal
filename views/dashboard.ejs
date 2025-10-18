@@ -33,8 +33,8 @@
       <aside class="market-sidebar card">
         <h3>Marketplace</h3>
         <ul class="muted">
-          <li>🏠 หน้าหลัก</li>
-          <li>📄 รายการของฉัน</li>
+          <li><a href="/dashboard" style="color:inherit;text-decoration:none">🏠 หน้าหลัก</a></li>
+          <li><a href="/books" style="color:inherit;text-decoration:none">📄 รายการของฉัน</a></li>
           <% if (typeof user !== 'undefined' && user && user.id) { %>
             <li><a href="/books/new" style="color:inherit;text-decoration:none">➕ เพิ่มรายการใหม่</a></li>
           <% } %>

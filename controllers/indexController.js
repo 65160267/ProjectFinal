@@ -25,13 +25,25 @@ exports.dashboard = async (req, res) => {
 
     // Recent books for dashboard marketplace view
     // prefer `image` column (used by create) then `thumbnail`, fall back to placeholder
-    const [books] = await db.pool.query(
-      `SELECT id, title, author, 
-        COALESCE(image, thumbnail, '/images/placeholder.png') AS thumbnail, 
-        COALESCE(tags, category, wanted, '') AS tags, 
-        location, condition
-      FROM books ORDER BY id DESC LIMIT 12`
-    );
+    // Select all columns so we don't reference columns that may not exist in every schema
+    const [books] = await db.pool.query('SELECT * FROM books ORDER BY id DESC LIMIT 12');
+
+    // Compute friendly fields in JS side to avoid SQL errors when a column is missing
+    books.forEach(b => {
+      // thumbnail: prefer image then thumbnail then placeholder
+      const thumb = (b.image || b.thumbnail || '/images/placeholder.png');
+      if (thumb && typeof thumb === 'string') {
+        b.thumbnail = (thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb);
+      } else {
+        b.thumbnail = '/images/placeholder.png';
+      }
+
+      // tags: coalesce several possible columns
+      b.tags = b.tags || b.category || b.wanted || '';
+
+      // condition: leave as-is (may be undefined)
+      // location: leave as-is
+    });
 
     res.render('dashboard', {
       user: { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin },

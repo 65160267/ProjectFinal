@@ -35,6 +35,8 @@ io.on('connection', (socket) => {
 const indexRoutes = require('./routes/indexRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
+// design preview route (temporary)
+app.get('/designed', (req, res) => res.render('designed'));
 
 app.use('/', indexRoutes);
 app.use('/books', bookRoutes);

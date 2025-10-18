@@ -24,7 +24,15 @@
         </form>
         <nav class="header-actions">
           <a href="/books" title="Cart">🛍️</a>
-          <a href="/auth/logout" title="Logout">🔓</a>
+          <% if (typeof user !== 'undefined' && user && user.username) { %>
+            <a href="/user" class="header-user" title="Your profile">
+              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile" />
+              <span class="username"><%= user.username %></span>
+            </a>
+            <a href="/auth/logout" title="Logout">🔓</a>
+          <% } else { %>
+            <a href="/auth/login" title="Login">🔓</a>
+          <% } %>
         </nav>
       </div>
     </header>
@@ -61,6 +69,9 @@
                       <% } %>
                     </div>
                     <div class="product-meta" style="margin-top:6px"><%= b.location || 'Unknown' %></div>
+                    <div style="margin-top:10px">
+                      <a class="btn" href="/books/<%= b.id %>" title="ดูรายละเอียด <%= b.title %>">ดูรายละเอียด</a>
+                    </div>
                   </div>
                 </div>
               <% }); %>

@@ -90,12 +90,21 @@ exports.createBook = async (req, res) => {
 exports.viewBook = async (req, res) => {
   const id = req.params.id;
   try {
-  const [rows] = await db.pool.query(`SELECT id, title, author, description, COALESCE(image, thumbnail, '') AS thumbnail, COALESCE(tags, category, wanted, '') AS tags, location, \`condition\` FROM books WHERE id = ?`, [id]);
+    // select all columns and compute friendly fields in JS to avoid errors when certain columns don't exist
+    const [rows] = await db.pool.query('SELECT * FROM books WHERE id = ?', [id]);
     if (!rows.length) return res.status(404).send('Book not found');
     const book = rows[0];
-    if (book.thumbnail && typeof book.thumbnail === 'string') {
-      if (!book.thumbnail.startsWith('/') && !book.thumbnail.startsWith('http')) book.thumbnail = '/uploads/' + book.thumbnail;
+
+    // compute thumbnail path: prefer image, then thumbnail, then placeholder
+    const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
+    if (thumb && typeof thumb === 'string') {
+      book.thumbnail = (thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb);
+    } else {
+      book.thumbnail = '/images/placeholder.png';
     }
+
+    book.tags = book.tags || book.category || book.wanted || '';
+
     res.render('books/view', { book });
   } catch (err) {
     res.status(500).send('DB error: ' + err.message);

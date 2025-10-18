@@ -17,7 +17,10 @@
         </form>
         <nav class="header-actions">
           <a href="/books" title="Cart">🛍️</a>
-          <% if (typeof user !== 'undefined' && user && user.id) { %>
+          <% if (typeof user !== 'undefined' && user && user.username) { %>
+            <a href="/user" class="header-user" title="Your profile">
+              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile" />
+            </a>
             <a href="/auth/logout" title="Logout">🔓</a>
           <% } else { %>
             <a href="/auth/login" title="Login">🔓</a>

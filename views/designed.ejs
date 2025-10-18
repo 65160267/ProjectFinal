@@ -1,0 +1,90 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Design Preview</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      .hero-preview{display:flex;gap:16px;align-items:center;justify-content:center;margin-top:18px}
+      .hero-card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 6px 24px rgba(28,20,10,0.06);width:320px}
+      .hero-card img{width:100%;height:200px;object-fit:cover;border-radius:10px}
+      .grid-preview{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+      .grid-item{background:#fff;border-radius:10px;padding:10px;box-shadow:0 6px 18px rgba(28,20,10,0.06)}
+      .grid-item img{width:100%;height:150px;object-fit:cover;border-radius:8px}
+      .section-title{font-size:20px;color:var(--accent-700);margin:28px 0 8px}
+      .hero-card h3{color:var(--accent-700);margin:12px 0}
+      .hero-card p{color:var(--muted)}
+      .hero-cta{margin-top:12px}
+      .product-card{border-top:4px solid rgba(0,0,0,0);}
+      .product-card:hover{border-top-color:var(--accent-600)}
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">Trade Web</div>
+        <nav class="top-nav">
+          <a href="/marketplace">Marketplace</a>
+          <a href="/books/new">Add Product</a>
+          <a href="/books">My List</a>
+        </nav>
+        <nav class="header-actions">
+          <% if (typeof user !== 'undefined' && user && user.username) { %>
+            <a href="/user" class="header-user" title="Your profile">
+              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile" />
+            </a>
+            <a href="/auth/logout">Logout</a>
+          <% } else { %>
+            <a href="/auth/login">Login</a>
+          <% } %>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <h2 class="section-title">Hero previews</h2>
+      <div class="hero-preview">
+        <div class="hero-card">
+          <img src="/images/pic1.png" alt="pic1" />
+          <h3>Featured item</h3>
+          <p class="muted">รายละเอียดสั้น ๆ ของสินค้า</p>
+          <div class="hero-cta"><a class="btn btn-primary" href="/books/new">เพิ่มรายการ</a></div>
+        </div>
+        <div class="hero-card">
+          <img src="/images/pic2.png" alt="pic2" />
+          <h3>Featured item 2</h3>
+          <p class="muted">รายละเอียดสั้น ๆ ของสินค้า</p>
+          <div class="hero-cta"><a class="btn btn-primary" href="/books/new">เพิ่มรายการ</a></div>
+        </div>
+      </div>
+
+      <h2 class="section-title">Grid gallery</h2>
+      <div class="grid-preview">
+        <div class="grid-item"><img src="/images/pic3.png" alt="pic3"><div class="muted">Item A</div></div>
+        <div class="grid-item"><img src="/images/pic4.png" alt="pic4"><div class="muted">Item B</div></div>
+        <div class="grid-item"><img src="/images/pic5.png" alt="pic5"><div class="muted">Item C</div></div>
+        <div class="grid-item"><img src="/images/pic6.png" alt="pic6"><div class="muted">Item D</div></div>
+      </div>
+
+      <h2 class="section-title">Recently posted</h2>
+      <div class="product-grid">
+        <div class="product-card"><div class="product-thumb" data-thumb="/images/pic7.png"></div><div class="product-body"><div class="product-title">Product 1</div></div></div>
+        <div class="product-card"><div class="product-thumb" data-thumb="/images/pic8.png"></div><div class="product-body"><div class="product-title">Product 2</div></div></div>
+        <div class="product-card"><div class="product-thumb" data-thumb="/images/pic1.png"></div><div class="product-body"><div class="product-title">Product 3</div></div></div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Trade Web — preview</div>
+      </div>
+    </footer>
+
+    <script>
+      document.querySelectorAll('.product-thumb[data-thumb]').forEach(el => {
+        el.style.backgroundImage = `url(${el.getAttribute('data-thumb')})`;
+      });
+    </script>
+  </body>
+</html>

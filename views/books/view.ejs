@@ -2,32 +2,82 @@
 <html>
   <head>
     <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title><%= book.title %></title>
+    <link rel="stylesheet" href="/css/style.css" />
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/chat.js"></script>
   </head>
   <body>
-    <div class="container">
-      <div class="card">
-        <h1><%= book.title %></h1>
-        <p><strong>Author:</strong> <%= book.author %></p>
-        <p><%= book.description %></p>
-        <a class="btn btn-ghost" href="/books">Back</a>
+    <main class="container">
+      <div class="detail-wrap">
+        <div class="detail-card">
+          <div class="detail-inner">
+            <div class="detail-media">
+              <% /* show large image / thumbnail or placeholder */ %>
+              <div class="detail-image" data-thumb="<%= book.thumbnail || '/images/placeholder.png' %>"></div>
+            </div>
+            <div class="detail-info">
+              <h2 class="detail-title"><%= book.title %></h2>
+              <% if (book.author) { %>
+                <div class="muted">by <%= book.author %></div>
+              <% } %>
 
-        <hr style="margin:18px 0" />
-        <h3>Chat about this book</h3>
-        <div id="chatWindow"></div>
-        <div style="display:flex;gap:8px;margin-top:8px">
-          <input id="chatUser" placeholder="Your name" style="flex:0 0 160px" />
-          <input id="chatMsg" placeholder="Message" style="flex:1" />
-          <button id="chatSend" class="btn btn-primary">Send</button>
+              <div style="margin-top:12px">
+                <div class="big-id"><%= book.id %></div>
+              </div>
+
+              <div style="margin-top:10px"><strong>ติดต่อ:</strong> <%= book.location || 'Unknown' %></div>
+
+              <div style="margin-top:10px">
+                <strong>สภาพ:</strong>
+                <% if (book.condition) { %>
+                  <span class="pill condition"><%= (book.condition === 'new' ? 'ใหม่' : (book.condition === 'good' ? 'ดี' : 'ผ่านการใช้งาน')) %></span>
+                <% } else { %>
+                  <span class="pill">ไม่ระบุ</span>
+                <% } %>
+              </div>
+
+              <div style="margin-top:8px">
+                <strong>ต้องการแลกกับ:</strong>
+                <span class="badge"><%= book.tags || 'n/a' %></span>
+              </div>
+
+              <div style="margin-top:14px">
+                <label for="pick">เลือกสินค้าที่ต้องการแลก:</label>
+                <select id="pick" class="select">
+                  <option value="">เลือกสินค้า</option>
+                  <option value="1">สินค้า A</option>
+                  <option value="2">สินค้า B</option>
+                </select>
+              </div>
+
+              <div style="margin-top:16px">
+                <button class="btn btn-primary">แลกเลย</button>
+                <a class="btn btn-ghost" href="/books" style="margin-left:8px">กลับ</a>
+              </div>
+
+              <% if (book.description) { %>
+                <div style="margin-top:18px" class="muted"><%= book.description %></div>
+              <% } %>
+            </div>
+          </div>
+
+          <hr style="margin:18px 0" />
+          <h3>Chat about this item</h3>
+          <div id="chatWindow" class="chat-window"></div>
+          <div class="chat-controls">
+            <input id="chatUser" placeholder="Your name" />
+            <input id="chatMsg" placeholder="Message" />
+            <button id="chatSend" class="btn btn-primary">Send</button>
+          </div>
+
+          <script>
+            const ROOM = 'book-<%= book.id %>';
+            window.room = ROOM;
+          </script>
         </div>
-
-        <script>
-          const ROOM = 'book-<%= book.id %>';
-          window.room = ROOM;
-        </script>
       </div>
-    </div>
+    </main>
   </body>
 </html>

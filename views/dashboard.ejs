@@ -12,6 +12,7 @@
       if (typeof featured === 'undefined') featured = [];
       if (typeof recommendedA === 'undefined') recommendedA = [];
       if (typeof recommendedB === 'undefined') recommendedB = [];
+      if (typeof books === 'undefined') books = [];
     %>
     <!-- Header -->
     <header class="site-header">
@@ -28,25 +29,44 @@
       </div>
     </header>
 
-    <main>
-      <!-- compact welcome + stats -->
-      <section class="container">
-        <div class="card" style="padding:20px">
-          <h2>ยินดีต้อนรับ, <%= user && user.username ? user.username : 'User' %></h2>
-          <p class="muted">นี่คือแดชบอร์ดของคุณ สถิติภาพรวมด้านล่าง</p>
-          <div style="display:flex;gap:16px;margin-top:12px">
-            <div class="card" style="flex:1;padding:12px">
-              <h4>หนังสือทั้งหมด</h4>
-              <p style="font-size:20px;font-weight:700;margin:6px 0"><%= stats && stats.booksCount ? stats.booksCount : 0 %></p>
-            </div>
-            <div class="card" style="flex:1;padding:12px">
-              <h4>ผู้ใช้ทั้งหมด</h4>
-              <p style="font-size:20px;font-weight:700;margin:6px 0"><%= stats && stats.usersCount ? stats.usersCount : 0 %></p>
-            </div>
-          </div>
-          <div style="margin-top:12px">
-            <a class="btn btn-primary" href="/books">จัดการหนังสือ</a>
-            <a class="btn btn-ghost" href="/auth/logout" style="margin-left:8px">ออกจากระบบ</a>
+    <main class="container marketplace-main">
+      <aside class="market-sidebar card">
+        <h3>Marketplace</h3>
+        <ul class="muted">
+          <li>🏠 หน้าหลัก</li>
+          <li>📄 รายการของฉัน</li>
+          <% if (typeof user !== 'undefined' && user && user.id) { %>
+            <li><a href="/books/new" style="color:inherit;text-decoration:none">➕ เพิ่มรายการใหม่</a></li>
+          <% } %>
+        </ul>
+    
+      </aside>
+
+      <section class="market-content">
+        
+        <div class="card">
+          <h2>Recently Posted</h2>
+          <input class="search-input" placeholder="ค้นหาสินค้า..." />
+          <div class="product-grid">
+            <% if (books && books.length) { %>
+              <% books.forEach(function(b) { %>
+                <div class="product-card">
+                  <div class="product-thumb" data-thumb="<%= b.thumbnail || '/images/placeholder.png' %>"></div>
+                  <div class="product-body">
+                    <div class="product-title"><%= b.title || 'Product' %></div>
+                    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
+                      <div class="product-tags">แลกกับ: <span class="badge"><%= b.tags || 'n/a' %></span></div>
+                      <% if (b.condition) { %>
+                        <div class="pill condition"><%= (b.condition === 'new' ? 'ใหม่' : (b.condition === 'good' ? 'ดี' : 'ผ่านการใช้งาน')) %></div>
+                      <% } %>
+                    </div>
+                    <div class="product-meta" style="margin-top:6px"><%= b.location || 'Unknown' %></div>
+                  </div>
+                </div>
+              <% }); %>
+            <% } else { %>
+              <p class="muted empty-state">No products found.</p>
+            <% } %>
           </div>
         </div>
       </section>
@@ -61,11 +81,13 @@
 
     <script>
       // apply background images from data-thumb attributes
-      document.querySelectorAll('.thumb[data-thumb], .small-thumb[data-thumb]').forEach(el => {
+      document.querySelectorAll('.thumb[data-thumb], .small-thumb[data-thumb], .product-thumb[data-thumb]').forEach(el => {
         const url = el.getAttribute('data-thumb') || '/images/placeholder.png';
         el.style.backgroundImage = `url(${url})`;
       });
     </script>
+
+    
 
   </body>
 </html>

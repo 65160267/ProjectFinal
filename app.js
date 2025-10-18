@@ -1,35 +1,35 @@
 const express = require('express');
+const bodyParser = require('body-parser');
+const { pool } = require('./db');
+
 const app = express();
-app.use(express.static('public'));
-app.use(express.json());
-app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.set('view engine', 'ejs');
+
 // Bootstrap: delegate to server.js which configures middleware, routes and starts the HTTP server.
 try {
   require('./server');
 } catch (err) {
   console.error('Failed to start server from app.js:', err);
-  throw err;
+  // don't rethrow here so the app file can still be required safely by tests/tools
 }
 
-const indexController = require('./controllers/indexController.js');
-try {
-    await connection.connect();
+async function checkMySQLConnection() {
+  try {
+    const conn = await pool.getConnection();
+    // ping or simple query
+    await conn.ping();
     console.log('✅ MySQL connected successfully!');
+    conn.release();
   } catch (error) {
-    console.error('❌ MySQL connection failed:', error.message);
-  } finally {
-    await connection.end();
+    console.error('❌ MySQL connection failed:', error.message || error);
   }
+}
 
-
-// เรียกใช้งานฟังก์ชัน
+// run a one-off check (non-blocking)
 checkMySQLConnection();
 
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`Server running on port ${port}`);
-});
+module.exports = app;

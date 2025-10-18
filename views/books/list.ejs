@@ -1,4 +1,10 @@
 <!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>All Books</title>
+  </head>
   <body>
     <div class="container">
       <div class="card">
@@ -6,26 +12,26 @@
         <p class="muted"><a href="/">Home</a> | <a class="btn btn-ghost" href="/books/new">Add book</a></p>
 
         <table>
-          <thead><tr><th>Title</th><th>Author</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Author</th>
+            </tr>
+          </thead>
           <tbody>
-          <% if (books && books.length) { %>
-            <% books.forEach(b => { %>
-              <tr>
-                <td><a href="/books/<%= b.id %>"><%= b.title %></a></td>
-                <td><%= b.author %></td>
-              </tr>
-            <% }) %>
-          <% } else { %>
-            <tr><td colspan="2">No books</td></tr>
-          <% } %>
+            <% if (books && books.length) { %>
+              <% books.forEach(function(b) { %>
+                <tr>
+                  <td><a href="/books/<%= b.id %>"><%= b.title %></a></td>
+                  <td><%= b.author %></td>
+                </tr>
+              <% }); %>
+            <% } else { %>
+              <tr><td colspan="2">No books</td></tr>
+            <% } %>
           </tbody>
         </table>
       </div>
     </div>
   </body>
-      <% } else { %>
-        <li>No books</li>
-      <% } %>
-    </ul>
-  </body>
-  </html>
+</html>

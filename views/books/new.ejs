@@ -1,25 +1,41 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Add Book</title>
-  </head>
   <body>
     <div class="container">
       <div class="card">
         <h1>Add Book</h1>
-        <form action="/books/create" method="post">
+  <form class="book-form" action="/books/create" method="post" enctype="multipart/form-data">
           <div class="field">
-            <label>Title</label>
+            <label>ชื่อสินค้า</label>
             <input name="title" required />
           </div>
           <div class="field">
-            <label>Author</label>
-            <input name="author" required />
+            <label>หมวดหมู่ของสินค้า</label>
+            <input name="category" placeholder="เช่น นิยาย, การศึกษา" />
           </div>
           <div class="field">
-            <label>Description</label>
+            <label>คุณภาพของสิ่งของ</label>
+            <select name="condition">
+              <option value="new">ใหม่</option>
+              <option value="good">ดี</option>
+              <option value="used">ผ่านการใช้งาน</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>รายละเอียด</label>
             <textarea name="description"></textarea>
+          </div>
+          <div class="field">
+            <label>ต้องการแลกกับหนังสืออะไร</label>
+            <input name="wanted" placeholder="เช่น ชื่อหนังสือที่ต้องการแลก" />
+          </div>
+          <div class="field">
+            <label>สถานที่ต้องการแลก</label>
+            <input name="location" placeholder="เมือง/จังหวัด" />
+          </div>
+          <div class="field">
+            <label>รูปภาพสินค้า</label>
+            <input type="file" name="image" accept="image/*" />
           </div>
           <div style="display:flex;gap:10px">
             <button class="btn btn-primary" type="submit">Create</button>

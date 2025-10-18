@@ -1,0 +1,62 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Marketplace</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">Trade Web</div>
+        <nav class="top-nav">
+          <a href="/marketplace">Marketplace</a>
+          <a href="/books/new">Add Product</a>
+          <a href="/auth/login">Live chat</a>
+          <a href="/books">My List</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container marketplace-main">
+      <aside class="market-sidebar card">
+        <h3>Marketplace</h3>
+        <ul class="muted">
+          <li>🏠 หน้าหลัก</li>
+          <li>➕ เพิ่มสินค้าใหม่</li>
+          <li>📄 รายการของฉัน</li>
+        </ul>
+      </aside>
+
+      <section class="market-content">
+        <div class="card">
+          <h2>Recently Posted</h2>
+          <input class="search-input" placeholder="ค้นหาสินค้า..." />
+          <div class="product-grid">
+            <% if (books && books.length) { %>
+              <% books.forEach(b => { %>
+                <div class="product-card">
+                  <div class="product-thumb" data-thumb="<%= b.thumbnail || '/images/placeholder.png' %>"></div>
+                  <div class="product-body">
+                    <div class="product-title"><%= b.title || 'Product' %></div>
+                    <div class="product-tags">แลกกับ: <span class="badge"><%= b.tags || 'n/a' %></span></div>
+                    <div class="product-meta"><%= b.location || 'Unknown' %></div>
+                  </div>
+                </div>
+              <% }) %>
+            <% } else { %>
+              <p class="muted">No products found.</p>
+            <% } %>
+          </div>
+        </div>
+      </section>
+    </main>
+    <script>
+      document.querySelectorAll('.product-thumb[data-thumb]').forEach(el => {
+        el.style.backgroundImage = `url(${el.getAttribute('data-thumb')})`;
+      });
+    </script>
+
+  </body>
+</html>

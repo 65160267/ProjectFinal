@@ -64,6 +64,8 @@ a{color:var(--accent-700);text-decoration:underline}
 /* focus */
 input:focus,textarea:focus{outline:none;box-shadow:0 0 0 4px rgba(247,169,122,0.12);border-color:var(--accent-700)}
 
+/* Removed: new-book form-specific styles were reverted per user request */
+
 /* subtle table styles (books list) */
 table{width:100%;border-collapse:collapse}
 th,td{padding:8px 10px;border-bottom:1px solid #f3e7dd;text-align:left}
@@ -136,3 +138,40 @@ body .legacy-minor{margin:20px}
 /* make list bullets white on dark background */
 .footer-col ul{color:#fff}
 .footer-col li::marker{color:#fff}
+
+/* Marketplace page styles */
+.marketplace-main{display:flex;gap:24px;margin-top:18px}
+.market-sidebar{width:220px}
+.market-content{flex:1}
+.search-input{width:100%;padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.6);background:rgba(255,255,255,0.9);margin:10px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,0.6), 0 2px 6px rgba(28,20,10,0.04)}
+/* Search input (simple) */
+.search-input {
+	width: 100%;
+	max-width: 520px;
+	padding: 10px;
+	border-radius: 8px;
+	border: 1px solid var(--input-border);
+	background: #fff;
+}
+.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:12px}
+.product-card{background:#fff;border-radius:10px;padding:10px;box-shadow:0 6px 18px rgba(28,20,10,0.06)}
+.product-thumb{height:160px;background-size:cover;background-position:center;border-radius:6px}
+.product-body{padding:10px}
+.product-title{font-weight:700;margin-bottom:8px}
+.product-meta{color:var(--muted);font-size:13px;margin-top:8px}
+
+/* Recently Posted card polish */
+.card h2{font-size:26px;color:var(--muted);margin-bottom:10px}
+.card{transition:box-shadow .18s ease, transform .12s ease}
+.card:hover{box-shadow:0 12px 36px rgba(28,20,10,0.08);transform:translateY(-2px)}
+.search-input:focus{box-shadow:0 6px 18px rgba(247,169,122,0.12);border-color:var(--accent-700);outline:none}
+.muted.empty-state{padding:18px 6px;color:#6b5841}
+
+@media(max-width:900px){
+	.product-grid{grid-template-columns:repeat(2,1fr)}
+	.market-sidebar{display:none}
+}
+
+/* book-form styling removed per user request */
+
+/* toast / popup (removed) */

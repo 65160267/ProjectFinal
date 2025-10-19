@@ -9,7 +9,7 @@
   <body>
     <header class="site-header">
       <div class="header-inner container">
-        <div class="brand">Trade Web</div>
+        <div class="brand">SwapABook</div>
         <nav class="header-actions">
           <a href="/marketplace">Marketplace</a>
           <a href="/books/new">Add Product</a>
@@ -28,27 +28,48 @@
     </header>
 
     <main class="container">
-      <div class="card" style="max-width:700px;margin:24px auto;display:flex;gap:18px;align-items:center">
-        <div style="flex:0 0 140px;display:flex;flex-direction:column;align-items:center;gap:10px">
-          <div style="width:120px;height:120px;border-radius:999px;border:3px solid var(--accent-700);overflow:hidden;display:flex;align-items:center;justify-content:center;background:#fff">
-            <img src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile Picture" style="width:100%;height:100%;object-fit:cover" />
+      <div class="profile-wrap">
+        <div class="profile-card card">
+          <div class="profile-main">
+            <div class="profile-media">
+              <div class="avatar">
+                <img src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Avatar" />
+              </div>
+              <!-- avatar upload moved to /user/edit -->
+            </div>
+            <div class="profile-info">
+              <h2 class="profile-name"><%= user.full_name || user.username %></h2>
+              <div class="muted">username: <%= user.username %></div>
+              <div class="muted">ที่อยู่: <%= user.location || '--' %></div>
+              <div class="profile-stats">
+                <div><strong>0</strong><div class="muted">แลกเรียบร้อย</div></div>
+                <div><strong>0</strong><div class="muted">รายการของคุณ</div></div>
+              </div>
+              <div style="margin-top:12px">
+                <a class="btn btn-ghost" href="/user/edit">แก้ไขโปรไฟล์</a>
+                <a class="btn btn-danger" href="/auth/logout" style="margin-left:8px">Logout</a>
+              </div>
+            </div>
           </div>
-          <input type="file" />
-        </div>
-        <div style="flex:1">
-          <h2><%= user.full_name || user.username %></h2>
-          <div class="muted">อายุ: --</div>
-          <div class="muted">ที่อยู่: <%= user.location || '--' %></div>
-          <div style="margin-top:12px">ประวัติการแลกเปลี่ยน</div>
-          <ul class="muted">
-            <li>ยังไม่มีประวัติ</li>
-          </ul>
-          <div style="margin-top:12px">
-            <button class="btn">ตั้งค่า</button>
-            <a class="btn btn-danger" href="/auth/logout" style="margin-left:8px">Logout</a>
+
+          <hr />
+          <div class="profile-history">
+            <h3>ประวัติการแลกเปลี่ยน</h3>
+            <p class="muted">ยังไม่มีประวัติการแลกเปลี่ยน</p>
           </div>
         </div>
+
+        <aside class="profile-side card">
+          <h4>รายการของฉัน</h4>
+          <p class="muted">ยังไม่มีรายการ</p>
+        </aside>
       </div>
     </main>
+
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
+      </div>
+    </footer>
   </body>
 </html>

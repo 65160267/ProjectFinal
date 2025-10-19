@@ -9,75 +9,139 @@
     <script src="/js/chat.js"></script>
   </head>
   <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">SwapABook</div>
+        <form class="search" action="/" method="get">
+          <input name="q" placeholder="ค้นหาหนังสือ" />
+          <button type="submit">🔍</button>
+        </form>
+        <nav class="header-actions">
+          <a href="/books">🛍️</a>
+          <a href="/books/new">➕</a>
+          <a href="/auth/logout">🔓</a>
+        </nav>
+      </div>
+    </header>
+
     <main class="container">
       <div class="detail-wrap">
         <div class="detail-card">
           <div class="detail-inner">
             <div class="detail-media">
               <% /* show large image / thumbnail or placeholder */ %>
-              <div class="detail-image" data-thumb="<%= book.thumbnail || '/images/placeholder.png' %>"></div>
+              <div class="detail-image" style="background-image: url('<%= book.thumbnail %>')"></div>
             </div>
             <div class="detail-info">
               <h2 class="detail-title"><%= book.title %></h2>
-              <% if (book.author) { %>
-                <div class="muted">by <%= book.author %></div>
-              <% } %>
-
-              <div style="margin-top:12px">
-                <div class="big-id"><%= book.id %></div>
+              
+              <div style="margin-top:8px">
+                <strong>ผู้แต่ง:</strong> <span class="muted"><%= book.author %></span>
               </div>
 
-              <div style="margin-top:10px"><strong>ติดต่อ:</strong> <%= book.location || 'Unknown' %></div>
-
+              <!-- ข้อมูลหมวดหมู่ -->
               <div style="margin-top:10px">
-                <strong>สภาพ:</strong>
-                <% if (book.condition) { %>
-                  <span class="pill condition"><%= (book.condition === 'new' ? 'ใหม่' : (book.condition === 'good' ? 'ดี' : 'ผ่านการใช้งาน')) %></span>
+                <strong>หมวดหมู่:</strong> 
+                <span class="badge" style="background: #e0f2fe; color: #0277bd;"><%= book.category %></span>
+              </div>
+
+              <!-- สภาพของสินค้า -->
+              <div style="margin-top:10px">
+                <strong>สภาพสินค้า:</strong>
+                <span class="pill condition"><%= book.conditionText %></span>
+              </div>
+
+              <!-- ข้อมูลเจ้าของ -->
+              <div style="margin-top:16px; padding-top:12px; border-top:1px solid #e5e5e5;">
+                <h3 style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">👤 ข้อมูลเจ้าของสินค้า</h3>
+                <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                  <div style="margin-bottom: 6px;">
+                    <strong>ชื่อ:</strong> <%= book.ownerName %>
+                  </div>
+                  <div>
+                    <strong>ที่อยู่:</strong> <%= book.ownerLocation %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- ข้อมูลโพสต์ -->
+              <div style="margin-top:12px; padding-top:12px; border-top:1px solid #e5e5e5;">
+                <h3 style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">📅 ข้อมูลการโพสต์</h3>
+                <div style="font-size: 13px; color: #666;">
+                  <div style="margin-bottom: 4px;">
+                    <strong>โพสต์เมื่อ:</strong> <%= book.createdDate %>
+                  </div>
+                  <% if (book.updatedDate) { %>
+                    <div>
+                      <strong>อัปเดตล่าสุด:</strong> <%= book.updatedDate %>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+
+              <!-- คำอธิบายรายละเอียด -->
+              <div style="margin-top:20px; padding-top:16px; border-top:2px solid #f0f0f0;">
+                <h3 style="color: var(--muted); font-size: 16px; margin-bottom: 8px;">📝 รายละเอียดเพิ่มเติม</h3>
+                <div class="description-box">
+                  <%= book.description %>
+                </div>
+              </div>
+
+              <!-- ข้อมูลการแลกเปลี่ยน -->
+              <div style="margin-top:20px; padding-top:16px; border-top:2px solid #f0f0f0;">
+                <h3 style="color: var(--muted); font-size: 16px; margin-bottom: 12px;">🔄 ข้อมูลการแลกเปลี่ยน</h3>
+                
+                <div style="background: #fafafa; padding: 12px; border-radius: 8px; margin-bottom: 12px;">
+                  <div style="margin-bottom: 8px;">
+                    <strong>💫 ต้องการแลกกับ:</strong> 
+                    <span style="color: var(--accent-700); font-weight: 600;"><%= book.wanted %></span>
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <strong>📍 สถานที่แลก:</strong> 
+                    <span style="color: var(--accent-700);"><%= book.exchangeLocation %></span>
+                  </div>
+                  <div>
+                    <strong>✅ สถานะ:</strong>
+                    <span class="pill <%= book.isAvailable ? 'available' : 'unavailable' %>">
+                      <%= book.availabilityText %>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- ปุ่มแลกเปลี่ยน (แสดงเฉพาะเมื่อสินค้าพร้อม) -->
+                <% if (book.isAvailable) { %>
+                  <div style="margin-top:14px">
+                    <label for="pick" style="color: var(--muted); font-weight: 600;">เลือกสินค้าของคุณที่ต้องการนำมาแลก:</label>
+                    <select id="pick" class="select" style="margin-top: 6px;">
+                      <option value="">-- เลือกสินค้าของคุณ --</option>
+                      <option value="1">หนังสือ A ของฉัน</option>
+                      <option value="2">หนังสือ B ของฉัน</option>
+                    </select>
+                  </div>
+
+                  <div style="margin-top:16px; display: flex; gap: 8px;">
+                    <button class="btn btn-primary" style="flex: 1;">💬 ติดต่อขอแลก</button>
+                    <button class="btn btn-ghost" onclick="window.history.back()">← กลับ</button>
+                  </div>
                 <% } else { %>
-                  <span class="pill">ไม่ระบุ</span>
+                  <div class="alert" style="padding:12px; background:#ffe6e6; border:1px solid #ffcccc; border-radius:8px; color:#cc0000; margin-top: 12px;">
+                    ⚠️ สินค้านี้ไม่พร้อมสำหรับการแลกเปลี่ยนในขณะนี้
+                  </div>
+                  <button class="btn btn-ghost" style="margin-top:12px; width: 100%;" onclick="window.history.back()">← กลับไปดูสินค้าอื่น</button>
                 <% } %>
               </div>
-
-              <div style="margin-top:8px">
-                <strong>ต้องการแลกกับ:</strong>
-                <span class="badge"><%= book.tags || 'n/a' %></span>
-              </div>
-
-              <div style="margin-top:14px">
-                <label for="pick">เลือกสินค้าที่ต้องการแลก:</label>
-                <select id="pick" class="select">
-                  <option value="">เลือกสินค้า</option>
-                  <option value="1">สินค้า A</option>
-                  <option value="2">สินค้า B</option>
-                </select>
-              </div>
-
-              <div style="margin-top:16px">
-                <button class="btn btn-primary">แลกเลย</button>
-                <a class="btn btn-ghost" href="/books" style="margin-left:8px">กลับ</a>
-              </div>
-
-              <% if (book.description) { %>
-                <div style="margin-top:18px" class="muted"><%= book.description %></div>
-              <% } %>
             </div>
           </div>
 
-          <hr style="margin:18px 0" />
-          <h3>Chat about this item</h3>
-          <div id="chatWindow" class="chat-window"></div>
-          <div class="chat-controls">
-            <input id="chatUser" placeholder="Your name" />
-            <input id="chatMsg" placeholder="Message" />
-            <button id="chatSend" class="btn btn-primary">Send</button>
-          </div>
-
-          <script>
-            const ROOM = 'book-<%= book.id %>';
-            window.room = ROOM;
-          </script>
+          <!-- chat removed per request -->
         </div>
       </div>
     </main>
+
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
+      </div>
+    </footer>
   </body>
 </html>

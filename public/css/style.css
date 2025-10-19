@@ -197,3 +197,68 @@ body .legacy-minor{margin:20px}
 .chat-controls input{flex:1;padding:8px;border-radius:8px;border:1px solid var(--input-border)}
 
 @media(max-width:480px){.detail-card{width:100%;padding:12px}.detail-image{width:160px;height:160px}}
+
+/* New book form styles */
+.book-card-form{max-width:880px;margin:18px auto;padding:22px}
+.form-title{font-size:22px;color:var(--muted);margin-bottom:12px}
+.book-form{display:block}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.book-form .field{margin-bottom:12px}
+.book-form .field.full{grid-column:1/-1}
+.book-form .file-field{display:flex;align-items:center;gap:12px}
+.form-actions{margin-top:16px;display:flex;gap:12px}
+
+@media(max-width:820px){
+	.form-grid{grid-template-columns:1fr}
+}
+
+/* User profile styles */
+.profile-wrap{display:grid;grid-template-columns:1fr 320px;gap:18px;margin-top:18px}
+.profile-card{padding:18px}
+.profile-main{display:flex;gap:18px;align-items:center}
+.profile-media .avatar{width:120px;height:120px;border-radius:999px;overflow:hidden;border:4px solid var(--accent-700);background:#fff}
+.profile-media .avatar img{width:100%;height:100%;object-fit:cover}
+.profile-info{flex:1}
+.profile-name{margin:0 0 6px}
+.profile-stats{display:flex;gap:14px;margin-top:10px}
+.profile-stats div{min-width:80px;text-align:center}
+.profile-side{padding:14px}
+
+@media(max-width:900px){.profile-wrap{grid-template-columns:1fr;}}
+
+/* Enhanced status pills */
+.pill.available {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.pill.unavailable {
+  background: #fef2f2;
+  color: #b91c1c;    
+  border: 1px solid #fecaca;
+}
+
+/* Alert styling for detail page */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  line-height: 1.4;
+  margin: 8px 0;
+}
+
+/* Enhanced detail info styling */
+.detail-info > div {
+  margin-bottom: 8px;
+}
+
+.detail-info .description-box {
+  background: #f9f9f9;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+

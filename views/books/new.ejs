@@ -1,48 +1,83 @@
 <!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>เพิ่มรายการใหม่</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
   <body>
-    <div class="container">
-      <div class="card">
-        <h1>Add Book</h1>
-  <form class="book-form" action="/books/create" method="post" enctype="multipart/form-data">
-          <div class="field">
-            <label>ชื่อสินค้า</label>
-            <input name="title" required />
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">SwapABook</div>
+        <form class="search" action="/" method="get">
+          <input name="q" placeholder="Search for books" />
+          <button type="submit">🔍</button>
+        </form>
+        <nav class="header-actions">
+          <a href="/books">🛍️</a>
+          <a href="/auth/logout">🔓</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="card book-card-form">
+        <h1 class="form-title">เพิ่มรายการสินค้า</h1>
+        <form class="book-form" action="/books/create" method="post" enctype="multipart/form-data">
+          <div class="form-grid">
+            <div class="field">
+              <label>ชื่อสินค้า</label>
+              <input name="title" required placeholder="เช่น ชื่อหนังสือ" />
+            </div>
+
+            <div class="field">
+              <label>หมวดหมู่ของสินค้า</label>
+              <input name="category" placeholder="เช่น นิยาย, การศึกษา" />
+            </div>
+
+            <div class="field">
+              <label>คุณภาพของสิ่งของ</label>
+              <select name="condition">
+                <option value="new">ใหม่</option>
+                <option value="good">ดี</option>
+                <option value="used">ผ่านการใช้งาน</option>
+              </select>
+            </div>
+
+            <div class="field full">
+              <label>รายละเอียด</label>
+              <textarea name="description" placeholder="อธิบายสภาพหรือรายละเอียดเพิ่มเติม"></textarea>
+            </div>
+
+            <div class="field">
+              <label>ต้องการแลกกับหนังสืออะไร</label>
+              <input name="wanted" placeholder="เช่น ชื่อหนังสือที่ต้องการแลก" />
+            </div>
+
+            <div class="field">
+              <label>สถานที่ต้องการแลก</label>
+              <input name="location" placeholder="เมือง/จังหวัด" />
+            </div>
+
+            <div class="field file-field">
+              <label>รูปภาพสินค้า</label>
+              <input type="file" name="image" accept="image/*" />
+            </div>
           </div>
-          <div class="field">
-            <label>หมวดหมู่ของสินค้า</label>
-            <input name="category" placeholder="เช่น นิยาย, การศึกษา" />
-          </div>
-          <div class="field">
-            <label>คุณภาพของสิ่งของ</label>
-            <select name="condition">
-              <option value="new">ใหม่</option>
-              <option value="good">ดี</option>
-              <option value="used">ผ่านการใช้งาน</option>
-            </select>
-          </div>
-          <div class="field">
-            <label>รายละเอียด</label>
-            <textarea name="description"></textarea>
-          </div>
-          <div class="field">
-            <label>ต้องการแลกกับหนังสืออะไร</label>
-            <input name="wanted" placeholder="เช่น ชื่อหนังสือที่ต้องการแลก" />
-          </div>
-          <div class="field">
-            <label>สถานที่ต้องการแลก</label>
-            <input name="location" placeholder="เมือง/จังหวัด" />
-          </div>
-          <div class="field">
-            <label>รูปภาพสินค้า</label>
-            <input type="file" name="image" accept="image/*" />
-          </div>
-          <div style="display:flex;gap:10px">
-            <button class="btn btn-primary" type="submit">Create</button>
-            <a class="btn btn-ghost" href="/books">Back</a>
+
+          <div class="form-actions">
+            <button class="btn btn-primary" type="submit">เพิ่มรายการ</button>
+            <a class="btn btn-ghost" href="/books">ยกเลิก</a>
           </div>
         </form>
       </div>
-    </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
+      </div>
+    </footer>
   </body>
-  </html>
+</html>

@@ -90,12 +90,19 @@ exports.createBook = async (req, res) => {
 exports.viewBook = async (req, res) => {
   const id = req.params.id;
   try {
-    // select all columns and compute friendly fields in JS to avoid errors when certain columns don't exist
-    const [rows] = await db.pool.query('SELECT * FROM books WHERE id = ?', [id]);
-    if (!rows.length) return res.status(404).send('Book not found');
+    // ดึงข้อมูลหนังสือพร้อมข้อมูลเจ้าของ (ถ้ามี owner_id)
+    const [rows] = await db.pool.query(`
+      SELECT b.*, u.username as owner_username, u.full_name as owner_full_name, u.location as owner_location
+      FROM books b
+      LEFT JOIN users u ON b.owner_id = u.id
+      WHERE b.id = ?
+    `, [id]);
+    
+    if (!rows.length) return res.status(404).send('หนังสือที่ต้องการดูไม่พบ');
+    
     const book = rows[0];
 
-    // compute thumbnail path: prefer image, then thumbnail, then placeholder
+    // จัดรูปแบบข้อมูลรูปภาพ
     const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
     if (thumb && typeof thumb === 'string') {
       book.thumbnail = (thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb);
@@ -103,10 +110,67 @@ exports.viewBook = async (req, res) => {
       book.thumbnail = '/images/placeholder.png';
     }
 
-    book.tags = book.tags || book.category || book.wanted || '';
+    // จัดรูปแบบข้อมูลแท็กและหมวดหมู่
+    book.tags = book.tags || book.category || book.wanted || 'ไม่ระบุ';
+    book.category = book.category || 'ไม่ระบุหมวดหมู่';
+    book.wanted = book.wanted || 'ไม่ระบุ';
+    
+    // จัดรูปแบบสภาพของหนังสือ
+    if (book.condition) {
+      switch(book.condition) {
+        case 'new': book.conditionText = 'ใหม่'; break;
+        case 'good': book.conditionText = 'ดี'; break;
+        case 'used': book.conditionText = 'ผ่านการใช้งาน'; break;
+        default: book.conditionText = book.condition;
+      }
+    } else {
+      book.conditionText = 'ไม่ระบุ';
+    }
+
+    // จัดรูปแบบข้อมูลเจ้าของ
+    book.ownerName = book.owner_full_name || book.owner_username || 'ไม่ทราบ';
+    book.ownerLocation = book.owner_location || book.location || 'ไม่ระบุที่อยู่';
+
+    // จัดรูปแบบสถานที่แลกเปลี่ยน
+    book.exchangeLocation = book.location || 'ไม่ระบุสถานที่';
+
+    // จัดรูปแบบข้อมูลผู้แต่ง
+    book.author = book.author || 'ไม่ระบุผู้แต่ง';
+
+    // จัดรูปแบบวันที่สร้าง
+    if (book.created_at) {
+      book.createdDate = new Date(book.created_at).toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } else {
+      book.createdDate = 'ไม่ทราบ';
+    }
+
+    // จัดรูปแบบวันที่แก้ไขล่าสุด (ถ้ามี)
+    if (book.updated_at) {
+      book.updatedDate = new Date(book.updated_at).toLocaleDateString('th-TH', {
+        year: 'numeric',
+        month: 'long', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    // ตรวจสอบสถานะว่าง
+    book.isAvailable = book.is_available !== 0;
+    book.availabilityText = book.isAvailable ? 'พร้อมแลกเปลี่ยน' : 'ไม่พร้อมแลกเปลี่ยน';
+
+    // จัดรูปแบบรายละเอียด
+    book.description = book.description || 'ไม่มีรายละเอียดเพิ่มเติม';
 
     res.render('books/view', { book });
   } catch (err) {
-    res.status(500).send('DB error: ' + err.message);
+    console.error('View book error:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการแสดงรายละเอียดหนังสือ: ' + err.message);
   }
 };

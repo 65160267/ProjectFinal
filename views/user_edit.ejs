@@ -1,0 +1,55 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Edit Profile</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">SwapABook</div>
+        <nav class="header-actions">
+          <a href="/books">🛍️</a>
+          <a href="/user">👤</a>
+          <a href="/auth/logout">🔓</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="card" style="max-width:720px;margin:24px auto;padding:18px">
+        <h2>แก้ไขโปรไฟล์</h2>
+        <form action="/user/edit" method="post" enctype="multipart/form-data">
+          <div class="field">
+            <label>ชื่อ - นามสกุล</label>
+            <input name="full_name" value="<%= user.full_name %>" />
+          </div>
+          <div class="field">
+            <label>อัปโหลดรูปโปรไฟล์</label>
+            <input type="file" name="avatar" accept="image/*" />
+          </div>
+          <div class="field">
+            <label>username</label>
+            <input name="username" value="<%= user.username %>" />
+          </div>
+          <div class="field">
+            <label>ที่อยู่</label>
+            <input name="location" value="<%= user.location %>" />
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-primary" type="submit">บันทึก</button>
+            <a class="btn btn-ghost" href="/user">ยกเลิก</a>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
+      </div>
+    </footer>
+  </body>
+</html>

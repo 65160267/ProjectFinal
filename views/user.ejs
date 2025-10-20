@@ -10,18 +10,29 @@
     <header class="site-header">
       <div class="header-inner container">
         <div class="brand">SwapABook</div>
+        <form class="search" action="/" method="get">
+          <input name="q" placeholder="🔍 ค้นหาหนังสือ..." />
+          <button type="submit">🔍</button>
+        </form>
         <nav class="header-actions">
-          <a href="/marketplace">Marketplace</a>
-          <a href="/books/new">Add Product</a>
-          <a href="/books">My List</a>
+          <a href="/dashboard" title="หน้าหลัก" style="padding: 8px 12px; border-radius: 8px; transition: all 0.2s;">🏠</a>
+          <a href="/books" title="รายการหนังสือ" style="padding: 8px 12px; border-radius: 8px; transition: all 0.2s;">📚</a>
+          <a href="/books/new" title="เพิ่มหนังสือใหม่" style="padding: 8px 12px; border-radius: 8px; transition: all 0.2s;">➕</a>
           <% if (user && user.username) { %>
-            <a href="/user" class="header-user" title="Your profile">
-              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile" />
-              <span class="username"><%= user.username %></span>
+            <a href="/user" class="header-user" title="โปรไฟล์ของคุณ" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(255,255,255,0.15); border-radius: 20px; text-decoration: none; transition: all 0.3s; backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);">
+              <img class="user-avatar" 
+                   src="<%= user.avatar || '/images/profile-placeholder.png' %>" 
+                   alt="Profile" 
+                   style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; transition: all 0.3s;" />
+              <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <span class="username" style="color: white; font-weight: 700; font-size: 14px; line-height: 1.2;"><%= user.full_name || user.username %></span>
+                <span style="color: rgba(255,255,255,0.8); font-size: 11px; line-height: 1;">โปรไฟล์</span>
+              </div>
+              <span style="color: rgba(255,255,255,0.8); font-size: 12px;">👤</span>
             </a>
-            <a href="/auth/logout">Logout</a>
+            <a href="/auth/logout" title="ออกจากระบบ" style="padding: 8px 12px; border-radius: 8px; transition: all 0.2s; margin-left: 8px;">🔓</a>
           <% } else { %>
-            <a href="/auth/login">Login</a>
+            <a href="/auth/login" title="เข้าสู่ระบบ" style="padding: 8px 12px; border-radius: 8px; transition: all 0.2s;">🔓</a>
           <% } %>
         </nav>
       </div>

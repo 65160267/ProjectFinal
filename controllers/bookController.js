@@ -54,6 +54,8 @@ exports.createBook = async (req, res) => {
     if (colSet.has('title')) { insertCols.push('title'); insertPlaceholders.push('?'); insertValues.push(title || null); }
     if (colSet.has('author')) { insertCols.push('author'); insertPlaceholders.push('?'); insertValues.push(author || null); }
     if (colSet.has('description')) { insertCols.push('description'); insertPlaceholders.push('?'); insertValues.push(description || null); }
+    
+
 
     // prefer 'tags' column for wanted/category aggregation, fallback to 'category' if available
     const tagsValue = wanted || category || null;

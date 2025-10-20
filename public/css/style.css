@@ -76,19 +76,169 @@ th,td{padding:8px 10px;border-bottom:1px solid #f3e7dd;text-align:left}
 /* keep legacy minimal rule for pages that expect basic style */
 body .legacy-minor{margin:20px}
 
-/* Dashboard specific styles */
-.site-header{background:var(--accent);padding:10px 0;border-bottom:4px solid var(--accent-700)}
-.site-header .header-inner{display:flex;align-items:center;gap:12px}
-.site-header .brand{font-weight:800;color:#fff;padding:6px 12px;border-radius:8px}
-.site-header .search{flex:1;display:flex;align-items:center;gap:6px}
-.site-header .search input{flex:1;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.4)}
-.site-header .search button{padding:9px 12px;border-radius:8px;background:#fff;border:none}
-.site-header .header-actions a{color:#fff;margin-left:10px;font-size:18px}
+/* Enhanced Header Styling for User Page */
+.site-header{
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-600) 100%);
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(255, 120, 20, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  backdrop-filter: blur(20px);
+}
 
-/* header user avatar */
-.header-user{display:inline-flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:transparent}
-.user-avatar{width:34px;height:34px;border-radius:999px;object-fit:cover;border:2px solid rgba(255,255,255,0.2)}
-.header-user .username{color:#fff;font-weight:700}
+.site-header .header-inner{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 0 20px;
+}
+
+.site-header .brand{
+  font-weight: 900;
+  color: #fff;
+  font-size: 24px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  letter-spacing: -0.5px;
+}
+
+.site-header .search{
+  flex: 1;
+  display: flex;
+  align-items: center;
+  max-width: 400px;
+  margin: 0 20px;
+}
+
+.site-header .search input{
+  flex: 1;
+  padding: 10px 16px;
+  border-radius: 25px;
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.site-header .search input:focus{
+  outline: none;
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 20px rgba(255, 120, 20, 0.3);
+  transform: translateY(-1px);
+}
+
+.site-header .search button{
+  background: none;
+  border: none;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 16px;
+  cursor: pointer;
+  margin-left: -40px;
+  padding: 8px;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.site-header .search button:hover{
+  background: rgba(255, 120, 20, 0.1);
+  transform: scale(1.1);
+}
+
+.site-header .header-actions{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.site-header .header-actions a{
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.site-header .header-actions > a:hover{
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced header user avatar */
+.header-user{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.header-user:hover{
+  background: rgba(255, 255, 255, 0.25) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3) !important;
+}
+
+.user-avatar{
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  border: none !important;
+}
+
+.header-user:hover .user-avatar{
+  transform: scale(1.1);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+.header-user .username{
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+/* Responsive Design for Header */
+@media (max-width: 768px) {
+  .site-header .header-inner {
+    padding: 0 15px;
+    gap: 10px;
+  }
+  
+  .site-header .search {
+    max-width: 200px;
+    margin: 0 10px;
+  }
+  
+  .site-header .brand {
+    font-size: 20px;
+  }
+  
+  .site-header .header-actions {
+    gap: 4px;
+  }
+  
+  .site-header .header-actions > a {
+    font-size: 14px;
+    padding: 6px 8px !important;
+  }
+  
+  .header-user span {
+    display: none;
+  }
+}
 
 .hero{display:flex;gap:12px;margin-top:18px}
 .hero-left .hero-large{height:220px;background:#fff;border-radius:8px}

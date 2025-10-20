@@ -26,7 +26,10 @@
           <a href="/books" title="Cart">🛍️</a>
           <% if (typeof user !== 'undefined' && user && user.username) { %>
             <a href="/user" class="header-user" title="Your profile">
-              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile" />
+              <img class="user-avatar" 
+                   src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.png') %>" 
+                   alt="Profile" 
+                   onerror="this.src='/images/profile-placeholder.png'" />
               <span class="username"><%= user.username %></span>
             </a>
             <a href="/auth/logout" title="Logout">🔓</a>
@@ -39,63 +42,362 @@
 
     <main class="container marketplace-main">
       <aside class="market-sidebar card">
-        <h3>Marketplace</h3>
-        <ul class="muted">
-          <li><a href="/dashboard" style="color:inherit;text-decoration:none">🏠 หน้าหลัก</a></li>
-          <li><a href="/books" style="color:inherit;text-decoration:none">📄 รายการของฉัน</a></li>
+        <!-- User Profile Section -->
+        <% if (typeof user !== 'undefined' && user && user.username) { %>
+          <div style="padding: 16px; background: linear-gradient(135deg, var(--accent), var(--accent-600)); border-radius: 12px; margin-bottom: 16px; color: white; text-align: center;">
+            <div style="margin-bottom: 12px;">
+              <img src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.png') %>" 
+                   alt="Profile" 
+                   style="width: 70px; height: 70px; border-radius: 50%; object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" 
+                   onerror="this.src='/images/profile-placeholder.png'" />
+            </div>
+            <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">
+              <%= user.full_name || user.username %>
+            </div>
+            <div style="font-size: 13px; opacity: 0.9;">
+              @<%= user.username %>
+            </div>
+            <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
+              📍 <%= user.location || 'ไม่ระบุที่อยู่' %>
+            </div>
+            <div style="margin-top: 12px;">
+              <a href="/user" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 12px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: 600;">
+                ✏️ แก้ไขโปรไฟล์
+              </a>
+            </div>
+          </div>
+        <% } %>
+
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li style="margin-bottom: 8px;">
+            <a href="/dashboard" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--accent-100); color: var(--accent-700); text-decoration: none; border-radius: 8px; font-weight: 600;">
+              🏠 <span>หน้าหลัก</span>
+            </a>
+          </li>
+          <li style="margin-bottom: 8px;">
+            <a href="/books" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; color: var(--muted); text-decoration: none; border-radius: 8px; transition: all 0.2s;">
+              � <span>รายการของฉัน</span>
+            </a>
+          </li>
           <% if (typeof user !== 'undefined' && user && user.id) { %>
-            <li><a href="/books/new" style="color:inherit;text-decoration:none">➕ เพิ่มรายการใหม่</a></li>
+            <li style="margin-bottom: 8px;">
+              <a href="/books/new" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: var(--success); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; border: none; outline: none;">
+                ➕ <span>เพิ่มรายการใหม่</span>
+              </a>
+            </li>
           <% } %>
         </ul>
-    
+
+        <!-- Quick Stats -->
+        <div style="margin-top: 20px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+          <h4 style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">📊 สถิติของคุณ</h4>
+          <div style="display: flex; justify-content: space-between; text-align: center;">
+            <div>
+              <div style="font-weight: 700; color: var(--accent-700);">0</div>
+              <div style="font-size: 11px; color: var(--muted);">รายการ</div>
+            </div>
+            <div>
+              <div style="font-weight: 700; color: var(--success-700);">0</div>
+              <div style="font-size: 11px; color: var(--muted);">แลกสำเร็จ</div>
+            </div>
+            <div>
+              <div style="font-weight: 700; color: #0277bd;">0</div>
+              <div style="font-size: 11px; color: var(--muted);">เข้าชม</div>
+            </div>
+          </div>
+        </div>
       </aside>
 
       <section class="market-content">
+        <!-- Welcome Section -->
+        <% if (typeof user !== 'undefined' && user && user.username) { %>
+          <div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 20px; text-align: center; padding: 24px;">
+            <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 800;">
+              🎉 ยินดีต้อนรับ, <%= user.full_name || user.username %>!
+            </h1>
+            <p style="margin: 0; opacity: 0.9; font-size: 16px;">
+              พร้อมแลกเปลี่ยนหนังสือและค้นพบเรื่องราวใหม่ๆ แล้วหรือยัง?
+            </p>
+            <div style="margin-top: 16px;">
+              <a href="/books/new" style="background: rgba(255,255,255,0.2); color: white; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 600; margin-right: 8px;">
+                📖 เพิ่มหนังสือใหม่
+              </a>
+              <a href="/books" style="background: transparent; color: white; padding: 12px 24px; border: 2px solid rgba(255,255,255,0.3); border-radius: 25px; text-decoration: none; font-weight: 600;">
+                📚 ดูรายการของฉัน
+              </a>
+            </div>
+          </div>
+        <% } %>
         
         <div class="card">
-          <h2>Recently Posted</h2>
-          <input class="search-input" placeholder="ค้นหาสินค้า..." />
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h2 style="margin: 0; color: var(--muted);">📚 รายการล่าสุด</h2>
+            <div style="font-size: 13px; color: var(--muted);">
+              📈 อัปเดตล่าสุด: <%= new Date().toLocaleDateString('th-TH') %>
+            </div>
+          </div>
+          <input class="search-input" placeholder="🔍 ค้นหาหนังสือที่คุณสนใจ..." style="margin-bottom: 16px;" />
           <div class="product-grid">
             <% if (books && books.length) { %>
-              <% books.forEach(function(b) { %>
-                <div class="product-card">
-                  <div class="product-thumb" data-thumb="<%= b.thumbnail || '/images/placeholder.png' %>"></div>
-                  <div class="product-body">
-                    <div class="product-title"><%= b.title || 'Product' %></div>
-                    <div style="display:flex;gap:8px;align-items:center;margin-top:8px">
-                      <div class="product-tags">แลกกับ: <span class="badge"><%= b.tags || 'n/a' %></span></div>
+              <% books.forEach(function(b, index) { %>
+                <div class="product-card" style="position: relative; overflow: hidden; transition: all 0.3s; border: 1px solid #f0f0f0;">
+                  <!-- New Badge for recent items -->
+                  <% if (index < 3) { %>
+                    <div style="position: absolute; top: 8px; right: 8px; background: #ff4757; color: white; padding: 4px 8px; border-radius: 12px; font-size: 11px; font-weight: 700; z-index: 2;">
+                      🆕 ใหม่
+                    </div>
+                  <% } %>
+                  
+                  <div class="product-thumb" data-thumb="<%= b.thumbnail || '/images/placeholder.png' %>" style="position: relative;">
+                    <!-- Gradient overlay for better text readability -->
+                    <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(transparent, rgba(0,0,0,0.7)); height: 40px;"></div>
+                  </div>
+                  
+                  <div class="product-body" style="padding: 14px;">
+                    <div class="product-title" style="font-weight: 700; color: var(--muted); margin-bottom: 8px; font-size: 16px;">
+                      📖 <%= b.title || 'หนังสือไม่ระบุชื่อ' %>
+                    </div>
+                    
+                    <!-- Tags and Condition Row -->
+                    <div style="display: flex; gap: 6px; align-items: center; margin-bottom: 8px; flex-wrap: wrap;">
+                      <span style="font-size: 12px; color: var(--muted);">🔄 แลกกับ:</span>
+                      <span class="badge" style="font-size: 11px;"><%= b.tags || 'ไม่ระบุ' %></span>
                       <% if (b.condition) { %>
-                        <div class="pill condition"><%= (b.condition === 'new' ? 'ใหม่' : (b.condition === 'good' ? 'ดี' : 'ผ่านการใช้งาน')) %></div>
+                        <span class="pill condition" style="font-size: 11px;">
+                          <%= (b.condition === 'new' ? '✨ ใหม่' : (b.condition === 'good' ? '👍 ดี' : '📝 ผ่านการใช้งาน')) %>
+                        </span>
                       <% } %>
                     </div>
-                    <div class="product-meta" style="margin-top:6px"><%= b.location || 'Unknown' %></div>
-                    <div style="margin-top:10px">
-                      <a class="btn" href="/books/<%= b.id %>" title="ดูรายละเอียด <%= b.title %>">ดูรายละเอียด</a>
+                    
+                    <!-- Location -->
+                    <div class="product-meta" style="margin-bottom: 12px; font-size: 13px; color: #666;">
+                      📍 <%= b.location || 'ไม่ทราบที่อยู่' %>
+                    </div>
+                    
+                    <!-- Action Button -->
+                    <div style="text-align: center;">
+                      <a class="btn btn-primary" href="/books/<%= b.id %>" 
+                         title="ดูรายละเอียด <%= b.title %>"
+                         style="width: 100%; font-size: 13px; padding: 8px 12px; background: linear-gradient(135deg, var(--accent), var(--accent-600));">
+                        👀 ดูรายละเอียด
+                      </a>
                     </div>
                   </div>
                 </div>
               <% }); %>
             <% } else { %>
-              <p class="muted empty-state">No products found.</p>
+              <div style="text-align: center; padding: 40px; color: var(--muted);">
+                <div style="font-size: 48px; margin-bottom: 16px;">📚</div>
+                <h3 style="margin-bottom: 8px;">ยังไม่มีรายการหนังสือ</h3>
+                <p style="margin-bottom: 20px;">เริ่มต้นแลกเปลี่ยนหนังสือกันเถอะ!</p>
+                <% if (typeof user !== 'undefined' && user && user.id) { %>
+                  <a href="/books/new" class="btn btn-primary">➕ เพิ่มหนังสือแรกของคุณ</a>
+                <% } else { %>
+                  <a href="/auth/login" class="btn btn-primary">🔐 เข้าสู่ระบบเพื่อเริ่มต้น</a>
+                <% } %>
+              </div>
             <% } %>
           </div>
         </div>
       </section>
     </main>
 
-    <!-- Footer (minimal) -->
-    <footer class="site-footer">
-      <div class="container footer-bottom">
-        <div class="copyright">Swap A Book <%= new Date().getFullYear() %> By Weerapat Tapaothong</div>
+    <!-- Enhanced Footer with Profile -->
+    <footer class="site-footer" style="background: linear-gradient(135deg, var(--accent), var(--accent-600)); margin-top: 40px; padding: 24px 0;">
+      <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+          
+          <!-- Left Section: Branding -->
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 12px;">
+              <span style="font-size: 24px;">📚</span>
+            </div>
+            <div>
+              <div style="color: white; font-weight: 800; font-size: 18px;">SwapABook</div>
+              <div style="color: rgba(255,255,255,0.8); font-size: 13px;">แลกเปลี่ยนหนังสือออนไลน์</div>
+            </div>
+          </div>
+
+          <!-- Center Section: User Profile (if logged in) -->
+          <% if (typeof user !== 'undefined' && user && user.username) { %>
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.15); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(10px);">
+              <img src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.png') %>" 
+                   alt="Profile" 
+                   style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" 
+                   onerror="this.src='/images/profile-placeholder.png'" />
+              <div>
+                <div style="color: white; font-weight: 700; font-size: 14px;">
+                  <%= user.full_name || user.username %>
+                </div>
+                <div style="color: rgba(255,255,255,0.8); font-size: 12px;">
+                  🎯 ผู้ใช้งานระบบ • <%= user.location || 'ไม่ระบุที่อยู่' %>
+                </div>
+              </div>
+              <a href="/user" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 8px; border-radius: 6px; text-decoration: none; font-size: 12px;">
+                ✏️
+              </a>
+            </div>
+          <% } %>
+
+          <!-- Right Section: Copyright & Stats -->
+          <div style="text-align: right;">
+            <div style="color: white; font-weight: 700; font-size: 14px; margin-bottom: 4px;">
+              © <%= new Date().getFullYear() %> SwapABook
+            </div>
+            <div style="color: rgba(255,255,255,0.8); font-size: 12px;">
+              By Weerapat Tapaothong
+            </div>
+            <div style="color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 4px;">
+              📈 เข้าชมวันนี้: <span style="font-weight: 600;">0</span> ครั้ง
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Bottom Row: Quick Links -->
+        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2);">
+          <div style="display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap;">
+            <a href="/dashboard" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              🏠 <span>หน้าแรก</span>
+            </a>
+            <a href="/books" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              📚 <span>รายการทั้งหมด</span>
+            </a>
+            <% if (typeof user !== 'undefined' && user && user.id) { %>
+              <a href="/books/new" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                ➕ <span>เพิ่มใหม่</span>
+              </a>
+            <% } %>
+            <a href="/user" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+              👤 <span>โปรไฟล์</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Mobile Responsive Adjustments -->
+        <style>
+          @media (max-width: 768px) {
+            .site-footer [style*="display: flex; justify-content: space-between"] {
+              flex-direction: column;
+              text-align: center;
+              gap: 20px;
+            }
+            
+            .site-footer [style*="text-align: right"] {
+              text-align: center !important;
+            }
+          }
+        </style>
+
       </div>
     </footer>
 
+    <style>
+      /* Enhanced Dashboard Styles */
+      .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+        border-color: var(--accent);
+      }
+      
+
+      
+      .market-sidebar ul li a:hover {
+        background-color: var(--accent-100) !important;
+        color: var(--accent-700) !important;
+        transform: translateX(4px);
+      }
+      
+      .search-input:focus {
+        box-shadow: 0 0 0 3px rgba(246, 169, 122, 0.2);
+        border-color: var(--accent);
+      }
+      
+      /* Smooth animations */
+      .market-sidebar ul li a {
+        transition: all 0.2s ease;
+      }
+      
+      .product-card {
+        transition: all 0.3s ease;
+      }
+      
+      /* Welcome section animation */
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .card {
+        animation: fadeInUp 0.6s ease;
+      }
+    </style>
+
     <script>
-      // apply background images from data-thumb attributes
+      // Enhanced image loading with fade-in effect
       document.querySelectorAll('.thumb[data-thumb], .small-thumb[data-thumb], .product-thumb[data-thumb]').forEach(el => {
         const url = el.getAttribute('data-thumb') || '/images/placeholder.png';
         el.style.backgroundImage = `url(${url})`;
+        el.style.opacity = '0';
+        el.style.transition = 'opacity 0.3s ease';
+        
+        // Simulate image loading
+        const img = new Image();
+        img.onload = () => {
+          el.style.opacity = '1';
+        };
+        img.src = url;
       });
+
+      // Enhanced profile image loading
+      document.querySelectorAll('img[src*="/uploads/"], img[src*="profile-placeholder"]').forEach(img => {
+        img.style.transition = 'opacity 0.3s ease';
+        img.addEventListener('load', function() {
+          this.style.opacity = '1';
+        });
+        img.addEventListener('error', function() {
+          console.log('Image failed to load:', this.src);
+          this.src = '/images/profile-placeholder.png';
+        });
+      });
+
+      // Search functionality
+      const searchInput = document.querySelector('.search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', function(e) {
+          const query = e.target.value.toLowerCase();
+          const cards = document.querySelectorAll('.product-card');
+          
+          cards.forEach(card => {
+            const title = card.querySelector('.product-title').textContent.toLowerCase();
+            const tags = card.querySelector('.badge').textContent.toLowerCase();
+            
+            if (title.includes(query) || tags.includes(query)) {
+              card.style.display = 'block';
+              card.style.animation = 'fadeInUp 0.3s ease';
+            } else {
+              card.style.display = 'none';
+            }
+          });
+        });
+      }
+
+      // Add welcome message animation delay
+      setTimeout(() => {
+        const welcomeSection = document.querySelector('[style*="background: linear-gradient(135deg, #667eea"]');
+        if (welcomeSection) {
+          welcomeSection.style.transform = 'scale(1.02)';
+          setTimeout(() => {
+            welcomeSection.style.transform = 'scale(1)';
+          }, 200);
+        }
+      }, 500);
     </script>
 
     

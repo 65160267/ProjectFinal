@@ -23,6 +23,19 @@ exports.dashboard = async (req, res) => {
     const [[{booksCount}]] = await db.pool.query('SELECT COUNT(*) AS booksCount FROM books');
     const [[{usersCount}]] = await db.pool.query('SELECT COUNT(*) AS usersCount FROM users');
 
+    // Get user profile information including avatar
+    let userProfile = { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin };
+    if (req.session.userId) {
+      try {
+        const [userRows] = await db.pool.query('SELECT username, full_name, avatar, location FROM users WHERE id = ?', [req.session.userId]);
+        if (userRows.length > 0) {
+          userProfile = { ...userProfile, ...userRows[0] };
+        }
+      } catch (userErr) {
+        console.error('Failed to load user profile:', userErr);
+      }
+    }
+
     // Recent books for dashboard marketplace view
     // prefer `image` column (used by create) then `thumbnail`, fall back to placeholder
     // Select all columns so we don't reference columns that may not exist in every schema
@@ -46,13 +59,17 @@ exports.dashboard = async (req, res) => {
     });
 
     res.render('dashboard', {
-      user: { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin },
+      user: userProfile,
       stats: { booksCount, usersCount },
       books
     });
   } catch (err) {
     console.error('Dashboard error', err);
-    res.render('dashboard', { user: { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin }, stats: { booksCount: 0, usersCount: 0 }, books: [] });
+    res.render('dashboard', { 
+      user: { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin }, 
+      stats: { booksCount: 0, usersCount: 0 }, 
+      books: [] 
+    });
   }
 };
 

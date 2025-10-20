@@ -34,21 +34,23 @@
             </div>
             <div class="detail-info">
               <h2 class="detail-title"><%= book.title %></h2>
-              
-              <div style="margin-top:8px">
-                <strong>ผู้แต่ง:</strong> <span class="muted"><%= book.author %></span>
-              </div>
 
-              <!-- ข้อมูลหมวดหมู่ -->
+              <!-- ข้อมูลแท็กส์ -->
               <div style="margin-top:10px">
-                <strong>หมวดหมู่:</strong> 
-                <span class="badge" style="background: #e0f2fe; color: #0277bd;"><%= book.category %></span>
+                <strong>🏷️ แท็ก:</strong> 
+                <span class="badge" style="background: #f3e5f5; color: #7b1fa2;"><%= book.tags %></span>
               </div>
 
               <!-- สภาพของสินค้า -->
               <div style="margin-top:10px">
-                <strong>สภาพสินค้า:</strong>
-                <span class="pill condition"><%= book.conditionText %></span>
+                <strong>⭐ สภาพสินค้า:</strong>
+                <% if (book.condition === 'new') { %>
+                  <span class="pill condition" style="padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #e8f5e8; color: #2e7d32;"><%= book.conditionText %></span>
+                <% } else if (book.condition === 'good') { %>
+                  <span class="pill condition" style="padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #fff3e0; color: #f57c00;"><%= book.conditionText %></span>
+                <% } else { %>
+                  <span class="pill condition" style="padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; background: #fce4ec; color: #c2185b;"><%= book.conditionText %></span>
+                <% } %>
               </div>
 
               <!-- ข้อมูลเจ้าของ -->
@@ -69,6 +71,9 @@
                 <h3 style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">📅 ข้อมูลการโพสต์</h3>
                 <div style="font-size: 13px; color: #666;">
                   <div style="margin-bottom: 4px;">
+                    <strong>รหัสสินค้า:</strong> #<%= book.id %>
+                  </div>
+                  <div style="margin-bottom: 4px;">
                     <strong>โพสต์เมื่อ:</strong> <%= book.createdDate %>
                   </div>
                   <% if (book.updatedDate) { %>
@@ -82,7 +87,7 @@
               <!-- คำอธิบายรายละเอียด -->
               <div style="margin-top:20px; padding-top:16px; border-top:2px solid #f0f0f0;">
                 <h3 style="color: var(--muted); font-size: 16px; margin-bottom: 8px;">📝 รายละเอียดเพิ่มเติม</h3>
-                <div class="description-box">
+                <div class="description-box" style="background: #f8f9fa; padding: 12px; border-radius: 8px; line-height: 1.5; white-space: pre-wrap;">
                   <%= book.description %>
                 </div>
               </div>

@@ -5,11 +5,171 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>User Profile</title>
     <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      .book-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        margin-bottom: 6px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-decoration: none;
+        color: inherit;
+      }
+      .book-item:hover {
+        background: #e3f2fd;
+        border-color: var(--accent);
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      }
+      .book-thumbnail {
+        flex-shrink: 0;
+        width: 32px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 4px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      .book-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .book-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--dark);
+        margin-bottom: 2px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .book-author {
+        font-size: 10px;
+        color: #666;
+        margin-bottom: 1px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .book-date {
+        font-size: 11px;
+        color: #888;
+      }
+      .book-status {
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+      }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: inline-block;
+      }
+      .status-dot.available {
+        background: #28a745;
+      }
+      .status-dot.unavailable {
+        background: #dc3545;
+      }
+      .status-text {
+        font-size: 9px;
+        font-weight: 500;
+      }
+      .status-text.available {
+        color: #28a745;
+      }
+      .status-text.unavailable {
+        color: #dc3545;
+      }
+      .books-container {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 12px;
+      }
+      .books-container::-webkit-scrollbar {
+        width: 6px;
+      }
+      .books-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+      }
+      .books-container::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+      }
+      .books-container::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+      }
+      .profile-section-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .profile-section-title {
+        margin: 0;
+        color: var(--dark);
+        font-size: 16px;
+      }
+      .books-count {
+        font-size: 12px;
+        color: var(--muted);
+        background: #f8f9fa;
+        padding: 4px 8px;
+        border-radius: 12px;
+      }
+      .empty-state {
+        text-align: center;
+        padding: 24px 16px;
+        color: var(--muted);
+      }
+      .empty-icon {
+        font-size: 40px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+      }
+      .empty-title {
+        margin: 0 0 8px 0;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .empty-subtitle {
+        margin: 0 0 16px 0;
+        font-size: 12px;
+        opacity: 0.8;
+      }
+      .add-book-btn {
+        font-size: 13px;
+        color: white;
+        background: var(--accent);
+        text-decoration: none;
+        padding: 8px 16px;
+        border-radius: 20px;
+        display: inline-block;
+        font-weight: 500;
+        transition: all 0.2s ease;
+      }
+      .add-book-btn:hover {
+        background: var(--accent-600);
+        transform: translateY(-1px);
+      }
+    </style>
   </head>
   <body>
     <header class="site-header">
       <div class="header-inner container">
-        <div class="brand">SwapABook</div>
+        <div class="brand">
+          <a href="/dashboard" style="color: inherit; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.8)'" onmouseout="this.style.color='inherit'">
+            SwapABook
+          </a>
+        </div>
         <form class="search" action="/" method="get">
           <input name="q" placeholder="🔍 ค้นหาหนังสือ..." />
           <button type="submit">🔍</button>
@@ -54,7 +214,7 @@
               <div class="muted">ที่อยู่: <%= user.location || '--' %></div>
               <div class="profile-stats">
                 <div><strong>0</strong><div class="muted">แลกเรียบร้อย</div></div>
-                <div><strong>0</strong><div class="muted">รายการของคุณ</div></div>
+                <div><strong><%= Array.isArray(userBooks) ? userBooks.length : 0 %></strong><div class="muted">รายการของคุณ</div></div>
               </div>
               <div style="margin-top:12px">
                 <a class="btn btn-ghost" href="/user/edit">แก้ไขโปรไฟล์</a>
@@ -71,8 +231,68 @@
         </div>
 
         <aside class="profile-side card">
-          <h4>รายการของฉัน</h4>
-          <p class="muted">ยังไม่มีรายการ</p>
+          <div class="profile-section-header">
+            <h4 class="profile-section-title">📚 รายการของฉัน</h4>
+            <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
+              <span class="books-count"><%= userBooks.length %> รายการ</span>
+            <% } %>
+          </div>
+          
+          <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
+            <div class="books-container">
+              <% userBooks.forEach(function(book, index) { %>
+                <a href="/books/<%= book.id %>" class="book-item">
+                  <!-- รูปหนังสือ -->
+                  <img src="<%= book.thumbnail %>" 
+                       alt="<%= book.title %>" 
+                       class="book-thumbnail"
+                       onerror="this.src='/images/placeholder.png'" />
+                  
+                  <!-- ข้อมูลหนังสือ -->
+                  <div class="book-info">
+                    <div class="book-title"><%= book.title %></div>
+                    <% if (book.author) { %>
+                      <div class="book-author">โดย <%= book.author %></div>
+                    <% } %>
+                    <div class="book-date">
+                      <%= book.created_at ? new Date(book.created_at).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }) : 'ไม่ทราบวันที่' %>
+                    </div>
+                  </div>
+                  
+                  <!-- สถานะ -->
+                  <div class="book-status">
+                    <% if (book.is_available !== 0) { %>
+                      <span class="status-dot available" title="พร้อมแลก"></span>
+                      <span class="status-text available">พร้อม</span>
+                    <% } else { %>
+                      <span class="status-dot unavailable" title="ไม่พร้อมแลก"></span>
+                      <span class="status-text unavailable">ไม่พร้อม</span>
+                    <% } %>
+                  </div>
+                </a>
+              <% }); %>
+            </div>
+            
+            <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e9ecef; text-align: center;">
+              <a href="/books" style="font-size: 12px; color: var(--accent); text-decoration: none; font-weight: 500;">ดูรายการทั้งหมด →</a>
+            </div>
+            
+          <% } else if (Array.isArray(userBooks)) { %>
+            <!-- แสดงเมื่อ userBooks เป็น array ว่าง -->
+            <div class="empty-state">
+              <div class="empty-icon">📖</div>
+              <p class="empty-title">ยังไม่มีหนังสือ</p>
+              <p class="empty-subtitle">เริ่มแบ่งปันหนังสือของคุณกันเถอะ!</p>
+              <a href="/books/new" class="add-book-btn">✨ เพิ่มหนังสือแรก</a>
+            </div>
+          <% } else { %>
+            <!-- แสดงเมื่อ userBooks ไม่ได้ถูกส่งมาจาก controller -->
+            <div style="background: #ffebee; padding: 16px; border-radius: 6px; text-align: center;">
+              <div style="color: #c62828; font-size: 24px; margin-bottom: 8px;">⚠️</div>
+              <p style="margin: 0; color: #c62828; font-size: 13px;">ไม่สามารถโหลดข้อมูลหนังสือได้</p>
+              <p style="margin: 8px 0 0 0; font-size: 11px; color: #666;">กรุณาลองรีเฟรชหน้าใหม่</p>
+            </div>
+          <% } %>
         </aside>
       </div>
     </main>

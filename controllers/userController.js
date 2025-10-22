@@ -6,6 +6,7 @@ exports.profile = async (req, res) => {
     // select all columns so we don't reference columns that may not exist in every schema
     const [rows] = await db.pool.query('SELECT * FROM users WHERE id = ?', [req.session.userId]);
     const raw = rows[0] || { id: req.session.userId, username: req.session.username };
+    
     // compute friendly fields with fallbacks
     const user = {
       id: raw.id,
@@ -14,7 +15,25 @@ exports.profile = async (req, res) => {
       avatar: raw.avatar || req.session.avatar || null,
       location: raw.location || ''
     };
-    res.render('user', { user });
+
+    // ดึงข้อมูลหนังสือของผู้ใช้
+    let userBooks = [];
+    try {
+      const [bookRows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY created_at DESC', [req.session.userId]);
+      
+      userBooks = bookRows.map(book => {
+        // จัดรูปแบบรูปภาพ
+        const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
+        book.thumbnail = (thumb && typeof thumb === 'string') ? 
+          ((thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb)) : 
+          '/images/placeholder.png';
+        
+        return book;
+      });
+    } catch (bookErr) {
+      console.error('Error fetching user books:', bookErr);
+    }
+    res.render('user', { user, userBooks });
   } catch (err) {
     console.error('User profile error', err);
     res.status(500).send('DB error: ' + err.message);

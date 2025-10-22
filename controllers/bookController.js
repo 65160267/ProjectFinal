@@ -71,6 +71,13 @@ exports.createBook = async (req, res) => {
       else if (colSet.has('image')) { insertCols.push('image'); insertPlaceholders.push('?'); insertValues.push('/uploads/' + imageFile); }
     }
 
+    // Add owner_id if user is logged in
+    if (req.session && req.session.userId && colSet.has('owner_id')) {
+      insertCols.push('owner_id');
+      insertPlaceholders.push('?');
+      insertValues.push(req.session.userId);
+    }
+
     if (insertCols.length === 0) {
       // nothing to insert? return error
       return res.status(500).send('No writable columns found in books table');
@@ -170,7 +177,21 @@ exports.viewBook = async (req, res) => {
     // จัดรูปแบบรายละเอียด
     book.description = book.description || 'ไม่มีรายละเอียดเพิ่มเติม';
 
-    res.render('books/view', { book });
+    // ดึงหนังสือของ user ปัจจุบันเพื่อให้เลือกแลกเปลี่ยน (ถ้าล็อกอินแล้ว)
+    let userBooks = [];
+    if (req.session && req.session.userId) {
+      try {
+        const [userBookRows] = await db.pool.query(
+          'SELECT id, title, author FROM books WHERE owner_id = ? AND is_available = 1 AND id != ?',
+          [req.session.userId, id]
+        );
+        userBooks = userBookRows;
+      } catch (bookErr) {
+        console.error('Error fetching user books for exchange:', bookErr);
+      }
+    }
+
+    res.render('books/view', { book, userBooks });
   } catch (err) {
     console.error('View book error:', err);
     res.status(500).send('เกิดข้อผิดพลาดในการแสดงรายละเอียดหนังสือ: ' + err.message);

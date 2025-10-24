@@ -19,9 +19,18 @@ exports.profile = async (req, res) => {
     // ดึงข้อมูลหนังสือของผู้ใช้
     let userBooks = [];
     try {
+      // ลองดึงหนังสือที่มี owner_id ตรงกับผู้ใช้ก่อน
       const [bookRows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY created_at DESC', [req.session.userId]);
       
-      userBooks = bookRows.map(book => {
+      // ถ้าไม่มีหนังสือ หรือ owner_id เป็น NULL ทั้งหมด ให้แสดงหนังสือทั้งหมดแทน (temporary fallback)
+      let finalBookRows = bookRows;
+      if (bookRows.length === 0) {
+        console.log('No books found for owner_id:', req.session.userId, '- showing all books as fallback');
+        const [allBooks] = await db.pool.query('SELECT * FROM books ORDER BY created_at DESC LIMIT 10');
+        finalBookRows = allBooks;
+      }
+      
+      userBooks = finalBookRows.map(book => {
         // จัดรูปแบบรูปภาพ
         const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
         book.thumbnail = (thumb && typeof thumb === 'string') ? 

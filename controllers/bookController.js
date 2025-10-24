@@ -5,8 +5,17 @@ const router = express.Router();
 
 exports.listBooks = async (req, res) => {
   try {
-    // select all columns; compute friendly fields in JS to avoid referencing missing columns
-    const [rows] = await db.pool.query('SELECT * FROM books ORDER BY id DESC');
+    // Add pagination for performance with large datasets
+    const page = parseInt(req.query.page) || 1;
+    const limit = 12; // Show 12 books per page
+    const offset = (page - 1) * limit;
+    
+    // Get total count for pagination
+    const [[{total}]] = await db.pool.query('SELECT COUNT(*) as total FROM books');
+    const totalPages = Math.ceil(total / limit);
+    
+    // select all columns with LIMIT for pagination; compute friendly fields in JS to avoid referencing missing columns
+    const [rows] = await db.pool.query('SELECT * FROM books ORDER BY id DESC LIMIT ? OFFSET ?', [limit, offset]);
     rows.forEach(b => {
       const thumb = (b.image || b.thumbnail || '/images/placeholder.png');
       if (thumb && typeof thumb === 'string') {
@@ -17,7 +26,17 @@ exports.listBooks = async (req, res) => {
       b.tags = b.tags || b.category || b.wanted || '';
       // condition and location left as-is
     });
-    res.render('books/list', { books: rows });
+    res.render('books/list', { 
+      books: rows, 
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+        nextPage: page + 1,
+        prevPage: page - 1
+      }
+    });
   } catch (err) {
     res.status(500).send('DB error: ' + err.message);
   }

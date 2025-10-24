@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150" viewBox="0 0 150 150">
+  <rect width="150" height="150" fill="#f0f0f0"/>
+  <circle cx="75" cy="60" r="25" fill="#ddd"/>
+  <path d="M30 130 Q30 100 50 100 L100 100 Q120 100 120 130 Z" fill="#ddd"/>
+  <text x="75" y="145" text-anchor="middle" font-family="Arial, sans-serif" font-size="10" fill="#999">No Avatar</text>
+</svg>

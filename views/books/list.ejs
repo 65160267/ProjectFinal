@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>All Books</title>
     <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/performance.css" />
   </head>
   <body>
     <!-- Header -->
     <header class="site-header">
       <div class="header-inner container">
         <div class="brand">
-          <a href="/dashboard" style="color: inherit; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.8)'" onmouseout="this.style.color='inherit'">
+          <a href="/dashboard" class="brand">
             SwapABook
           </a>
         </div>
@@ -23,7 +24,7 @@
           <a href="/books" title="Cart">🛍️</a>
           <% if (typeof user !== 'undefined' && user && user.username) { %>
             <a href="/user" class="header-user" title="Your profile">
-              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.png' %>" alt="Profile" />
+              <img class="user-avatar" src="<%= user.avatar || '/images/profile-placeholder.svg' %>" alt="Profile" />
             </a>
             <a href="/auth/logout" title="Logout">🔓</a>
           <% } else { %>
@@ -67,6 +68,25 @@
               <p class="muted empty-state">No books found.</p>
             <% } %>
           </div>
+          
+          <!-- Pagination -->
+          <% if (typeof pagination !== 'undefined' && pagination.totalPages > 1) { %>
+            <div class="pagination-container" style="margin-top: 30px; text-align: center;">
+              <div class="pagination">
+                <% if (pagination.hasPrevPage) { %>
+                  <a href="/books?page=<%= pagination.prevPage %>" class="btn btn-ghost">← ก่อนหน้า</a>
+                <% } %>
+                
+                <span class="pagination-info">
+                  หน้า <%= pagination.currentPage %> จาก <%= pagination.totalPages %>
+                </span>
+                
+                <% if (pagination.hasNextPage) { %>
+                  <a href="/books?page=<%= pagination.nextPage %>" class="btn btn-ghost">ถัดไป →</a>
+                <% } %>
+              </div>
+            </div>
+          <% } %>
         </div>
       </section>
     </main>
@@ -79,6 +99,10 @@
         el.style.backgroundImage = `url(${url})`;
       });
     </script>
+    
+    <!-- Lazy loading script for performance -->
+    <script src="/js/lazy-loading.js"></script>
+    
     <!-- Footer (minimal) -->
     <footer class="site-footer">
       <div class="container footer-bottom">

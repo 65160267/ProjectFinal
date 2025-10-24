@@ -37,10 +37,13 @@ textarea{min-height:120px}
 .field{margin-bottom:14px}
 
 /* buttons */
-.btn{display:inline-block;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+.btn{display:inline-block;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;font-weight:600;transition:background-color 0.2s ease}
 .btn-primary{background:linear-gradient(180deg,var(--accent),var(--accent-600));color:#fff}
+.btn-primary:hover{background:linear-gradient(180deg,var(--accent-600),var(--accent-700))}
 .btn-ghost{background:transparent;border:1px solid rgba(0,0,0,0.06);color:var(--muted)}
+.btn-ghost:hover{background:rgba(0,0,0,0.03)}
 .btn-danger{background:#ff6b6b;color:#fff}
+.btn-danger:hover{background:#ff5252}
 
 /* alerts */
 .alert{padding:10px 12px;border-radius:8px;margin-bottom:12px}
@@ -102,6 +105,12 @@ body .legacy-minor{margin:20px}
   font-size: 24px;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   letter-spacing: -0.5px;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.site-header .brand:hover{
+  color: rgba(255,255,255,0.8);
 }
 
 .site-header .search{
@@ -127,8 +136,7 @@ body .legacy-minor{margin:20px}
 .site-header .search input:focus{
   outline: none;
   background: rgba(255, 255, 255, 1);
-  box-shadow: 0 4px 20px rgba(255, 120, 20, 0.3);
-  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(255, 120, 20, 0.2);
 }
 
 .site-header .search button{
@@ -140,12 +148,10 @@ body .legacy-minor{margin:20px}
   margin-left: -40px;
   padding: 8px;
   border-radius: 50%;
-  transition: all 0.2s;
 }
 
 .site-header .search button:hover{
   background: rgba(255, 120, 20, 0.1);
-  transform: scale(1.1);
 }
 
 .site-header .header-actions{
@@ -165,8 +171,8 @@ body .legacy-minor{margin:20px}
 
 .site-header .header-actions > a:hover{
   background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
 }
 
 /* Enhanced header user avatar */
@@ -185,8 +191,6 @@ body .legacy-minor{margin:20px}
 
 .header-user:hover{
   background: rgba(255, 255, 255, 0.25) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 25px rgba(0, 0, 0, 0.3) !important;
 }
 
 .user-avatar{
@@ -194,13 +198,9 @@ body .legacy-minor{margin:20px}
   height: 36px;
   border-radius: 50%;
   object-fit: cover;
-  transition: all 0.3s ease;
   border: none !important;
-}
-
-.header-user:hover .user-avatar{
-  transform: scale(1.1);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+  will-change: auto;
+  image-rendering: optimizeQuality;
 }
 
 .header-user .username{

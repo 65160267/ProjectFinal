@@ -1,0 +1,117 @@
+/* Performance Optimization CSS */
+
+/* Smooth scrolling และ hardware acceleration */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeSpeed;
+}
+
+/* ปรับปรุงการแสดงผลของ images */
+img {
+  image-rendering: optimizeQuality;
+  will-change: auto;
+}
+
+/* ลดการใช้ GPU สำหรับ elements ที่ไม่จำเป็น */
+* {
+  will-change: auto;
+}
+
+/* Remove all transitions for better performance */
+*, *::before, *::after {
+  transition: none !important;
+}
+
+/* ลด blur effects ที่หนัก */
+.site-header {
+  backdrop-filter: none;
+}
+
+/* ปรับปรุงการแสดงผลของ gradients */
+.btn-primary {
+  background: var(--accent);
+}
+
+.btn-primary:hover {
+  background: var(--accent-600);
+}
+
+/* ลด box-shadow ที่หนักเกินไป */
+.card {
+  box-shadow: 0 2px 8px rgba(28,20,10,0.06);
+}
+
+.site-header {
+  box-shadow: 0 2px 8px rgba(255, 120, 20, 0.15);
+}
+
+/* ปรับปรุง focus states */
+input:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(247,169,122,0.1);
+}
+
+/* Remove all animations and transitions for mobile */
+@media (max-width: 768px) {
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .site-header {
+    position: relative;
+  }
+}
+
+/* Lazy loading styles */
+.lazy-loading {
+  background: #f0f0f0;
+  border: 1px solid #e0e0e0;
+  opacity: 0.6;
+}
+
+.lazy-loaded {
+  opacity: 1;
+}
+
+/* Optimize image rendering */
+img {
+  image-rendering: auto;
+  image-rendering: crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Performance-optimized hover effects without transitions */
+.book-item:hover {
+  background: #f8f9fa;
+}
+
+.product-card:hover {
+  border-color: #007bff;
+}
+
+/* Prevent layout shifts */
+.book-item {
+  contain: layout style;
+}
+
+.product-card {
+  contain: layout style;
+}
+
+/* Prefers reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}

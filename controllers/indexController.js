@@ -36,10 +36,10 @@ exports.dashboard = async (req, res) => {
       }
     }
 
-    // Recent books for dashboard marketplace view
+    // Recent books for dashboard marketplace view - reduced to 6 items for better performance
     // prefer `image` column (used by create) then `thumbnail`, fall back to placeholder
     // Select all columns so we don't reference columns that may not exist in every schema
-    const [books] = await db.pool.query('SELECT * FROM books ORDER BY id DESC LIMIT 12');
+    const [books] = await db.pool.query('SELECT * FROM books ORDER BY id DESC LIMIT 6');
 
     // Compute friendly fields in JS side to avoid SQL errors when a column is missing
     books.forEach(b => {

@@ -208,6 +208,46 @@
 
         <% if (requests && requests.length > 0) { %>
           <% requests.forEach(function(request) { %>
+            <%
+              // normalize a single src string into a usable URL (absolute or prefixed)
+              function thumb(src) {
+                // prefer the profile-placeholder SVG that exists in public/images
+                if (!src) return '/images/profile-placeholder.svg';
+                src = ('' + src).trim();
+                if (/^https?:\/\//i.test(src)) return src;
+                if (src.startsWith('/')) return src;
+                // uploaded files are saved under /uploads/
+                return '/uploads/' + src;
+              }
+
+              // attempt to find the best image from a book object or from explicit request fields
+              function resolveBookThumb(book) {
+                if (!book) return null;
+                // common possible fields used in different parts of the app
+                var candidates = [
+                  book.thumbnail,
+                  book.image,
+                  book.cover_image,
+                  book.image_path,
+                  book.file_name,
+                  book.filename,
+                  book.path,
+                  book.cover
+                ];
+                for (var i = 0; i < candidates.length; i++) {
+                  if (candidates[i]) return candidates[i];
+                }
+                if (book.images && typeof book.images === 'string') {
+                  var arr = book.images.split(',');
+                  if (arr.length > 0 && arr[0].trim()) return arr[0].trim();
+                }
+                return null;
+              }
+
+              // compute resolved srcs (try explicit request.*_thumbnail fields first, then book object)
+              var reqImg = (request.requested_book_thumbnail || request.requested_book_image) || resolveBookThumb(request.requested_book) || null;
+              var offImg = (request.offered_book_thumbnail || request.offered_book_image) || resolveBookThumb(request.offered_book) || null;
+            %>
             <div class="exchange-card">
               <div class="request-header">
                 <div class="request-info">
@@ -233,13 +273,14 @@
 
               <div class="book-details">
                 <div class="book-info">
-                  <img src="<%= request.requested_book_thumbnail || '/images/placeholder.png' %>" 
-                       alt="<%= request.requested_book_title %>" 
-                       class="book-thumbnail"
-                       onerror="this.src='/images/placeholder.png'" />
+         <img src="<%= thumb(reqImg || request.requested_book_thumbnail) %>"
+           alt="<%= request.requested_book_title %>"
+           class="book-thumbnail"
+           width="60" height="75"
+           onerror="this.src='/images/profile-placeholder.svg'" />
                   <div class="book-text">
                     <h4><%= request.requested_book_title %></h4>
-                    <p>โดย <%= request.requested_book_author || 'ไม่ระบุผู้แต่ง' %></p>
+                    <p>สภาพ: <%= request.requested_book_condition_text || 'ไม่ระบุ' %></p>
                     <p style="font-size: 12px; color: var(--accent); margin-top: 5px;">📖 หนังสือของคุณ</p>
                   </div>
                 </div>
@@ -247,13 +288,14 @@
                 <% if (request.offered_book_id) { %>
                   <div class="exchange-arrow">⇄</div>
                   <div class="book-info">
-                    <img src="<%= request.offered_book_thumbnail || '/images/placeholder.png' %>" 
-                         alt="<%= request.offered_book_title %>" 
-                         class="book-thumbnail"
-                         onerror="this.src='/images/placeholder.png'" />
+        <img src="<%= thumb(offImg || request.offered_book_thumbnail) %>"
+          alt="<%= request.offered_book_title %>"
+          class="book-thumbnail"
+          width="60" height="75"
+          onerror="this.src='/images/profile-placeholder.svg'" />
                     <div class="book-text">
                       <h4><%= request.offered_book_title %></h4>
-                      <p>โดย <%= request.offered_book_author || 'ไม่ระบุผู้แต่ง' %></p>
+                      <p>สภาพ: <%= request.offered_book_condition_text || 'ไม่ระบุ' %></p>
                       <p style="font-size: 12px; color: #28a745; margin-top: 5px;">📚 หนังสือที่เสนอแลก</p>
                     </div>
                   </div>
@@ -304,5 +346,7 @@
         <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
       </div>
     </footer>
+
+  <%- include('../partials/report_footer') %>
   </body>
 </html>

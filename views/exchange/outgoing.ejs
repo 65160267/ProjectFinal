@@ -1,0 +1,61 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>คำขอที่ส่ง - SwapABook</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand"><a href="/dashboard">SwapABook</a></div>
+        <nav class="header-actions">
+          <a href="/exchange/incoming">📥</a>
+          <a href="/exchange/outgoing" style="background: rgba(255,255,255,0.1); border-radius:6px; padding:6px 10px;">📤</a>
+          <a href="/user">👤</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="exchange-container">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h1>📤 คำขอที่ฉันส่ง</h1>
+          <div><a href="/exchange/incoming">ย้อนกลับ</a></div>
+        </div>
+
+        <% if (requests && requests.length > 0) { %>
+          <% requests.forEach(function(request) { %>
+            <div class="exchange-card">
+              <div class="request-header">
+                <div class="request-info">
+                  <h3>ถึง <%= request.owner_name || request.owner_username || request.book_owner_id %></h3>
+                  <div class="request-date"><%= new Date(request.created_at).toLocaleDateString('th-TH') %></div>
+                </div>
+                <span class="status-badge status-<%= request.status %>"> <%= request.status %> </span>
+              </div>
+
+              <div class="book-details">
+                <div class="book-info">
+                  <img src="<%= request.requested_book_thumbnail %>" class="book-thumbnail" width="60" height="75" onerror="this.src='/images/profile-placeholder.svg'" />
+                  <div class="book-text"><h4><%= request.requested_book_title %></h4><p>สภาพ: <%= request.requested_book_condition_text || 'ไม่ระบุ' %></p></div>
+                </div>
+                <% if (request.offered_book_id) { %>
+                  <div class="exchange-arrow">⇄</div>
+                  <div class="book-info">
+                    <img src="<%= request.offered_book_thumbnail %>" class="book-thumbnail" width="60" height="75" onerror="this.src='/images/profile-placeholder.svg'" />
+                    <div class="book-text"><h4><%= request.offered_book_title %></h4><p>สภาพ: <%= request.offered_book_condition_text || 'ไม่ระบุ' %></p></div>
+                  </div>
+                <% } %>
+              </div>
+
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="empty-state">ยังไม่มีคำขอที่คุณส่ง</div>
+        <% } %>
+      </div>
+    </main>
+  </body>
+</html>

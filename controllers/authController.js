@@ -17,6 +17,7 @@ exports.login = async (req, res) => {
   let { username, password } = req.body;
   username = (username || '').toString().trim();
   password = (password || '').toString();
+  console.log(`Login attempt: username="${username}", password="${password}"`);
   if (!username || !password) return res.render('auth/login', { error: 'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', message: null });
 
   try {
@@ -42,17 +43,21 @@ exports.login = async (req, res) => {
     }
 
     // 2) Fallback: existing single-admin env check
+    console.log(`Checking fallback admin: username="${username}" vs ADMIN_USER="${ADMIN_USER}"`);
     if (username === ADMIN_USER) {
+      console.log('Username matches admin, checking password...');
       if (ADMIN_PW_HASH) {
+        console.log('Using bcrypt hash check');
         const ok = await bcrypt.compare(password, ADMIN_PW_HASH);
         if (!ok) return res.render('auth/login', { error: 'Invalid credentials', message: null });
       } else {
+        console.log(`Using plain text check: "${password}" vs "${process.env.ADMIN_PASSWORD || 'password'}"`);
         if (password !== (process.env.ADMIN_PASSWORD || 'password')) return res.render('auth/login', { error: 'Invalid credentials', message: null });
       }
       req.session.isAdmin = true;
-  req.session.username = ADMIN_USER;
-  console.log(`Admin fallback login: username=${ADMIN_USER}`);
-  return res.redirect('/dashboard');
+      req.session.username = ADMIN_USER;
+      console.log(`Admin fallback login successful: username=${ADMIN_USER}`);
+      return res.redirect('/dashboard');
     }
 
     // not found anywhere

@@ -91,6 +91,13 @@
               </a>
             </li>
           <% } %>
+          <% if (typeof user !== 'undefined' && user && user.isAdmin) { %>
+            <li style="margin-bottom: 8px;">
+              <a href="/admin" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);">
+                🛠️ <span>Admin Panel</span>
+              </a>
+            </li>
+          <% } %>
         </ul>
 
         <!-- Quick Stats -->
@@ -296,6 +303,8 @@
 
       </div>
     </footer>
+
+  <%- include('partials/report_footer') %>
 
     <style>
       /* Enhanced Dashboard Styles */

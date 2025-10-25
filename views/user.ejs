@@ -244,6 +244,9 @@
           <a href="/books" title="รายการหนังสือ" style="padding: 8px 12px; border-radius: 8px;">📚</a>
           <a href="/books/new" title="เพิ่มหนังสือใหม่" style="padding: 8px 12px; border-radius: 8px;">➕</a>
           <% if (user && user.username) { %>
+            <% if (user.isAdmin) { %>
+              <a href="/admin" title="Admin Panel" style="padding: 8px 12px; border-radius: 8px; margin-right:8px; background: linear-gradient(90deg,#ffd7d7,#fff6d7); border:1px solid #ffd1d1; font-weight:700;">🔧 Admin</a>
+            <% } %>
             <a href="/user" class="header-user" title="โปรไฟล์ของคุณ" style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; background: rgba(255,255,255,0.15); border-radius: 20px; text-decoration: none; border: 2px solid rgba(255,255,255,0.3);">
               <img class="user-avatar" 
                    src="<%= user.avatar || '/images/profile-placeholder.svg' %>" 
@@ -291,7 +294,7 @@
           <hr />
           <div class="profile-history">
             <h3>ประวัติการแลกเปลี่ยน</h3>
-            <p class="muted">ยังไม่มีประวัติการแลกเปลี่ยน</p>
+            <p class="muted">ดูประวัติการแลกเปลี่ยนของคุณ <a href="/exchange/history" style="margin-left:8px; color:var(--accent); font-weight:700;">📜 ดูทั้งหมด</a></p>
           </div>
         </div>
 
@@ -302,6 +305,28 @@
               <span class="books-count"><%= userBooks.length %> รายการ</span>
             <% } %>
           </div>
+          
+          <% if (Array.isArray(incomingRequests) && incomingRequests.length > 0) { %>
+            <div style="margin-bottom:12px; padding:10px; background: linear-gradient(90deg,#fff7ef,#fff0e6); border-radius:8px; border:1px solid #ffe6cc;">
+              <strong>📥 คำขอแลกจากผู้อื่น</strong>
+              <div style="margin-top:8px">
+                <% incomingRequests.forEach(function(r) { %>
+                  <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 6px;border-radius:6px;margin-bottom:6px;background:#fff;">
+                    <div style="display:flex;gap:8px;align-items:center;">
+                      <div style="width:40px;height:40px;border-radius:6px;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-weight:700;color:#666;">👤</div>
+                      <div>
+                        <div style="font-weight:700;font-size:13px;"><%= r.requester_username || 'ผู้ใช้งาน' %></div>
+                        <div style="font-size:12px;color:#666;">ขอแลก: <strong><%= r.requested_book_title %></strong></div>
+                      </div>
+                    </div>
+                    <div style="display:flex;gap:8px;align-items:center;">
+                      <a href="/exchange/incoming" style="padding:6px 10px;background:var(--accent);color:white;border-radius:6px;text-decoration:none;font-weight:700;">ดูทั้งหมด</a>
+                    </div>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          <% } %>
           
           <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
             <div class="books-container">
@@ -339,7 +364,7 @@
             </div>
             
             <div style="margin-top: 16px; padding-top: 12px; border-top: 2px solid #f0f3f6; text-align: center; background: #fafbfc; border-radius: 8px; padding: 12px;">
-              <a href="/books" class="view-all-link" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(77, 171, 247, 0.1); border-radius: 20px; transition: all 0.2s ease;">
+                <a href="/books/mine" class="view-all-link" style="font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; background: rgba(77, 171, 247, 0.1); border-radius: 20px; transition: all 0.2s ease;">
                 📚 ดูรายการทั้งหมด
                 <span style="font-size: 12px;">→</span>
               </a>
@@ -362,6 +387,15 @@
             </div>
           <% } %>
         </aside>
+          <% if (user && user.isAdmin) { %>
+            <div style="margin-bottom:12px; padding:10px; background: linear-gradient(90deg,#fff, #f9fafb); border-radius:8px; border:1px dashed #e6e9ef;">
+              <strong>แผงควบคุมผู้ดูแล</strong>
+              <div style="margin-top:8px; display:flex; gap:8px;">
+                <a class="btn" href="/admin/dashboard" style="padding:6px 10px; background:#007bff; color:white; border-radius:6px; text-decoration:none">Dashboard</a>
+                <a class="btn" href="/admin/reports" style="padding:6px 10px; background:#ffc107; color:#222; border-radius:6px; text-decoration:none">Reports</a>
+              </div>
+            </div>
+          <% } %>
       </div>
     </main>
 
@@ -370,6 +404,7 @@
         <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
       </div>
     </footer>
+    <%- include('partials/report_footer') %>
     
     <script src="/js/performance.js"></script>
   </body>

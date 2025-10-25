@@ -35,9 +35,53 @@ exports.listBooks = async (req, res) => {
         hasPrevPage: page > 1,
         nextPage: page + 1,
         prevPage: page - 1
-      }
+      },
+      pageTitle: 'รายการทั้งหมด',
+      basePath: '/books'
     });
   } catch (err) {
+    res.status(500).send('DB error: ' + err.message);
+  }
+};
+
+// List only books owned by the logged-in user
+exports.listUserBooks = async (req, res) => {
+  if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 12;
+    const offset = (page - 1) * limit;
+
+    const [[{total}]] = await db.pool.query('SELECT COUNT(*) as total FROM books WHERE owner_id = ?', [req.session.userId]);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    const [rows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY id DESC LIMIT ? OFFSET ?', [req.session.userId, limit, offset]);
+    rows.forEach(b => {
+      const thumb = (b.image || b.thumbnail || '/images/placeholder.png');
+      if (thumb && typeof thumb === 'string') {
+        b.thumbnail = (thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb);
+      } else {
+        b.thumbnail = '/images/placeholder.png';
+      }
+      b.tags = b.tags || b.category || b.wanted || '';
+    });
+
+    res.render('books/list', {
+      books: rows,
+      pagination: {
+        currentPage: page,
+        totalPages: totalPages,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+        nextPage: page + 1,
+        prevPage: page - 1
+      },
+      pageTitle: 'รายการของฉัน',
+      basePath: '/books/mine',
+      user: { id: req.session.userId, username: req.session.username }
+    });
+  } catch (err) {
+    console.error('List user books error:', err);
     res.status(500).send('DB error: ' + err.message);
   }
 };

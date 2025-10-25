@@ -10,6 +10,8 @@ const app = express();
 const server = http.createServer(app);
 const io = require('socket.io')(server);
 
+// (global error handlers removed during revert)
+
 // middleware
 app.set('view engine', 'ejs');
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,6 +38,8 @@ const indexRoutes = require('./routes/indexRoutes');
 const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 const exchangeRoutes = require('./routes/exchangeRoutes');
+const adminRoutes = require('./routes/adminRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 // design preview route (temporary)
 app.get('/designed', (req, res) => res.render('designed'));
 
@@ -171,10 +175,49 @@ app.use('/', indexRoutes);
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
 app.use('/exchange', exchangeRoutes);
+app.use('/admin', adminRoutes);
+// public reports endpoint for users to submit issues
+app.use('/reports', reportRoutes);
 
 const port = process.env.PORT || 3000;
-server.listen(port, () => {
-  console.log(`Server running on port ${port}`);
-});
+
+// Run lightweight migration: ensure exchange_history table exists so history feature works
+async function runMigrationsAndStart() {
+    try {
+            // Create exchange_history table without strict foreign keys to avoid migration failure
+            const createExchangeHistory = `
+                CREATE TABLE IF NOT EXISTS exchange_history (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    exchange_request_id INT NOT NULL,
+                    user1_id INT NOT NULL,
+                    user2_id INT NOT NULL,
+                    book1_id INT NOT NULL,
+                    book2_id INT NULL,
+                    exchange_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    rating_user1 INT NULL,
+                    rating_user2 INT NULL,
+                    review_user1 TEXT,
+                    review_user2 TEXT
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            `;
+
+        await pool.query(createExchangeHistory);
+        console.log('Migrations: ensured exchange_history table exists');
+            try {
+                await pool.query("ALTER TABLE exchange_requests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP NULL");
+                console.log('Migrations: ensured exchange_requests.completed_at exists');
+            } catch (e) {
+                // ignore
+            }
+    } catch (migErr) {
+        console.error('Migration error (non-fatal):', migErr && migErr.message);
+    }
+
+    server.listen(port, () => {
+        console.log(`Server running on port ${port}`);
+    });
+}
+
+runMigrationsAndStart();
 
 module.exports = { app, server, io };

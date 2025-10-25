@@ -16,21 +16,12 @@ exports.profile = async (req, res) => {
       location: raw.location || ''
     };
 
-    // ดึงข้อมูลหนังสือของผู้ใช้
+    // ดึงข้อมูลหนังสือของผู้ใช้ — แสดงเฉพาะหนังสือที่มี owner_id ตรงกับผู้ใช้เท่านั้น
     let userBooks = [];
     try {
-      // ลองดึงหนังสือที่มี owner_id ตรงกับผู้ใช้ก่อน
       const [bookRows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY created_at DESC', [req.session.userId]);
       
-      // ถ้าไม่มีหนังสือ หรือ owner_id เป็น NULL ทั้งหมด ให้แสดงหนังสือทั้งหมดแทน (temporary fallback)
-      let finalBookRows = bookRows;
-      if (bookRows.length === 0) {
-        console.log('No books found for owner_id:', req.session.userId, '- showing all books as fallback');
-        const [allBooks] = await db.pool.query('SELECT * FROM books ORDER BY created_at DESC LIMIT 10');
-        finalBookRows = allBooks;
-      }
-      
-      userBooks = finalBookRows.map(book => {
+      userBooks = bookRows.map(book => {
         // จัดรูปแบบรูปภาพ
         const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
         book.thumbnail = (thumb && typeof thumb === 'string') ? 
@@ -42,7 +33,24 @@ exports.profile = async (req, res) => {
     } catch (bookErr) {
       console.error('Error fetching user books:', bookErr);
     }
-    res.render('user', { user, userBooks });
+    // ดึงคำขอแลกเปลี่ยนที่เข้ามาหาผู้ใช้ (pending)
+    let incomingRequests = [];
+    try {
+      const [reqRows] = await db.pool.query(`
+        SELECT id, requester_id, requester_username, requested_book_id, requested_book_title, message, status, created_at
+        FROM exchange_requests_detailed
+        WHERE book_owner_id = ? AND status = 'pending'
+        ORDER BY created_at DESC
+        LIMIT 5
+      `, [req.session.userId]);
+      incomingRequests = reqRows || [];
+    } catch (reqErr) {
+      // ถ้าไม่มีตารางหรือ view นี้ ให้ไม่ขัดขวางหน้าโปรไฟล์
+      console.log('No exchange_requests_detailed view/table or error:', reqErr && reqErr.message);
+      incomingRequests = [];
+    }
+
+    res.render('user', { user, userBooks, incomingRequests });
   } catch (err) {
     console.error('User profile error', err);
     res.status(500).send('DB error: ' + err.message);

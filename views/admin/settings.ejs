@@ -1,0 +1,533 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ตั้งค่าระบบ - Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/performance.css" />
+  <style>
+    .admin-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 0;
+      margin-bottom: 30px;
+    }
+    .admin-nav {
+      background: #2c3e50;
+      padding: 15px 0;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    .admin-nav .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .admin-nav a {
+      color: #ecf0f1;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-nav a:hover {
+      background: #34495e;
+      transform: translateY(-2px);
+    }
+    .admin-nav a.active {
+      background: #3498db;
+      box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+    }
+    .settings-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    .settings-card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      border-left: 4px solid #3498db;
+    }
+    .settings-card h3 {
+      margin: 0 0 20px 0;
+      color: #2c3e50;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #495057;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 15px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.3s ease;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #3498db;
+      box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+    }
+    .form-group textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .settings-btn {
+      background: #3498db;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .settings-btn:hover {
+      background: #2980b9;
+      transform: translateY(-1px);
+    }
+    .settings-btn.danger {
+      background: #e74c3c;
+    }
+    .settings-btn.danger:hover {
+      background: #c0392b;
+    }
+    .settings-btn.success {
+      background: #27ae60;
+    }
+    .settings-btn.success:hover {
+      background: #219a52;
+    }
+    .system-info {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .info-item {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+    .info-label {
+      font-size: 12px;
+      color: #6c757d;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+    .info-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .danger-zone {
+      border-left-color: #e74c3c;
+      background: #fdf2f2;
+    }
+    .danger-zone h3 {
+      color: #e74c3c;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #3498db;
+    }
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+    .toggle-group {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-header">
+    <div class="container">
+      <h1>⚙️ ตั้งค่าระบบ</h1>
+      <p>จัดการการตั้งค่าทั่วไปของระบบ</p>
+    </div>
+  </div>
+
+  <div class="admin-nav">
+    <div class="container">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/users">👥 จัดการผู้ใช้</a>
+      <a href="/admin/books">📚 จัดการหนังสือ</a>
+      <a href="/admin/exchanges">🔄 การแลกเปลี่ยน</a>
+      <a href="/admin/settings" class="active">⚙️ ตั้งค่า</a>
+      <a href="/dashboard">🏠 กลับหน้าหลัก</a>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- System Information -->
+    <div class="system-info">
+      <div class="info-item">
+        <div class="info-label">Server Time</div>
+        <div class="info-value" id="serverTime"><%= new Date().toLocaleString('th-TH') %></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Node.js Version</div>
+        <div class="info-value"><%= process.version %></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Platform</div>
+        <div class="info-value"><%= process.platform %></div>
+      </div>
+      <div class="info-item">
+        <div class="info-label">Admin User</div>
+        <div class="info-value"><%= user.username %></div>
+      </div>
+    </div>
+
+    <!-- Settings Cards -->
+    <div class="settings-grid">
+      <!-- General Settings -->
+      <div class="settings-card">
+        <h3>🌐 ตั้งค่าทั่วไป</h3>
+        <form id="generalSettings">
+          <div class="form-group">
+            <label>ชื่อเว็บไซต์</label>
+            <input type="text" id="siteName" value="SwapABook" placeholder="ชื่อเว็บไซต์">
+          </div>
+          <div class="form-group">
+            <label>คำอธิบายเว็บไซต์</label>
+            <textarea id="siteDescription" placeholder="คำอธิบายเว็บไซต์">แพลตฟอร์มแลกเปลี่ยนหนังสือออนไลน์</textarea>
+          </div>
+          <div class="toggle-group">
+            <label>เปิดให้ลงทะเบียนใหม่</label>
+            <label class="switch">
+              <input type="checkbox" id="allowRegistration" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-group">
+            <label>ต้องการการอนุมัติหนังสือใหม่</label>
+            <label class="switch">
+              <input type="checkbox" id="requireBookApproval">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <button type="submit" class="settings-btn">💾 บันทึกการตั้งค่า</button>
+        </form>
+      </div>
+
+      <!-- Upload Settings -->
+      <div class="settings-card">
+        <h3>📁 ตั้งค่าการอัปโหลด</h3>
+        <form id="uploadSettings">
+          <div class="form-group">
+            <label>ขนาดไฟล์สูงสุด (MB)</label>
+            <input type="number" id="maxFileSize" value="5" min="1" max="50">
+          </div>
+          <div class="form-group">
+            <label>ประเภทไฟล์ที่อนุญาต</label>
+            <input type="text" id="allowedTypes" value="jpg,jpeg,png,gif" placeholder="jpg,jpeg,png,gif">
+          </div>
+          <div class="toggle-group">
+            <label>ปรับขนาดรูปภาพอัตโนมัติ</label>
+            <label class="switch">
+              <input type="checkbox" id="autoResize" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <button type="submit" class="settings-btn">💾 บันทึกการตั้งค่า</button>
+        </form>
+      </div>
+
+      <!-- Email Settings -->
+      <div class="settings-card">
+        <h3>📧 ตั้งค่าอีเมล</h3>
+        <form id="emailSettings">
+          <div class="form-group">
+            <label>SMTP Server</label>
+            <input type="text" id="smtpServer" placeholder="smtp.gmail.com">
+          </div>
+          <div class="form-group">
+            <label>SMTP Port</label>
+            <input type="number" id="smtpPort" value="587">
+          </div>
+          <div class="form-group">
+            <label>อีเมลผู้ส่ง</label>
+            <input type="email" id="senderEmail" placeholder="noreply@swapbook.com">
+          </div>
+          <div class="toggle-group">
+            <label>เปิดใช้งานการส่งอีเมล</label>
+            <label class="switch">
+              <input type="checkbox" id="enableEmail">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <button type="submit" class="settings-btn">💾 บันทึกการตั้งค่า</button>
+        </form>
+      </div>
+
+      <!-- Security Settings -->
+      <div class="settings-card">
+        <h3>🔒 ตั้งค่าความปลอดภัย</h3>
+        <form id="securitySettings">
+          <div class="form-group">
+            <label>ความยาวรหัสผ่านขั้นต่ำ</label>
+            <input type="number" id="minPasswordLength" value="6" min="4" max="20">
+          </div>
+          <div class="toggle-group">
+            <label>บังคับใช้รหัสผ่านที่ซับซ้อน</label>
+            <label class="switch">
+              <input type="checkbox" id="complexPassword">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-group">
+            <label>เปิดใช้งาน reCAPTCHA</label>
+            <label class="switch">
+              <input type="checkbox" id="enableRecaptcha">
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="form-group">
+            <label>ระยะเวลา Session (นาที)</label>
+            <input type="number" id="sessionTimeout" value="60" min="15" max="1440">
+          </div>
+          <button type="submit" class="settings-btn">💾 บันทึกการตั้งค่า</button>
+        </form>
+      </div>
+
+      <!-- Database Management -->
+      <div class="settings-card">
+        <h3>🗄️ จัดการฐานข้อมูล</h3>
+        <div class="form-group">
+          <label>สำรองข้อมูล</label>
+          <button type="button" class="settings-btn success" onclick="backupDatabase()">
+            💾 สำรองข้อมูลตอนนี้
+          </button>
+        </div>
+        <div class="form-group">
+          <label>ทำความสะอาดข้อมูล</label>
+          <button type="button" class="settings-btn" onclick="cleanupData()">
+            🧹 ลบข้อมูลที่ไม่จำเป็น
+          </button>
+        </div>
+        <div class="form-group">
+          <label>ตรวจสอบความสมบูรณ์</label>
+          <button type="button" class="settings-btn" onclick="checkIntegrity()">
+            🔍 ตรวจสอบฐานข้อมูล
+          </button>
+        </div>
+        <div class="form-group">
+          <label>ดู Debug ฐานข้อมูล</label>
+          <a href="/debug" class="settings-btn" style="display: inline-block; text-decoration: none;">
+            🐛 Debug Database
+          </a>
+        </div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-card danger-zone">
+        <h3>⚠️ Danger Zone</h3>
+        <div class="form-group">
+          <label>รีเซ็ตระบบทั้งหมด</label>
+          <p style="font-size: 13px; color: #6c757d; margin: 5px 0 15px 0;">
+            จะลบข้อมูลทั้งหมดและรีสตาร์ทระบบ
+          </p>
+          <button type="button" class="settings-btn danger" onclick="resetSystem()">
+            ⚠️ รีเซ็ตระบบ
+          </button>
+        </div>
+        <div class="form-group">
+          <label>รีสตาร์ทเซิร์ฟเวอร์</label>
+          <p style="font-size: 13px; color: #6c757d; margin: 5px 0 15px 0;">
+            รีสตาร์ทเซิร์ฟเวอร์ Node.js
+          </p>
+          <button type="button" class="settings-btn danger" onclick="restartServer()">
+            🔄 รีสตาร์ทเซิร์ฟเวอร์
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div class="copyright">Admin Panel - SwapABook <%= new Date().getFullYear() %></div>
+    </div>
+  </footer>
+
+  <%- include('../partials/report_footer') %>
+
+  <script src="/js/performance.js"></script>
+  <script>
+    // Update server time every second
+    function updateServerTime() {
+      document.getElementById('serverTime').textContent = new Date().toLocaleString('th-TH');
+    }
+    setInterval(updateServerTime, 1000);
+
+    // Form submission handlers
+    document.getElementById('generalSettings').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      saveSettings('general', formData);
+    });
+
+    document.getElementById('uploadSettings').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      saveSettings('upload', formData);
+    });
+
+    document.getElementById('emailSettings').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      saveSettings('email', formData);
+    });
+
+    document.getElementById('securitySettings').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      saveSettings('security', formData);
+    });
+
+    // Save settings function
+    async function saveSettings(type, formData) {
+      try {
+        // Convert FormData to regular object
+        const settings = {};
+        const form = document.getElementById(type + 'Settings');
+        const inputs = form.querySelectorAll('input, textarea, select');
+        
+        inputs.forEach(input => {
+          if (input.type === 'checkbox') {
+            settings[input.id] = input.checked;
+          } else {
+            settings[input.id] = input.value;
+          }
+        });
+
+        console.log(`Saving ${type} settings:`, settings);
+        
+        // For now, just show success message
+        // In a real implementation, you would send this to the server
+        alert(`บันทึกการตั้งค่า ${type} เรียบร้อยแล้ว`);
+        
+        // TODO: Implement actual API call to save settings
+        /*
+        const response = await fetch(`/admin/api/settings/${type}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(settings)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('บันทึกการตั้งค่าเรียบร้อยแล้ว');
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + result.error);
+        }
+        */
+      } catch (error) {
+        console.error('Error saving settings:', error);
+        alert('เกิดข้อผิดพลาดในการบันทึกการตั้งค่า');
+      }
+    }
+
+    // Database management functions
+    function backupDatabase() {
+      if (confirm('คุณต้องการสำรองข้อมูลฐานข้อมูลหรือไม่?')) {
+        alert('ฟีเจอร์สำรองข้อมูลกำลังพัฒนา');
+        // TODO: Implement database backup
+      }
+    }
+
+    function cleanupData() {
+      if (confirm('คุณต้องการลบข้อมูลที่ไม่จำเป็นหรือไม่?')) {
+        alert('ฟีเจอร์ทำความสะอาดข้อมูลกำลังพัฒนา');
+        // TODO: Implement data cleanup
+      }
+    }
+
+    function checkIntegrity() {
+      alert('ฟีเจอร์ตรวจสอบความสมบูรณ์กำลังพัฒนา');
+      // TODO: Implement integrity check
+    }
+
+    // Danger zone functions
+    function resetSystem() {
+      const confirmation = prompt('พิมพ์ "RESET" เพื่อยืนยันการรีเซ็ตระบบ:');
+      if (confirmation === 'RESET') {
+        alert('ฟีเจอร์รีเซ็ตระบบกำลังพัฒนา - สำหรับความปลอดภัย');
+        // TODO: Implement system reset (very carefully!)
+      } else {
+        alert('การรีเซ็ตถูกยกเลิก');
+      }
+    }
+
+    function restartServer() {
+      if (confirm('คุณต้องการรีสตาร์ทเซิร์ฟเวอร์หรือไม่? คุณจะต้องเข้าสู่ระบบใหม่')) {
+        alert('ฟีเจอร์รีสตาร์ทเซิร์ฟเวอร์กำลังพัฒนา');
+        // TODO: Implement server restart
+      }
+    }
+
+    console.log('Admin Settings loaded');
+  </script>
+</body>
+</html>

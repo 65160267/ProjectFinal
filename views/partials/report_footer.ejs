@@ -1,0 +1,87 @@
+<!-- Report to admin footer partial (styled orange box) -->
+<div style="margin-top:18px;">
+  <div style="background: linear-gradient(90deg,#ffb27a,#ff8a3d); padding:14px; border-radius:10px; display:flex; align-items:center; justify-content:space-between; gap:12px; box-shadow:0 6px 18px rgba(0,0,0,0.08);">
+    <div style="display:flex; gap:12px; align-items:center;">
+      <div style="width:48px; height:48px; border-radius:8px; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-size:22px;">
+        🛟
+      </div>
+      <div>
+        <div style="font-weight:700; color:#3e2b14;">แจ้งปัญหา / ส่งรีพอร์ตให้แอดมิน</div>
+        <div style="font-size:13px; color:#4a2f14; opacity:0.95;">พบปัญหา? ส่งรายละเอียดมาให้ทีมงานตรวจสอบได้ที่นี่</div>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button id="openReportBtn" class="btn" style="padding:10px 14px; background:#fff; color:#ff6b00; border-radius:8px; font-weight:700; border:none; box-shadow:0 6px 14px rgba(0,0,0,0.06);">แจ้งปัญหา</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div id="reportModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; z-index:9999;">
+  <div style="background:white; width:92%; max-width:640px; padding:20px; border-radius:10px; box-shadow:0 20px 50px rgba(0,0,0,0.25);">
+    <h3 style="margin-top:0; color:#ff6b00;">แจ้งปัญหา / ส่งรีพอร์ตถึงแอดมิน</h3>
+    <p style="margin-top:0; color:#6b4b2a;">กรุณาระบุรายละเอียดให้ชัดเจน เช่น หน้าไหน, ปุ่มไหน, ข้อความผิดพลาด (ถ้ามี)</p>
+    <form id="reportForm">
+      <div style="margin-bottom:10px;">
+        <label style="display:block; font-weight:600; margin-bottom:6px;">หัวข้อ</label>
+        <input name="title" required style="width:100%; padding:10px; border:1px solid #eee; border-radius:6px; font-size:14px;" />
+      </div>
+      <div style="margin-bottom:10px;">
+        <label style="display:block; font-weight:600; margin-bottom:6px;">รายละเอียด</label>
+        <textarea name="description" required rows="6" style="width:100%; padding:10px; border:1px solid #eee; border-radius:6px; font-size:14px;"></textarea>
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+        <button type="button" id="cancelReport" class="btn" style="background:#f0f0f0; color:#333; padding:10px 12px; border-radius:8px; border:none;">ยกเลิก</button>
+        <button type="submit" class="btn" style="background:#ff6b00; color:white; padding:10px 14px; border-radius:8px; border:none; font-weight:700;">ส่งรายงาน</button>
+      </div>
+    </form>
+    <div id="reportMsg" style="display:none; margin-top:12px; font-weight:600;"></div>
+  </div>
+</div>
+
+<style>
+  /* Small responsive tweak for modal on mobile */
+  @media (max-width: 480px) {
+    #reportModal > div { padding:14px; }
+    #openReportBtn { padding:8px 10px; }
+  }
+</style>
+
+<script>
+  (function(){
+    const openBtn = document.getElementById('openReportBtn');
+    const modal = document.getElementById('reportModal');
+    const cancel = document.getElementById('cancelReport');
+    const form = document.getElementById('reportForm');
+    const msg = document.getElementById('reportMsg');
+
+    if (!openBtn || !modal) return;
+    openBtn.addEventListener('click', () => { modal.style.display = 'flex'; window.scrollTo(0,0); });
+    cancel.addEventListener('click', () => { modal.style.display = 'none'; });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const payload = {
+        title: data.get('title'),
+        description: data.get('description')
+      };
+      try {
+        const res = await fetch('/reports', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        const json = await res.json();
+        if (json && (json.success || json.warning)) {
+          msg.style.display = 'block';
+          msg.style.color = 'green';
+          msg.textContent = 'ส่งรายงานเรียบร้อยแล้ว ขอบคุณค่ะ';
+          form.reset();
+          setTimeout(()=>{ modal.style.display='none'; msg.style.display='none'; }, 1200);
+        } else {
+          msg.style.display = 'block'; msg.style.color = 'red'; msg.textContent = json.error || 'เกิดข้อผิดพลาด';
+        }
+      } catch (err) {
+        msg.style.display = 'block'; msg.style.color = 'red'; msg.textContent = 'ไม่สามารถส่งรายงานได้';
+      }
+    });
+  })();
+</script>

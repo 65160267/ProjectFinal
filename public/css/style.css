@@ -91,6 +91,8 @@ body .legacy-minor{margin:20px}
   backdrop-filter: blur(20px);
 }
 
+/* Unified orange box wrapper used on profile and some pages to group header + report footer */
+
 .site-header .header-inner{
   display: flex;
   align-items: center;

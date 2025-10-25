@@ -8,6 +8,9 @@ router.get('/incoming', exchangeController.getIncomingRequests);
 // หน้าแสดงคำขอแลกเปลี่ยนที่ฉันส่งไป
 router.get('/outgoing', exchangeController.getOutgoingRequests);
 
+// ประวัติการแลกเปลี่ยนของผู้ล็อกอิน
+router.get('/history', exchangeController.getHistory);
+
 // ส่งคำขอแลกเปลี่ยน
 router.post('/request/:bookId', exchangeController.sendRequest);
 

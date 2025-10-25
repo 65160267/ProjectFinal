@@ -1,0 +1,72 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Error - SwapABook</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .error-container {
+      max-width: 600px;
+      margin: 100px auto;
+      text-align: center;
+      padding: 40px 20px;
+    }
+    .error-icon {
+      font-size: 80px;
+      margin-bottom: 20px;
+    }
+    .error-title {
+      font-size: 28px;
+      font-weight: bold;
+      color: #e74c3c;
+      margin-bottom: 15px;
+    }
+    .error-message {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 30px;
+      line-height: 1.5;
+    }
+    .error-actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .error-btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    .btn-primary {
+      background: #3498db;
+      color: white;
+    }
+    .btn-primary:hover {
+      background: #2980b9;
+    }
+    .btn-secondary {
+      background: #95a5a6;
+      color: white;
+    }
+    .btn-secondary:hover {
+      background: #7f8c8d;
+    }
+  </style>
+</head>
+<body>
+  <div class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h1 class="error-title"><%= error || 'เกิดข้อผิดพลาด' %></h1>
+    <p class="error-message"><%= message || 'เกิดข้อผิดพลาดที่ไม่คาดคิด กรุณาลองใหม่อีกครั้ง' %></p>
+    
+    <div class="error-actions">
+      <a href="/" class="error-btn btn-primary">🏠 กลับหน้าหลัก</a>
+      <a href="/auth/login" class="error-btn btn-secondary">🔓 เข้าสู่ระบบ</a>
+    </div>
+  </div>
+</body>
+</html>

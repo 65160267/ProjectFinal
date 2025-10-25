@@ -45,7 +45,7 @@
       </aside>
       <section class="market-content">
         <div class="card">
-          <h2>รายการทั้งหมด</h2>
+          <h2><%= pageTitle || 'รายการทั้งหมด' %></h2>
           <div class="product-grid">
             <% if (books && books.length) { %>
               <% books.forEach(function(b) { %>
@@ -74,7 +74,7 @@
             <div class="pagination-container" style="margin-top: 30px; text-align: center;">
               <div class="pagination">
                 <% if (pagination.hasPrevPage) { %>
-                  <a href="/books?page=<%= pagination.prevPage %>" class="btn btn-ghost">← ก่อนหน้า</a>
+                  <a href="<%= (basePath || '/books') %>?page=<%= pagination.prevPage %>" class="btn btn-ghost">← ก่อนหน้า</a>
                 <% } %>
                 
                 <span class="pagination-info">
@@ -82,7 +82,7 @@
                 </span>
                 
                 <% if (pagination.hasNextPage) { %>
-                  <a href="/books?page=<%= pagination.nextPage %>" class="btn btn-ghost">ถัดไป →</a>
+                  <a href="<%= (basePath || '/books') %>?page=<%= pagination.nextPage %>" class="btn btn-ghost">ถัดไป →</a>
                 <% } %>
               </div>
             </div>
@@ -109,5 +109,7 @@
         <div class="copyright">Swap A Book <%= new Date().getFullYear() %> By Weerapat Tapaothong</div>
       </div>
     </footer>
+
+  <%- include('../partials/report_footer') %>
   </body>
 </html>

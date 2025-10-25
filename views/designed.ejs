@@ -85,6 +85,8 @@
       </div>
     </footer>
 
+  <%- include('partials/report_footer') %>
+
     <script>
       document.querySelectorAll('.product-thumb[data-thumb]').forEach(el => {
         el.style.backgroundImage = `url(${el.getAttribute('data-thumb')})`;

@@ -23,6 +23,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 router.get('/', bookController.listBooks);
+router.get('/mine', bookController.listUserBooks);
 router.get('/new', bookController.showCreateForm);
 // POST with multer middleware to handle file upload field named 'image'
 router.post('/create', upload.single('image'), bookController.createBook);

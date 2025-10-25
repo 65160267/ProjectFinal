@@ -7,11 +7,46 @@ exports.getIncomingRequests = async (req, res) => {
   }
 
   try {
+    // Fetch requests and include book image fields so the view can show uploaded covers
     const [requests] = await db.pool.query(`
-      SELECT * FROM exchange_requests_detailed 
-      WHERE book_owner_id = ? 
-      ORDER BY created_at DESC
+      SELECT er.*, ru.username as requester_username, ru.full_name as requester_name,
+        ou.username as owner_username,
+        rb.title as requested_book_title, rb.author as requested_book_author, rb.condition as requested_book_condition, rb.thumbnail as requested_book_thumbnail, rb.image as requested_book_image,
+        ob.title as offered_book_title, ob.author as offered_book_author, ob.condition as offered_book_condition, ob.thumbnail as offered_book_thumbnail, ob.image as offered_book_image
+      FROM exchange_requests er
+      LEFT JOIN users ru ON er.requester_id = ru.id
+      LEFT JOIN users ou ON er.book_owner_id = ou.id
+      LEFT JOIN books rb ON er.requested_book_id = rb.id
+      LEFT JOIN books ob ON er.offered_book_id = ob.id
+      WHERE er.book_owner_id = ?
+      ORDER BY er.created_at DESC
     `, [req.session.userId]);
+
+    // normalize thumbnail URLs to match how books are rendered elsewhere
+    requests.forEach(r => {
+      function normalize(src) {
+        if (!src) return '/images/profile-placeholder.svg';
+        src = String(src).trim();
+        if (/^https?:\/\//i.test(src)) return src;
+        if (src.startsWith('/')) return src;
+        return '/uploads/' + src;
+      }
+      function conditionText(cond) {
+        if (!cond) return 'ไม่ระบุ';
+        switch(String(cond)) {
+          case 'new': return 'ใหม่';
+          case 'good': return 'ดี';
+          case 'used': return 'ผ่านการใช้งาน';
+          default: return cond;
+        }
+      }
+      r.requested_book_thumbnail = normalize(r.requested_book_thumbnail || r.requested_book_image);
+      r.offered_book_thumbnail = normalize(r.offered_book_thumbnail || r.offered_book_image);
+      // friendly names and condition text
+      r.requester_name = r.requester_name || r.requester_username || 'ไม่ระบุ';
+      r.requested_book_condition_text = conditionText(r.requested_book_condition);
+      r.offered_book_condition_text = conditionText(r.offered_book_condition);
+    });
 
     res.render('exchange/incoming', { requests });
   } catch (error) {
@@ -28,10 +63,42 @@ exports.getOutgoingRequests = async (req, res) => {
 
   try {
     const [requests] = await db.pool.query(`
-      SELECT * FROM exchange_requests_detailed 
-      WHERE requester_id = ? 
-      ORDER BY created_at DESC
+      SELECT er.*, ru.username as requester_username, ru.full_name as requester_name,
+        ou.username as owner_username,
+        rb.title as requested_book_title, rb.author as requested_book_author, rb.condition as requested_book_condition, rb.thumbnail as requested_book_thumbnail, rb.image as requested_book_image,
+        ob.title as offered_book_title, ob.author as offered_book_author, ob.condition as offered_book_condition, ob.thumbnail as offered_book_thumbnail, ob.image as offered_book_image
+      FROM exchange_requests er
+      LEFT JOIN users ru ON er.requester_id = ru.id
+      LEFT JOIN users ou ON er.book_owner_id = ou.id
+      LEFT JOIN books rb ON er.requested_book_id = rb.id
+      LEFT JOIN books ob ON er.offered_book_id = ob.id
+      WHERE er.requester_id = ?
+      ORDER BY er.created_at DESC
     `, [req.session.userId]);
+
+    requests.forEach(r => {
+      function normalize(src) {
+        if (!src) return '/images/profile-placeholder.svg';
+        src = String(src).trim();
+        if (/^https?:\/\//i.test(src)) return src;
+        if (src.startsWith('/')) return src;
+        return '/uploads/' + src;
+      }
+      function conditionText(cond) {
+        if (!cond) return 'ไม่ระบุ';
+        switch(String(cond)) {
+          case 'new': return 'ใหม่';
+          case 'good': return 'ดี';
+          case 'used': return 'ผ่านการใช้งาน';
+          default: return cond;
+        }
+      }
+      r.requested_book_thumbnail = normalize(r.requested_book_thumbnail || r.requested_book_image);
+      r.offered_book_thumbnail = normalize(r.offered_book_thumbnail || r.offered_book_image);
+      r.requester_name = r.requester_name || r.requester_username || 'ไม่ระบุ';
+      r.requested_book_condition_text = conditionText(r.requested_book_condition);
+      r.offered_book_condition_text = conditionText(r.offered_book_condition);
+    });
 
     res.render('exchange/outgoing', { requests });
   } catch (error) {
@@ -193,9 +260,34 @@ exports.completeExchange = async (req, res) => {
 
     // อัพเดทสถานะคำขอเป็น completed
     await db.pool.query(
-      'UPDATE exchange_requests SET status = "completed", updated_at = NOW() WHERE id = ?',
+      'UPDATE exchange_requests SET status = "completed", updated_at = NOW(), completed_at = NOW() WHERE id = ?',
       [requestId]
     );
+
+    // เก็บประวัติการแลกเปลี่ยนลงในตาราง exchange_history
+    try {
+      await db.pool.query(
+        `INSERT INTO exchange_history (exchange_request_id, user1_id, user2_id, book1_id, book2_id, exchange_date)
+         VALUES (?, ?, ?, ?, ?, NOW())`,
+        [requestId, request.requester_id, request.book_owner_id, request.requested_book_id, request.offered_book_id || null]
+      );
+    } catch (histErr) {
+      console.error('Error inserting exchange_history:', histErr);
+      // continue even if history insert fails
+    }
+
+    // โอนความเป็นเจ้าของหนังสือ (swap) ถ้ามีหนังสือที่เสนอแลก
+    try {
+      // ให้ผู้ขอเป็นเจ้าของหนังสือที่ขอ (requested_book)
+      await db.pool.query('UPDATE books SET owner_id = ? WHERE id = ?', [request.requester_id, request.requested_book_id]);
+
+      // ถ้ามีหนังสือที่เสนอแลก ให้เจ้าของเดิมรับหนังสือที่เสนอ
+      if (request.offered_book_id) {
+        await db.pool.query('UPDATE books SET owner_id = ? WHERE id = ?', [request.book_owner_id, request.offered_book_id]);
+      }
+    } catch (transferErr) {
+      console.error('Error transferring book ownership:', transferErr);
+    }
 
     // อัพเดทจำนวนการแลกเปลี่ยนของทั้งสองฝ่าย
     await db.pool.query(
@@ -212,6 +304,48 @@ exports.completeExchange = async (req, res) => {
   } catch (error) {
     console.error('Error completing exchange:', error);
     res.status(500).send('เกิดข้อผิดพลาดในการยืนยันการแลกเปลี่ยนสำเร็จ');
+  }
+};
+
+// แสดงประวัติการแลกเปลี่ยนสำหรับผู้ใช้ที่ล็อกอิน
+exports.getHistory = async (req, res) => {
+  if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+  try {
+    const [rows] = await db.pool.query(`
+      SELECT eh.*, 
+             u1.username as user1_username, u2.username as user2_username,
+             b1.title as book1_title, b1.thumbnail as book1_thumbnail,
+             b2.title as book2_title, b2.thumbnail as book2_thumbnail
+      FROM exchange_history eh
+      LEFT JOIN users u1 ON eh.user1_id = u1.id
+      LEFT JOIN users u2 ON eh.user2_id = u2.id
+      LEFT JOIN books b1 ON eh.book1_id = b1.id
+      LEFT JOIN books b2 ON eh.book2_id = b2.id
+      WHERE eh.user1_id = ? OR eh.user2_id = ?
+      ORDER BY eh.exchange_date DESC
+    `, [req.session.userId, req.session.userId]);
+
+    // normalize thumbnails to usable URLs
+    rows.forEach(r => {
+      function normalize(src) {
+        if (!src) return '/images/profile-placeholder.svg';
+        src = String(src).trim();
+        if (/^https?:\/\//i.test(src)) return src;
+        if (src.startsWith('/')) return src;
+        return '/uploads/' + src;
+      }
+      r.book1_thumbnail = normalize(r.book1_thumbnail);
+      r.book2_thumbnail = normalize(r.book2_thumbnail);
+    });
+
+    res.render('exchange/history', { history: rows });
+  } catch (err) {
+    console.error('Error fetching exchange history:', err);
+    // If the exchange_history table doesn't exist, render an empty history with a friendly message
+    if (err && err.code === 'ER_NO_SUCH_TABLE') {
+      return res.render('exchange/history', { history: [], warning: 'ตาราง `exchange_history` ยังไม่มีในฐานข้อมูล — รันไฟล์ SQL `db/exchange_system_complete.sql` เพื่อสร้างตารางประวัติการแลกเปลี่ยน' });
+    }
+    res.status(500).send('เกิดข้อผิดพลาดในการดึงประวัติการแลกเปลี่ยน');
   }
 };
 

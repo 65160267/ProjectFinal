@@ -1,0 +1,464 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>จัดการผู้ใช้ - Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/performance.css" />
+  <style>
+    .admin-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 0;
+      margin-bottom: 30px;
+    }
+    .admin-nav {
+      background: #2c3e50;
+      padding: 15px 0;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    .admin-nav .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .admin-nav a {
+      color: #ecf0f1;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-nav a:hover {
+      background: #34495e;
+      transform: translateY(-2px);
+    }
+    .admin-nav a.active {
+      background: #3498db;
+      box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+    }
+    .users-table {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .table-header {
+      padding: 20px 25px;
+      background: #f8f9fa;
+      border-bottom: 1px solid #e9ecef;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .table-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin: 0;
+    }
+    .search-box {
+      padding: 8px 15px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      width: 250px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 15px 25px;
+      text-align: left;
+      border-bottom: 1px solid #f1f3f4;
+    }
+    th {
+      background: #f8f9fa;
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tr:hover {
+      background: #f8f9fa;
+    }
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #e9ecef;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #6c757d;
+    }
+    .user-details h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+    .user-details p {
+      margin: 2px 0 0 0;
+      font-size: 13px;
+      color: #6c757d;
+    }
+    .status-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-active {
+      background: #d4edda;
+      color: #155724;
+    }
+    .status-inactive {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .status-admin {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 0 2px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-edit {
+      background: #17a2b8;
+      color: white;
+    }
+    .btn-edit:hover {
+      background: #138496;
+    }
+    .btn-toggle {
+      background: #ffc107;
+      color: #212529;
+    }
+    .btn-toggle:hover {
+      background: #e0a800;
+    }
+    .btn-delete {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-delete:hover {
+      background: #c82333;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0;
+    }
+    .pagination a {
+      padding: 8px 15px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #495057;
+      font-weight: 500;
+    }
+    .pagination a:hover {
+      background: #e9ecef;
+    }
+    .pagination a.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-item {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-header">
+    <div class="container">
+      <h1>👥 จัดการผู้ใช้</h1>
+      <p>จัดการข้อมูลผู้ใช้ทั้งหมดในระบบ</p>
+    </div>
+  </div>
+
+  <div class="admin-nav">
+    <div class="container">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/users" class="active">👥 จัดการผู้ใช้</a>
+      <a href="/admin/books">📚 จัดการหนังสือ</a>
+      <a href="/admin/exchanges">🔄 การแลกเปลี่ยน</a>
+      <a href="/admin/settings">⚙️ ตั้งค่า</a>
+      <a href="/dashboard">🏠 กลับหน้าหลัก</a>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- Statistics Summary -->
+    <div class="stats-summary">
+      <div class="stat-item">
+        <div class="stat-number" id="totalUsers"><%= users.length %></div>
+        <div class="stat-label">ผู้ใช้ทั้งหมด</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="activeUsers">
+          <%= users.filter(u => u.is_active !== 0).length %>
+        </div>
+        <div class="stat-label">ผู้ใช้ที่ใช้งานอยู่</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number" id="adminUsers">
+          <%= users.filter(u => u.role === 'admin').length %>
+        </div>
+        <div class="stat-label">ผู้ดูแลระบบ</div>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="users-table">
+      <div class="table-header">
+        <h2 class="table-title">รายการผู้ใช้</h2>
+        <input type="text" id="searchUsers" class="search-box" placeholder="🔍 ค้นหาผู้ใช้...">
+      </div>
+      
+      <% if (users && users.length > 0) { %>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>ผู้ใช้</th>
+              <th>สิทธิ์</th>
+              <th>สถานะ</th>
+              <th>วันที่สมัคร</th>
+              <th>การดำเนินการ</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody">
+            <% users.forEach(function(targetUser) { %>
+              <tr data-user-id="<%= targetUser.id %>">
+                <td>#<%= targetUser.id %></td>
+                <td>
+                  <div class="user-info">
+                    <div class="user-avatar">
+                      <%= targetUser.username.charAt(0).toUpperCase() %>
+                    </div>
+                    <div class="user-details">
+                      <h4><%= targetUser.display_name || targetUser.username %></h4>
+                      <p>@<%= targetUser.username %></p>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <span class="status-badge <%= targetUser.role === 'admin' ? 'status-admin' : 'status-active' %>">
+                    <%= targetUser.role === 'admin' ? 'Admin' : 'User' %>
+                  </span>
+                </td>
+                <td>
+                  <span class="status-badge <%= (targetUser.is_active === null || targetUser.is_active !== 0) ? 'status-active' : 'status-inactive' %>">
+                    <%= (targetUser.is_active === null || targetUser.is_active !== 0) ? 'ใช้งานอยู่' : 'ระงับ' %>
+                  </span>
+                </td>
+                <td><%= new Date(targetUser.created_at).toLocaleDateString('th-TH') %></td>
+                <td>
+                  <button class="action-btn btn-edit" onclick="editUser(<%= targetUser.id %>)">
+                    ✏️ แก้ไข
+                  </button>
+                  <% if (targetUser.role !== 'admin') { %>
+                    <button class="action-btn btn-toggle" onclick="toggleUserStatus(<%= targetUser.id %>)">
+                      🔄 สลับสถานะ
+                    </button>
+                    <button class="action-btn btn-delete" onclick="deleteUser(<%= targetUser.id %>)">
+                      🗑️ ลบ
+                    </button>
+                  <% } %>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      <% } else { %>
+        <div style="padding: 60px; text-align: center; color: #6c757d;">
+          <h3>ไม่พบข้อมูลผู้ใช้</h3>
+          <p>ยังไม่มีผู้ใช้ในระบบ</p>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% if (currentPage > 1) { %>
+          <a href="?page=<%= currentPage - 1 %>">← ก่อนหน้า</a>
+        <% } %>
+        
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+        
+        <% if (currentPage < totalPages) { %>
+          <a href="?page=<%= currentPage + 1 %>">ถัดไป →</a>
+        <% } %>
+      </div>
+    <% } %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div class="copyright">Admin Panel - SwapABook <%= new Date().getFullYear() %></div>
+    </div>
+  </footer>
+
+  <%- include('../partials/report_footer') %>
+
+  <script src="/js/performance.js"></script>
+  <script>
+    // Search functionality
+    document.getElementById('searchUsers').addEventListener('input', function(e) {
+      const searchTerm = e.target.value.toLowerCase();
+      const tableBody = document.getElementById('usersTableBody');
+      const rows = tableBody.querySelectorAll('tr');
+      
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchTerm) ? '' : 'none';
+      });
+    });
+
+    // Edit user function
+    function editUser(userId) {
+      alert('ฟีเจอร์แก้ไขผู้ใช้กำลังพัฒนา User ID: ' + userId);
+      // TODO: Implement edit user modal or redirect to edit page
+    }
+
+    // Toggle user status
+    async function toggleUserStatus(userId) {
+      if (!confirm('คุณต้องการเปลี่ยนสถานะของผู้ใช้นี้หรือไม่?')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/api/users/${userId}/toggle-status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          location.reload(); // Refresh page to show updated status
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถเปลี่ยนสถานะได้'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      }
+    }
+
+    // Delete user function
+    async function deleteUser(userId) {
+      if (!confirm('คุณต้องการลบผู้ใช้นี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/api/users/${userId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          // Remove row from table
+          const row = document.querySelector(`tr[data-user-id="${userId}"]`);
+          if (row) {
+            row.remove();
+          }
+          
+          // Update statistics
+          updateStatistics();
+          alert('ลบผู้ใช้เรียบร้อยแล้ว');
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถลบผู้ใช้ได้'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      }
+    }
+
+    // Update statistics after actions
+    function updateStatistics() {
+      const rows = document.querySelectorAll('#usersTableBody tr:not([style*="display: none"])');
+      document.getElementById('totalUsers').textContent = rows.length;
+      
+      let activeCount = 0;
+      let adminCount = 0;
+      
+      rows.forEach(row => {
+        const statusBadges = row.querySelectorAll('.status-badge');
+        if (statusBadges[0] && statusBadges[0].textContent.includes('Admin')) {
+          adminCount++;
+        }
+        if (statusBadges[1] && statusBadges[1].textContent.includes('ใช้งานอยู่')) {
+          activeCount++;
+        }
+      });
+      
+      document.getElementById('activeUsers').textContent = activeCount;
+      document.getElementById('adminUsers').textContent = adminCount;
+    }
+
+    console.log('Admin Users Management loaded');
+  </script>
+</body>
+</html>

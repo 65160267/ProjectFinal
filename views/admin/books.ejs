@@ -1,0 +1,503 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>จัดการหนังสือ - Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/performance.css" />
+  <style>
+    .admin-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px 0;
+      margin-bottom: 30px;
+    }
+    .admin-nav {
+      background: #2c3e50;
+      padding: 15px 0;
+      margin-bottom: 30px;
+      border-radius: 8px;
+    }
+    .admin-nav .container {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .admin-nav a {
+      color: #ecf0f1;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .admin-nav a:hover {
+      background: #34495e;
+      transform: translateY(-2px);
+    }
+    .admin-nav a.active {
+      background: #3498db;
+      box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);
+    }
+    .books-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .book-card {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .book-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    .book-image {
+      height: 200px;
+      background: #f8f9fa;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #6c757d;
+      font-size: 48px;
+      position: relative;
+      overflow: hidden;
+    }
+    .book-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .book-info {
+      padding: 20px;
+    }
+    .book-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2c3e50;
+      margin-bottom: 8px;
+    }
+    .book-author {
+      color: #6c757d;
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    .book-owner {
+      color: #495057;
+      font-size: 13px;
+      margin-bottom: 12px;
+    }
+    .book-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      font-size: 12px;
+      color: #6c757d;
+    }
+    .book-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .action-btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+    .btn-view {
+      background: #17a2b8;
+      color: white;
+    }
+    .btn-view:hover {
+      background: #138496;
+    }
+    .btn-edit {
+      background: #ffc107;
+      color: #212529;
+    }
+    .btn-edit:hover {
+      background: #e0a800;
+    }
+    .btn-delete {
+      background: #dc3545;
+      color: white;
+    }
+    .btn-delete:hover {
+      background: #c82333;
+    }
+    .stats-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-item {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .stat-number {
+      font-size: 24px;
+      font-weight: bold;
+      color: #2c3e50;
+    }
+    .stat-label {
+      font-size: 13px;
+      color: #6c757d;
+      margin-top: 5px;
+    }
+    .filter-controls {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .filter-row {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .filter-item label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #495057;
+    }
+    .filter-item input,
+    .filter-item select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 30px 0;
+    }
+    .pagination a {
+      padding: 8px 15px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      text-decoration: none;
+      color: #495057;
+      font-weight: 500;
+    }
+    .pagination a:hover {
+      background: #e9ecef;
+    }
+    .pagination a.active {
+      background: #3498db;
+      color: white;
+      border-color: #3498db;
+    }
+    .no-books {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+    .no-books h3 {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-header">
+    <div class="container">
+      <h1>📚 จัดการหนังสือ</h1>
+      <p>จัดการหนังสือทั้งหมดในระบบ</p>
+    </div>
+  </div>
+
+  <div class="admin-nav">
+    <div class="container">
+      <a href="/admin">📊 Dashboard</a>
+      <a href="/admin/users">👥 จัดการผู้ใช้</a>
+      <a href="/admin/books" class="active">📚 จัดการหนังสือ</a>
+      <a href="/admin/exchanges">🔄 การแลกเปลี่ยน</a>
+      <a href="/admin/settings">⚙️ ตั้งค่า</a>
+      <a href="/dashboard">🏠 กลับหน้าหลัก</a>
+    </div>
+  </div>
+
+  <main class="container">
+    <!-- Statistics Summary -->
+    <div class="stats-summary">
+      <div class="stat-item">
+        <div class="stat-number"><%= books.length %></div>
+        <div class="stat-label">หนังสือทั้งหมด</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">
+          <%= books.filter(b => b.is_available !== 0).length %>
+        </div>
+        <div class="stat-label">พร้อมแลกเปลี่ยน</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">
+          <%= books.filter(b => b.owner_id === null).length %>
+        </div>
+        <div class="stat-label">ไม่มีเจ้าของ</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-number">
+          <%= [...new Set(books.map(b => b.owner_id).filter(id => id !== null))].length %>
+        </div>
+        <div class="stat-label">เจ้าของที่แตกต่าง</div>
+      </div>
+    </div>
+
+    <!-- Quick actions for orphan books -->
+    <div style="margin-bottom:20px; display:flex; gap:8px; align-items:center;">
+      <button class="action-btn btn-edit" onclick="assignOrphans()">🔁 มอบหมายหนังสือที่ไม่มีเจ้าของทั้งหมดให้แอดมิน</button>
+      <small style="color:#6c757d">(จะมอบหมายทั้งหมดให้บัญชีแอดมินตัวแรกในระบบ)</small>
+    </div>
+
+    <!-- Filter Controls -->
+    <div class="filter-controls">
+      <div class="filter-row">
+        <div class="filter-item">
+          <label>ค้นหา</label>
+          <input type="text" id="searchBooks" placeholder="ชื่อหนังสือ, ผู้แต่ง...">
+        </div>
+        <div class="filter-item">
+          <label>สถานะ</label>
+          <select id="filterStatus">
+            <option value="">ทั้งหมด</option>
+            <option value="available">พร้อมแลก</option>
+            <option value="unavailable">ไม่พร้อมแลก</option>
+            <option value="no-owner">ไม่มีเจ้าของ</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>เรียงตาม</label>
+          <select id="sortBy">
+            <option value="newest">ใหม่ล่าสุด</option>
+            <option value="oldest">เก่าที่สุด</option>
+            <option value="title">ชื่อหนังสือ A-Z</option>
+            <option value="author">ผู้แต่ง A-Z</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Books Grid -->
+    <% if (books && books.length > 0) { %>
+      <div class="books-grid" id="booksGrid">
+        <% books.forEach(function(book) { %>
+          <div class="book-card" data-book-id="<%= book.id %>" 
+               data-title="<%= book.title %>" 
+               data-author="<%= book.author || '' %>"
+               data-available="<%= book.is_available !== 0 ? 'true' : 'false' %>"
+               data-has-owner="<%= book.owner_id ? 'true' : 'false' %>"
+               data-created="<%= new Date(book.created_at).getTime() %>">
+            <div class="book-image">
+              <% if (book.image || book.thumbnail) { %>
+                <img src="<%= (book.image || book.thumbnail).startsWith('/') ? (book.image || book.thumbnail) : '/uploads/' + (book.image || book.thumbnail) %>" 
+                     alt="<%= book.title %>" 
+                     onerror="this.style.display='none'; this.parentNode.innerHTML='📖';">
+              <% } else { %>
+                📖
+              <% } %>
+            </div>
+            <div class="book-info">
+              <div class="book-title"><%= book.title %></div>
+              <div class="book-author">ผู้แต่ง: <%= book.author || 'ไม่ระบุ' %></div>
+              <div class="book-owner">
+                เจ้าของ: <%= book.owner_username || (book.owner_id ? 'User #' + book.owner_id : 'ไม่มีเจ้าของ') %>
+              </div>
+              <div class="book-meta">
+                <span>วันที่เพิ่ม: <%= new Date(book.created_at).toLocaleDateString('th-TH') %></span>
+                <span class="status-badge <%= book.is_available !== 0 ? 'status-active' : 'status-inactive' %>">
+                  <%= book.is_available !== 0 ? 'พร้อมแลก' : 'ไม่พร้อมแลก' %>
+                </span>
+              </div>
+              <div class="book-actions">
+                <a href="/books/<%= book.id %>" class="action-btn btn-view">👁️ ดู</a>
+                <button class="action-btn btn-edit" onclick="editBook(<%= book.id %>)">✏️ แก้ไข</button>
+                <button class="action-btn btn-delete" onclick="deleteBook(<%= book.id %>)">🗑️ ลบ</button>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    <% } else { %>
+      <div class="no-books">
+        <h3>ไม่พบหนังสือ</h3>
+        <p>ยังไม่มีหนังสือในระบบ</p>
+        <a href="/books/new" class="action-btn btn-view">➕ เพิ่มหนังสือแรก</a>
+      </div>
+    <% } %>
+
+    <!-- Pagination -->
+    <% if (totalPages > 1) { %>
+      <div class="pagination">
+        <% if (currentPage > 1) { %>
+          <a href="?page=<%= currentPage - 1 %>">← ก่อนหน้า</a>
+        <% } %>
+        
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+        
+        <% if (currentPage < totalPages) { %>
+          <a href="?page=<%= currentPage + 1 %>">ถัดไป →</a>
+        <% } %>
+      </div>
+    <% } %>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-bottom">
+      <div class="copyright">Admin Panel - SwapABook <%= new Date().getFullYear() %></div>
+    </div>
+  </footer>
+
+  <%- include('../partials/report_footer') %>
+
+  <script src="/js/performance.js"></script>
+  <script>
+    // Search and filter functionality
+    document.getElementById('searchBooks').addEventListener('input', filterBooks);
+    document.getElementById('filterStatus').addEventListener('change', filterBooks);
+    document.getElementById('sortBy').addEventListener('change', sortBooks);
+
+    function filterBooks() {
+      const searchTerm = document.getElementById('searchBooks').value.toLowerCase();
+      const statusFilter = document.getElementById('filterStatus').value;
+      const cards = document.querySelectorAll('.book-card');
+      
+      cards.forEach(card => {
+        const title = card.dataset.title.toLowerCase();
+        const author = card.dataset.author.toLowerCase();
+        const available = card.dataset.available === 'true';
+        const hasOwner = card.dataset.hasOwner === 'true';
+        
+        // Search filter
+        const matchesSearch = title.includes(searchTerm) || author.includes(searchTerm);
+        
+        // Status filter
+        let matchesStatus = true;
+        if (statusFilter === 'available') {
+          matchesStatus = available;
+        } else if (statusFilter === 'unavailable') {
+          matchesStatus = !available;
+        } else if (statusFilter === 'no-owner') {
+          matchesStatus = !hasOwner;
+        }
+        
+        card.style.display = matchesSearch && matchesStatus ? 'block' : 'none';
+      });
+    }
+
+    function sortBooks() {
+      const sortBy = document.getElementById('sortBy').value;
+      const grid = document.getElementById('booksGrid');
+      const cards = Array.from(grid.children);
+      
+      cards.sort((a, b) => {
+        switch (sortBy) {
+          case 'newest':
+            return parseInt(b.dataset.created) - parseInt(a.dataset.created);
+          case 'oldest':
+            return parseInt(a.dataset.created) - parseInt(b.dataset.created);
+          case 'title':
+            return a.dataset.title.localeCompare(b.dataset.title);
+          case 'author':
+            return a.dataset.author.localeCompare(b.dataset.author);
+          default:
+            return 0;
+        }
+      });
+      
+      cards.forEach(card => grid.appendChild(card));
+    }
+
+    // Edit book function
+    function editBook(bookId) {
+      alert('ฟีเจอร์แก้ไขหนังสือกำลังพัฒนา Book ID: ' + bookId);
+      // TODO: Implement edit book modal or redirect to edit page
+    }
+
+    // Delete book function
+    async function deleteBook(bookId) {
+      if (!confirm('คุณต้องการลบหนังสือนี้หรือไม่? การกระทำนี้ไม่สามารถย้อนกลับได้!')) {
+        return;
+      }
+
+      try {
+        const response = await fetch(`/admin/api/books/${bookId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+          // Remove card from grid
+          const card = document.querySelector(`[data-book-id="${bookId}"]`);
+          if (card) {
+            card.remove();
+          }
+          
+          alert('ลบหนังสือเรียบร้อยแล้ว');
+          location.reload(); // Refresh to update statistics
+        } else {
+          alert('เกิดข้อผิดพลาด: ' + (result.error || 'ไม่สามารถลบหนังสือได้'));
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      }
+    }
+
+    // Assign orphan books to admin
+    async function assignOrphans() {
+      if (!confirm('คุณต้องการมอบหมายหนังสือที่ไม่มีเจ้าของทั้งหมดให้บัญชีแอดมินตัวแรกในระบบหรือไม่?')) return;
+      try {
+        const res = await fetch('/admin/books/assign-orphans', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+        const data = await res.json();
+        if (data && data.success) {
+          alert('มอบหมายสำเร็จ จำนวน: ' + data.assigned + ' รายการ (adminId=' + data.adminId + ')');
+          location.reload();
+        } else {
+          alert('ไม่สามารถมอบหมายได้: ' + (data.error || 'Unknown'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('เกิดข้อผิดพลาดขณะเชื่อมต่อ');
+      }
+    }
+
+    console.log('Admin Books Management loaded');
+  </script>
+</body>
+</html>

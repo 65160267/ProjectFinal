@@ -164,7 +164,7 @@ exports.viewBook = async (req, res) => {
   try {
     // ดึงข้อมูลหนังสือพร้อมข้อมูลเจ้าของ (ถ้ามี owner_id)
     const [rows] = await db.pool.query(`
-      SELECT b.*, u.username as owner_username, u.full_name as owner_full_name, u.location as owner_location
+      SELECT b.*, u.id as owner_id, u.username as owner_username, u.full_name as owner_full_name, u.location as owner_location, u.avatar as owner_avatar, u.is_active as owner_is_active, u.last_login as owner_last_login
       FROM books b
       LEFT JOIN users u ON b.owner_id = u.id
       WHERE b.id = ?
@@ -202,6 +202,17 @@ exports.viewBook = async (req, res) => {
     // จัดรูปแบบข้อมูลเจ้าของ
     book.ownerName = book.owner_full_name || book.owner_username || 'ไม่ทราบ';
     book.ownerLocation = book.owner_location || book.location || 'ไม่ระบุที่อยู่';
+  book.ownerId = book.owner_id || null;
+  // owner active flag: treat 0 as suspended, otherwise active
+  book.ownerActive = !(book.owner_is_active === 0);
+  // owner last login timestamp (if any)
+  book.ownerLastLogin = book.owner_last_login || null;
+  // owner avatar: normalize path if present
+    if (book.owner_avatar) {
+      book.ownerAvatar = (book.owner_avatar.startsWith('/') || book.owner_avatar.startsWith('http')) ? book.owner_avatar : ('/uploads/' + book.owner_avatar);
+    } else {
+      book.ownerAvatar = '/images/profile-placeholder.svg';
+    }
 
     // จัดรูปแบบสถานที่แลกเปลี่ยน
     book.exchangeLocation = book.location || 'ไม่ระบุสถานที่';

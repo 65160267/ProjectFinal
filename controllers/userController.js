@@ -122,3 +122,33 @@ exports.update = async (req, res) => {
 };
 
 module.exports = exports;
+
+// Public view of a user's profile by id (read-only, for visitors)
+exports.viewPublic = async (req, res) => {
+  const userId = req.params.id;
+  try {
+    const [rows] = await db.pool.query('SELECT * FROM users WHERE id = ?', [userId]);
+    if (!rows || rows.length === 0) return res.status(404).send('ไม่พบผู้ใช้นี้');
+    const raw = rows[0];
+    const user = {
+      id: raw.id,
+      username: raw.username,
+      full_name: raw.full_name || raw.name || raw.username,
+      avatar: raw.avatar || '/images/profile-placeholder.svg',
+      location: raw.location || ''
+    };
+
+    // fetch this user's public books (optionally filter by availability)
+    const [bookRows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY created_at DESC', [userId]);
+    const userBooks = (bookRows || []).map(book => {
+      const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
+      book.thumbnail = (thumb && typeof thumb === 'string') ? ((thumb.startsWith('/') || thumb.startsWith('http')) ? thumb : ('/uploads/' + thumb)) : '/images/placeholder.png';
+      return book;
+    });
+
+    res.render('users/view', { user, userBooks });
+  } catch (err) {
+    console.error('Public user view error', err);
+    res.status(500).send('DB error: ' + err.message);
+  }
+};

@@ -1,0 +1,105 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title><%= user.full_name %> - โปรไฟล์</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      /* Small local styles to beautify public profile card */
+      .profile-card.custom {
+        padding: 20px;
+        display: flex;
+        gap: 18px;
+        align-items: center;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        border-radius: 14px;
+        box-shadow: 0 10px 30px rgba(20,40,80,0.06);
+        border: 1px solid #f0f3f6;
+      }
+      .profile-avatar img {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 3px solid #fff;
+        box-shadow: 0 6px 18px rgba(34,60,80,0.08);
+        background: linear-gradient(135deg,#fff,#f7f9fc);
+      }
+      .profile-meta .profile-name { font-size: 20px; font-weight: 800; color: #2e2e2e; margin:0; }
+      .profile-meta .profile-username { color: #7b7b7b; margin-top:6px; font-size:13px; }
+      .profile-meta .profile-location { color:#666; margin-top:6px; font-size:13px; }
+      .btn-dashboard {
+        padding: 8px 12px; border-radius: 10px; border: 1px solid #e6eef8; background: #ffffff; color: #333; text-decoration:none; display:inline-block;
+      }
+      .btn-dashboard:hover { background: #f0f8ff; border-color: #cfeeff; }
+      .user-books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:12px; margin-top:12px; }
+      .user-book-card { padding:12px; border-radius:10px; background:#fff; border:1px solid #eef3f8; box-shadow: 0 6px 18px rgba(12,30,60,0.04); text-decoration:none; color:inherit; display:block }
+      .user-book-card img { width:64px; height:84px; object-fit:cover; border-radius:6px; }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">
+          <a href="/dashboard" class="brand">SwapABook</a>
+        </div>
+        <form class="search" action="/" method="get">
+          <input name="q" placeholder="🔍 ค้นหาหนังสือ..." />
+          <button type="submit">🔍</button>
+        </form>
+        <nav class="header-actions">
+          <a href="/books">📚</a>
+          <a href="/books/new">➕</a>
+          <a href="/auth/logout">🔓</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container" style="padding-top:20px; padding-bottom:40px;">
+      <div class="profile-card custom">
+        <div class="profile-avatar">
+          <img src="<%= user.avatar %>" alt="Avatar" onerror="this.src='/images/profile-placeholder.svg'" />
+        </div>
+        <div class="profile-meta" style="flex:1; min-width:0;">
+          <h2 class="profile-name"><%= user.full_name %></h2>
+          <div class="profile-username">@<%= user.username %></div>
+          <div class="profile-location">📍 <%= user.location || 'ไม่ระบุ' %></div>
+        </div>
+        <div style="flex-shrink:0;">
+          <a href="/dashboard" class="btn-dashboard">กลับหน้าแรก</a>
+        </div>
+      </div>
+
+      <section style="margin-top:18px;">
+        <h3>📚 รายการของผู้ใช้</h3>
+        <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
+          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:12px; margin-top:12px;">
+            <% userBooks.forEach(function(b) { %>
+              <a href="/books/<%= b.id %>" class="card" style="display:block; padding:12px; text-decoration:none; color:inherit;">
+                <div style="display:flex; gap:12px; align-items:center;">
+                  <img src="<%= b.thumbnail %>" alt="<%= b.title %>" style="width:64px; height:84px; object-fit:cover; border-radius:6px;" />
+                  <div style="min-width:0;">
+                    <div style="font-weight:700; font-size:14px; margin-bottom:6px;"><%= b.title %></div>
+                    <% if (b.author) { %>
+                      <div style="color:#666; font-size:13px;">โดย <%= b.author %></div>
+                    <% } %>
+                    <div style="color:#999; font-size:12px; margin-top:6px;">#<%= b.id %></div>
+                  </div>
+                </div>
+              </a>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div style="margin-top:12px; padding:18px; background:#fafafa; border-radius:8px; color:#666;">ผู้ใช้ยังไม่มีรายการหนังสือ</div>
+        <% } %>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-bottom">
+        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
+      </div>
+    </footer>
+  </body>
+</html>

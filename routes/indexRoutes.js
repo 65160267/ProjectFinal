@@ -23,6 +23,8 @@ router.get('/marketplace', indexController.marketplace);
 router.get('/dashboard', indexController.dashboard);
 router.get('/user', userController.profile);
 router.get('/user/edit', userController.edit);
+// public user profile
+router.get('/users/:id', userController.viewPublic);
 // attach multer middleware to handle avatar file upload (field name: avatar)
 router.post('/user/edit', upload.single('avatar'), userController.update);
 

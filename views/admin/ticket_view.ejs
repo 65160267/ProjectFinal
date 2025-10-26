@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ticket Detail - Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .ticket-wrap { max-width: 900px; margin: 30px auto; }
+    .ticket-card { background:#fff;padding:18px;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,0.06); }
+    .comment { background:#f8f9fa;padding:12px;border-radius:6px;margin-bottom:10px; }
+    .meta { color:#6c757d;font-size:13px }
+    .btn { padding:8px 12px;border-radius:6px;text-decoration:none;display:inline-block;background:#3498db;color:#fff }
+  </style>
+</head>
+<body>
+  <%- include('../partials/admin_header', { showAdminSearch: false }) %>
+
+  <main class="container ticket-wrap">
+    <div style="margin-top:18px; margin-bottom:12px;">
+      <a href="/admin/tickets" class="btn">← Back to Tickets</a>
+      <h1 style="display:inline-block; margin-left:12px">Ticket #<%= ticket ? ticket.id : '' %></h1>
+    </div>
+
+    <% if (!ticket) { %>
+      <div style="padding:30px; background:#fff3cd; border-radius:8px">ไม่พบตั๋วนี้</div>
+    <% } else { %>
+      <div class="ticket-card">
+        <h2><%= ticket.subject || '(No subject)' %></h2>
+        <div class="meta">โดย: <strong><%= ticket.owner_username || ticket.username || 'Unknown' %></strong> • สถานะ: <%= ticket.status %></div>
+        <p style="margin-top:12px"><%= ticket.body %></p>
+      </div>
+
+      <section style="margin-top:18px">
+        <h3>Comments</h3>
+        <% if (comments && comments.length > 0) { %>
+          <% comments.forEach(function(c) { %>
+            <div class="comment">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div><strong><%= c.username || 'anonymous' %></strong> <span class="meta">• <%= new Date(c.created_at).toLocaleString('th-TH') %></span></div>
+              </div>
+              <div style="margin-top:8px"><%= c.body %></div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="comment muted">ยังไม่มีความคิดเห็น</div>
+        <% } %>
+
+        <form method="post" action="/admin/tickets/<%= ticket.id %>/comments" style="margin-top:12px">
+          <textarea name="body" rows="4" style="width:100%;padding:8px" placeholder="ตอบกลับหรือบันทึกข้อความ"></textarea>
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn" type="submit">ส่งความคิดเห็น</button>
+            <button type="button" class="btn" style="background:#6c757d" onclick="closeTicket(<%= ticket.id %>)">ปิดตั๋ว</button>
+          </div>
+        </form>
+      </section>
+    <% } %>
+  </main>
+
+  <script>
+    async function closeTicket(id) {
+      if (!confirm('ปิดตั๋วนี้หรือไม่?')) return;
+      try {
+        const res = await fetch('/admin/tickets/' + id + '/close', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert('ปิดตั๋วเรียบร้อย');
+          location.reload();
+        } else {
+          alert('ไม่สามารถปิดตั๋วได้');
+        }
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด');
+      }
+    }
+  </script>
+</body>
+</html>

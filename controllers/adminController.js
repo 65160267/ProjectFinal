@@ -346,3 +346,73 @@ exports.assignOrphansToAdmin = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Tickets list (separate from admin_reports)
+exports.ticketsList = async (req, res) => {
+  try {
+    const [tickets] = await db.pool.query('SELECT t.*, u.username as owner_username FROM tickets t LEFT JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT 200');
+    res.render('admin/tickets', {
+      user: {
+        id: req.session.userId,
+        username: req.session.username,
+        isAdmin: req.session.isAdmin
+      },
+      tickets
+    });
+  } catch (err) {
+    console.error('Admin tickets error:', err);
+    res.status(500).render('error', { error: 'Database Error', message: err.message });
+  }
+};
+
+// Ticket detail and comments
+exports.ticketView = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id) return res.redirect('/admin/tickets');
+
+    const [[ticketRows]] = await db.pool.query('SELECT t.*, u.username as owner_username FROM tickets t LEFT JOIN users u ON t.user_id = u.id WHERE t.id = ?', [id]);
+    const [comments] = await db.pool.query('SELECT tc.*, u.username FROM ticket_comments tc LEFT JOIN users u ON tc.user_id = u.id WHERE tc.ticket_id = ? ORDER BY tc.created_at ASC', [id]);
+
+    res.render('admin/ticket_view', {
+      user: { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin },
+      ticket: ticketRows || null,
+      comments
+    });
+  } catch (err) {
+    console.error('Ticket view error:', err);
+    res.status(500).render('error', { error: 'Error', message: err.message });
+  }
+};
+
+// Post a comment on a ticket
+exports.postTicketComment = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const body = (req.body.body || '').toString();
+    const userId = req.session && req.session.userId ? req.session.userId : null;
+    const username = req.session && req.session.username ? req.session.username : (req.body.username || 'anonymous');
+
+    if (!id || !body) return res.status(400).json({ error: 'Invalid' });
+
+    await db.pool.query('INSERT INTO ticket_comments (ticket_id, user_id, username, body) VALUES (?, ?, ?, ?)', [id, userId, username, body]);
+
+    res.redirect('/admin/tickets/' + id);
+  } catch (err) {
+    console.error('Post ticket comment error:', err);
+    res.status(500).render('error', { error: 'Error', message: err.message });
+  }
+};
+
+// Close ticket
+exports.closeTicket = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id) return res.status(400).json({ error: 'Invalid ticket id' });
+    await db.pool.query('UPDATE tickets SET status = ? WHERE id = ?', ['closed', id]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Close ticket error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};

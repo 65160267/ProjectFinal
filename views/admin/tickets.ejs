@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Tickets - Admin Panel</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .container { max-width:1000px; margin:30px auto }
+    .ticket-row { background:#fff;padding:14px;border-radius:8px;margin-bottom:10px;box-shadow:0 2px 6px rgba(0,0,0,0.04) }
+    .meta { color:#6c757d; font-size:13px }
+    .btn { padding:8px 12px;border-radius:6px;text-decoration:none;display:inline-block;background:#3498db;color:#fff }
+  </style>
+</head>
+<body>
+  <%- include('../partials/admin_header', { showAdminSearch: false }) %>
+
+  <main class="container">
+    <div style="margin-top:18px">
+      <% if (tickets && tickets.length > 0) { %>
+        <% tickets.forEach(function(t) { %>
+          <div class="ticket-row">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+              <div>
+                <strong>#<%= t.id %></strong> - <%= t.subject || '(no subject)' %>
+                <div class="meta">จาก: <%= t.owner_username || t.username || 'unknown' %> • สถานะ: <%= t.status %></div>
+              </div>
+              <div>
+                <a class="btn" href="/admin/tickets/<%= t.id %>">ดู</a>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div style="padding:30px; background:#f8f9fa; border-radius:8px">ยังไม่มี ticket</div>
+      <% } %>
+    </div>
+  </main>
+</body>
+</html>

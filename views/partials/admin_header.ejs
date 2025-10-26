@@ -1,0 +1,55 @@
+<header class="admin-top" style="background:linear-gradient(135deg,#4f46e5,#06b6d4); color:white; padding:18px 0;">
+  <div class="container" style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+    <div style="display:flex; align-items:center; gap:14px; min-width:0;">
+  <a href="/admin" style="display:inline-flex; align-items:center; gap:12px; text-decoration:none; color:white;">
+        <div style="width:56px; height:56px; border-radius:10px; background:rgba(255,255,255,0.12); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:20px; box-shadow:inset 0 -6px 12px rgba(0,0,0,0.08);">SB</div>
+        <div style="line-height:1;">
+          <div style="font-weight:800; font-size:18px;">SwapABook Admin</div>
+          <div style="font-size:12px; opacity:0.9;">จัดการระบบและตรวจสอบ</div>
+        </div>
+      </a>
+    </div>
+
+      <div style="display:flex; align-items:center; gap:12px;">
+      <% /* showAdminSearch default to true unless explicitly false */ %>
+      <% var _showSearch = (typeof showAdminSearch === 'undefined') ? true : showAdminSearch; %>
+      <% if (_showSearch) { %>
+      <div style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.06); padding:6px 10px; border-radius:8px;">
+        <input id="adminSearch" placeholder="ค้นหา..." style="background:transparent; border:none; outline:none; color:white; width:200px;" />
+        <button onclick="document.getElementById('adminSearch').focus()" style="background:transparent; border:none; color:white; font-size:16px;">🔍</button>
+      </div>
+      <% } %>
+
+      <a href="/admin/reports" style="background:rgba(255,255,255,0.08); padding:8px 12px; border-radius:8px; color:white; text-decoration:none; font-weight:700;">
+        🔔 รายงาน
+        <% if (typeof openReportsCount !== 'undefined' && openReportsCount > 0) { %>
+          <span style="background:#ffdd57; color:#2b2b2b; padding:2px 8px; margin-left:8px; border-radius:12px; font-weight:800;"><%= openReportsCount %></span>
+        <% } %>
+      </a>
+
+      <div style="display:flex; align-items:center; gap:10px;">
+        <a href="/admin/settings" style="color:white; text-decoration:none; opacity:0.95;">⚙️</a>
+        <a href="/auth/logout" style="background:#ef4444; color:white; padding:8px 12px; border-radius:8px; text-decoration:none; font-weight:700;">Logout</a>
+      </div>
+    </div>
+  </div>
+
+  <nav style="margin-top:12px; background:transparent;">
+    <div class="container" style="display:flex; gap:12px; flex-wrap:wrap;">
+      <a href="/admin" style="padding:8px 12px; border-radius:8px; background:rgba(255,255,255,0.08); color:white; text-decoration:none; font-weight:700;">📊 Dashboard</a>
+      <a href="/admin/users" style="padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">👥 Users</a>
+      <a href="/admin/books" style="padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">📚 Books</a>
+      <a href="/admin/exchanges" style="padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">🔄 Exchanges</a>
+      <a href="/admin/tickets" style="padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">🎫 Tickets</a>
+      <a href="/admin/reports" style="padding:8px 12px; border-radius:8px; color:white; text-decoration:none;">📣 Reports</a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  /* admin header small adjustments */
+  .admin-top .container { max-width:1100px; margin:0 auto; }
+  @media (max-width:720px) {
+    .admin-top input#adminSearch { width:120px; }
+  }
+</style>

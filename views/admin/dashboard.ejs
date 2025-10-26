@@ -169,23 +169,7 @@
   </style>
 </head>
 <body>
-  <div class="admin-header">
-    <div class="container">
-      <h1>🛠️ Admin Dashboard</h1>
-      <p>ยินดีต้อนรับ <strong><%= user.username %></strong> สู่ระบบจัดการ</p>
-    </div>
-  </div>
-
-  <div class="admin-nav">
-    <div class="container">
-      <a href="/admin" class="active">📊 Dashboard</a>
-      <a href="/admin/users">👥 จัดการผู้ใช้</a>
-      <a href="/admin/books">📚 จัดการหนังสือ</a>
-      <a href="/admin/exchanges">🔄 การแลกเปลี่ยน</a>
-      <a href="/admin/settings">⚙️ ตั้งค่า</a>
-      <a href="/dashboard">🏠 กลับหน้าหลัก</a>
-    </div>
-  </div>
+  <%- include('../partials/admin_header', { showAdminSearch: false }) %>
 
   <main class="container">
     <!-- Statistics Cards -->
@@ -303,13 +287,14 @@
     </div>
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-bottom">
+  <footer class="site-footer" style="background:linear-gradient(135deg,#4f46e5,#06b6d4); color:white; margin-top:40px; padding:18px 0;">
+    <div class="container footer-bottom" style="display:flex; justify-content:space-between; align-items:center;">
       <div class="copyright">Admin Panel - SwapABook <%= new Date().getFullYear() %></div>
+      <div style="font-size:13px; opacity:0.95;">ดูแลโดยทีมงาน SwapABook</div>
     </div>
   </footer>
 
-  <%- include('../partials/report_footer') %>
+  
 
   <script src="/js/performance.js"></script>
   <script>

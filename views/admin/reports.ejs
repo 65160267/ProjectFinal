@@ -19,36 +19,14 @@
     </style>
   </head>
   <body>
-    <header class="site-header">
-      <div class="header-inner container">
-        <div class="brand"><a href="/dashboard">SwapABook</a></div>
-        <nav class="header-actions">
-          <a href="/admin">Admin</a>
-          <a href="/admin/dashboard">Dashboard</a>
-          <a href="/admin/reports">Reports</a>
-          <a href="/auth/logout">Logout</a>
-        </nav>
-      </div>
-    </header>
+    <%- include('../partials/admin_header') %>
 
     <main class="container reports-wrap">
       <h1>รายงานข้อผิดพลาด / ปัญหา</h1>
 
       <section class="report-form">
         <h3>สร้างรายงาน (ทดสอบ)</h3>
-        <form method="post" action="/admin/reports">
-          <div>
-            <label>หัวข้อ</label><br />
-            <input name="title" style="width:100%; padding:8px;" />
-          </div>
-          <div style="margin-top:8px;">
-            <label>รายละเอียด</label><br />
-            <textarea name="description" rows="4" style="width:100%; padding:8px;"></textarea>
-          </div>
-          <div style="margin-top:8px;">
-            <button class="btn btn-primary" type="submit">ส่งรายงาน</button>
-          </div>
-        </form>
+      <%- include('../partials/admin_header', { showAdminSearch: false }) %>
       </section>
 
       <section>

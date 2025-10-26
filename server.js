@@ -39,6 +39,7 @@ const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 const exchangeRoutes = require('./routes/exchangeRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const adminNotify = require('./controllers/adminNotify');
 const reportRoutes = require('./routes/reportRoutes');
 // design preview route (temporary)
 app.get('/designed', (req, res) => res.render('designed'));
@@ -171,6 +172,9 @@ app.get('/debug', async (req, res) => {
     }
 });
 
+// admin notification middleware - provide open reports count to templates
+app.use(adminNotify);
+
 app.use('/', indexRoutes);
 app.use('/books', bookRoutes);
 app.use('/auth', authRoutes);
@@ -203,6 +207,49 @@ async function runMigrationsAndStart() {
 
         await pool.query(createExchangeHistory);
         console.log('Migrations: ensured exchange_history table exists');
+        // ensure admin_reports (tickets) table exists for admin panel
+        const createAdminReports = `
+            CREATE TABLE IF NOT EXISTS admin_reports (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                reporter_username VARCHAR(191) DEFAULT NULL,
+                title VARCHAR(255) DEFAULT NULL,
+                description TEXT,
+                status VARCHAR(32) DEFAULT 'open',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        `;
+        await pool.query(createAdminReports);
+        console.log('Migrations: ensured admin_reports table exists');
+
+        // lightweight tickets table (optional alternate ticketing schema)
+        const createTickets = `
+            CREATE TABLE IF NOT EXISTS tickets (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                user_id INT DEFAULT NULL,
+                subject VARCHAR(255) DEFAULT NULL,
+                body TEXT,
+                status VARCHAR(32) DEFAULT 'open',
+                priority ENUM('low','medium','high') DEFAULT 'medium',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP NULL DEFAULT NULL
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        `;
+        await pool.query(createTickets);
+        console.log('Migrations: ensured tickets table exists');
+        // ticket comments for threaded replies on tickets/reports
+        const createTicketComments = `
+            CREATE TABLE IF NOT EXISTS ticket_comments (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                ticket_id INT NOT NULL,
+                user_id INT DEFAULT NULL,
+                username VARCHAR(191) DEFAULT NULL,
+                body TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        `;
+        await pool.query(createTicketComments);
+        console.log('Migrations: ensured ticket_comments table exists');
             try {
                 await pool.query("ALTER TABLE exchange_requests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP NULL");
                 console.log('Migrations: ensured exchange_requests.completed_at exists');

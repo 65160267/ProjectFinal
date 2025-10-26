@@ -33,12 +33,14 @@ exports.login = async (req, res) => {
         const ok = await bcrypt.compare(password, user.password_hash);
         if (!ok) return res.render('auth/login', { error: 'Invalid credentials', message: null });
 
-        // authenticated
-        req.session.userId = user.id;
-        req.session.username = user.username;
-        req.session.isAdmin = (user.role === 'admin');
-        console.log(`User logged in: id=${user.id} username=${user.username} isAdmin=${req.session.isAdmin}`);
-  return res.redirect('/dashboard');
+    // authenticated
+    req.session.userId = user.id;
+    req.session.username = user.username;
+    req.session.isAdmin = (user.role === 'admin');
+    console.log(`User logged in: id=${user.id} username=${user.username} isAdmin=${req.session.isAdmin}`);
+    // Redirect admins to admin panel, others to dashboard
+    if (req.session.isAdmin) return res.redirect('/admin');
+    return res.redirect('/dashboard');
       }
     }
 
@@ -54,10 +56,10 @@ exports.login = async (req, res) => {
         console.log(`Using plain text check: "${password}" vs "${process.env.ADMIN_PASSWORD || 'password'}"`);
         if (password !== (process.env.ADMIN_PASSWORD || 'password')) return res.render('auth/login', { error: 'Invalid credentials', message: null });
       }
-      req.session.isAdmin = true;
-      req.session.username = ADMIN_USER;
-      console.log(`Admin fallback login successful: username=${ADMIN_USER}`);
-      return res.redirect('/dashboard');
+  req.session.isAdmin = true;
+  req.session.username = ADMIN_USER;
+  console.log(`Admin fallback login successful: username=${ADMIN_USER}`);
+  return res.redirect('/admin');
     }
 
     // not found anywhere

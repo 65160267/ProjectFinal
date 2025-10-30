@@ -1,0 +1,78 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Messages</title>
+  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>" />
+  <!-- cache-bust by appending timestamp during dev so browser fetches latest CSS -->
+  <link rel="stylesheet" href="/css/chat-style.css?v=<%= Date.now() %>" />
+    <script src="/socket.io/socket.io.js"></script>
+  </head>
+  <body>
+    <main class="chat-page">
+      <header class="chat-topbar">
+        <div style="display:flex;align-items:center;gap:12px">
+          <h1 class="chat-title">แชท</h1>
+          <a class="chat-all" href="/messages">ดูทั้งหมด</a>
+        </div>
+        <div class="topbar-user">
+          <img src="<%= (me && me.avatar) ? me.avatar : '/images/profile-placeholder.svg' %>" alt="avatar" class="topbar-avatar" />
+          <div class="topbar-name"><%= (me && (me.username || me.name)) || ('user:' + (me && me.userId)) %></div>
+        </div>
+      </header>
+
+      <section class="chat-wrap">
+        <aside class="chat-list">
+          <div class="list-header">
+            <h3>แชท</h3>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div class="search-wrap"><input class="list-search" id="convSearch" placeholder="ค้นหาผู้ใช้งานหรือข้อความ" /></div>
+              <a class="view-all" href="/messages">ดูทั้งหมด</a>
+            </div>
+          </div>
+
+          <ul class="conversations" id="conversations">
+            <% (conversations || []).forEach(function(c){ %>
+              <li class="conv-item" data-user-id="<%= c.id %>" data-username="<%= c.username %>">
+                <img class="conv-avatar" src="<%= c.avatar %>" alt="avatar" />
+                <div class="conv-meta">
+                  <div class="conv-top"><strong class="conv-name"><%= c.username %></strong> <span class="conv-time"><%= c.time || '' %></span></div>
+                  <div class="conv-snippet"><%= c.snippet || '' %></div>
+                </div>
+                <div class="conv-badge"><%= c.unread || '' %></div>
+              </li>
+            <% }) %>
+          </ul>
+        </aside>
+
+        <main class="chat-panel">
+          <div class="panel-header">
+            <img class="panel-avatar" src="/images/default-avatar.png" data-default="/images/default-avatar.png" alt="avatar" />
+            <div class="panel-user">
+              <div class="panel-name">ผู้ใช้</div>
+              <div class="panel-username">@username</div>
+            </div>
+            <div class="panel-status" id="panelStatus"></div>
+          </div>
+
+          <div class="panel-messages" id="messages" aria-live="polite"></div>
+
+          <div class="panel-composer">
+            <div class="composer-box">
+              <textarea id="msgInput" placeholder="พิมพ์ข้อความ..." rows="1"></textarea>
+            </div>
+            <button id="sendBtn" class="send-btn">ส่ง</button>
+          </div>
+        </main>
+      </section>
+
+    </main>
+
+    <%- include('../partials/footer_unified') %>
+    <%- include('../partials/report_footer') %>
+
+  <script>window.me = JSON.parse('<%- JSON.stringify(me || {}) %>');</script>
+    <script src="/js/newchat.js"></script>
+  </body>
+</html>

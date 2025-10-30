@@ -23,14 +23,114 @@ app.use(session({
   saveUninitialized: true,
 }));
 
-// simple Socket.IO chat namespace for book rooms
+// Per-request user stats (items, completed exchanges, views) for templates
+app.use(async (req, res, next) => {
+    try {
+        if (!req.session || !req.session.userId) {
+            res.locals.userStats = { items: 0, exchanges: 0, views: 0 };
+            return next();
+        }
+        const uid = req.session.userId;
+        // run 3 quick subqueries in one roundtrip
+        const sql = `
+            SELECT
+                (SELECT COUNT(*) FROM books WHERE owner_id = ?) AS items,
+                (SELECT COUNT(*) FROM exchange_requests WHERE status = 'completed' AND (requester_id = ? OR book_owner_id = ?)) AS exchanges,
+                (SELECT COUNT(*) FROM book_views v JOIN books b ON v.book_id = b.id WHERE b.owner_id = ?) AS views
+        `;
+        let items = 0, exchanges = 0, views = 0;
+        try {
+            const [rows] = await pool.query(sql, [uid, uid, uid, uid]);
+            if (rows && rows[0]) {
+                items = rows[0].items || 0;
+                exchanges = rows[0].exchanges || 0;
+                views = rows[0].views || 0;
+            }
+        } catch (e) {
+            // fallback if book_views or exchange_requests not present
+            try {
+                const [[{ cntItems }]] = await pool.query('SELECT COUNT(*) AS cntItems FROM books WHERE owner_id = ?', [uid]);
+                items = cntItems || 0;
+            } catch {}
+            try {
+                const [[{ cntEx }]] = await pool.query("SELECT COUNT(*) AS cntEx FROM exchange_requests WHERE status = 'completed' AND (requester_id = ? OR book_owner_id = ?)", [uid, uid]);
+                exchanges = cntEx || 0;
+            } catch {}
+            // views left as 0 if table missing
+        }
+        res.locals.userStats = { items, exchanges, views };
+        return next();
+    } catch (err) {
+        res.locals.userStats = { items: 0, exchanges: 0, views: 0 };
+        return next();
+    }
+});
+
+// New lightweight Socket.IO namespace for messages
+// This replaces the legacy chat handlers. It uses an in-memory store for quick setup.
+const messagesNamespace = io.of('/messages');
+const inMemoryMessages = {}; // { roomName: [{ user, text, time }] }
+
+messagesNamespace.on('connection', (socket) => {
+    socket.on('join', (room) => {
+        socket.join(room);
+        socket.emit('joined', { room });
+    });
+
+    socket.on('send', ({ room, user, text }) => {
+        const msg = { user, text, time: new Date() };
+        inMemoryMessages[room] = inMemoryMessages[room] || [];
+        inMemoryMessages[room].push(msg);
+        messagesNamespace.to(room).emit('message', msg);
+    });
+
+    socket.on('getHistory', (room) => {
+        socket.emit('history', inMemoryMessages[room] || []);
+    });
+});
+
+// Legacy/global chat handlers (restore compatibility with older clients)
 io.on('connection', (socket) => {
-  socket.on('joinRoom', (room) => {
-    socket.join(room);
-  });
-  socket.on('chatMessage', ({ room, user, message }) => {
-    io.to(room).emit('chatMessage', { user, message, time: new Date() });
-  });
+    socket.on('joinRoom', (room) => {
+        socket.join(room);
+    });
+
+    socket.on('chatMessage', async (data) => {
+        try {
+            const { room, user, message } = data || {};
+            // emit to room
+            io.to(room).emit('chatMessage', { user: user && (user.username || user), message, time: new Date() });
+
+            // try to persist to DB if pool is available and tables exist
+            if (typeof pool !== 'undefined' && pool) {
+                // ensure conversation exists
+                let convId = null;
+                try {
+                    const [[existing]] = await pool.query('SELECT id FROM chat_conversations WHERE room = ? LIMIT 1', [room]);
+                    if (existing && existing.id) convId = existing.id;
+                    else {
+                        // try to parse room like chat_1_2
+                        const parts = String(room || '').split('_');
+                        let a = null, b = null;
+                        if (parts.length === 3 && parts[0] === 'chat') { a = parts[1]; b = parts[2]; }
+                        const insertRes = await pool.query('INSERT INTO chat_conversations (room, user_a, user_b) VALUES (?, ?, ?)', [room, a || null, b || null]);
+                        convId = insertRes && insertRes[0] && insertRes[0].insertId ? insertRes[0].insertId : null;
+                    }
+                } catch (e) {
+                    // ignore DB conversation errors
+                    console.error('chat conversation upsert error', e && e.message);
+                }
+
+                try {
+                    await pool.query('INSERT INTO chat_messages (conversation_id, room, username, user_id, message) VALUES (?, ?, ?, ?, ?)', [convId, room, user && (user.username || user), user && user.id ? user.id : null, message]);
+                } catch (e) {
+                    console.error('chat message insert error', e && e.message);
+                }
+            }
+        } catch (err) {
+            console.error('chatMessage handler error', err && err.message);
+        }
+    });
 });
 
 // routes (will be created)
@@ -250,12 +350,36 @@ async function runMigrationsAndStart() {
         `;
         await pool.query(createTicketComments);
         console.log('Migrations: ensured ticket_comments table exists');
+        // ensure books.owner_id exists for per-user filtering on /books
+        try {
+            await pool.query("ALTER TABLE books ADD COLUMN IF NOT EXISTS owner_id INT NULL");
+            console.log('Migrations: ensured books.owner_id exists');
+        } catch (e) {
+            // ignore if table doesn't exist in minimal setups
+        }
             try {
                 await pool.query("ALTER TABLE exchange_requests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP NULL");
                 console.log('Migrations: ensured exchange_requests.completed_at exists');
             } catch (e) {
                 // ignore
             }
+        // track views on book detail pages
+        try {
+            const createBookViews = `
+                CREATE TABLE IF NOT EXISTS book_views (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    book_id INT NOT NULL,
+                    viewer_id INT NULL,
+                    viewed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_book (book_id),
+                    INDEX idx_viewer (viewer_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            `;
+            await pool.query(createBookViews);
+            console.log('Migrations: ensured book_views table exists');
+        } catch (e) {
+            // ignore
+        }
     } catch (migErr) {
         console.error('Migration error (non-fatal):', migErr && migErr.message);
     }

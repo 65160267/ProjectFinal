@@ -1,0 +1,17 @@
+<div style="margin-top: 20px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
+  <h4 style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">📊 สถิติของคุณ</h4>
+  <div style="display: flex; justify-content: space-between; text-align: center;">
+    <div>
+      <div style="font-weight: 700; color: var(--accent-700);"><%= (typeof userStats !== 'undefined' && userStats && userStats.items) ? userStats.items : 0 %></div>
+      <div style="font-size: 11px; color: var(--muted);">รายการ</div>
+    </div>
+    <div>
+      <div style="font-weight: 700; color: var(--success-700);"><%= (typeof userStats !== 'undefined' && userStats && userStats.exchanges) ? userStats.exchanges : 0 %></div>
+      <div style="font-size: 11px; color: var(--muted);">แลกสำเร็จ</div>
+    </div>
+    <div>
+      <div style="font-weight: 700; color: #0277bd;"><%= (typeof userStats !== 'undefined' && userStats && userStats.views) ? userStats.views : 0 %></div>
+      <div style="font-size: 11px; color: var(--muted);">เข้าชม</div>
+    </div>
+  </div>
+</div>

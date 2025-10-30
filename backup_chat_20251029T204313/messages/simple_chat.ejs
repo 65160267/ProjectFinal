@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Simple Chat</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      body{font-family:Inter,Arial;margin:18px}
+      .shell{max-width:900px;margin:0 auto;display:flex;gap:16px}
+      .left{width:260px}
+      .panel{background:#fff;border-radius:10px;padding:12px;border:1px solid rgba(0,0,0,0.04)}
+      #chatWindow{height:420px;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:8px}
+      .msg.me{align-self:flex-end;background:linear-gradient(180deg,var(--accent),var(--accent-600));color:#fff;padding:8px 12px;border-radius:12px;max-width:80%}
+      .msg.other{align-self:flex-start;background:#f3f3f3;padding:8px 12px;border-radius:12px;max-width:80%}
+      .composer{display:flex;gap:8px;margin-top:8px}
+      input[type=text]{flex:1;padding:8px;border-radius:8px;border:1px solid #ddd}
+      button{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#fff}
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <div class="left">
+        <div class="panel">
+          <h3>Quick open</h3>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input id="otherId" type="text" placeholder="User id (e.g. 6)" />
+            <button id="openBtn">Open</button>
+          </div>
+          <div style="font-size:13px;color:var(--muted)">Or click a conv from existing list below</div>
+          <div id="convoList" style="margin-top:10px"></div>
+        </div>
+      </div>
+      <div style="flex:1">
+        <div class="panel">
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+            <div style="width:48px;height:48px;border-radius:50%;overflow:hidden;background:#eee"><img id="otherAvatar" src="/images/profile-placeholder.svg" style="width:100%;height:100%;object-fit:cover"/></div>
+            <div>
+              <div id="otherName" style="font-weight:700">No conversation</div>
+              <div id="otherInfo" style="font-size:13px;color:var(--muted)"></div>
+            </div>
+          </div>
+          <div id="chatWindow"></div>
+          <div class="composer">
+            <input id="msgInput" type="text" placeholder="Type a message..." />
+            <button id="sendBtn">Send</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>window.__ME__ = <%- JSON.stringify(me || null) %>;</script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat-simple.js"></script>
+  </body>
+</html>

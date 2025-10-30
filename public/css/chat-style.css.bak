@@ -1,0 +1,78 @@
+/* Backup of chat-style.css before revert (created 2025-10-30) */
+/* Original (polished) styles preserved here in case you want to restore later */
+:root{
+  --chat-bg:#0b0f10; /* main dark */
+  --panel-bg:#0f1314; /* right panel dark */
+  --list-bg:#0d1112; /* left list */
+  --muted:#9aa6a6;
+  --accent:#ff8f5a; /* send button */
+  --pale-border:rgba(255,255,255,0.08);
+}
+
+html,body{height:100%;}
+body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial;}
+
+.chat-page{min-height:100vh;background:linear-gradient(180deg,#071018 0%, #0b0f10 40%);color:#fff;padding:18px 20px;box-sizing:border-box}
+.chat-topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--pale-border);margin-bottom:12px}
+.chat-topbar .chat-title{font-size:20px;margin:0;color:#fff;font-weight:700}
+.chat-topbar .chat-all{color:var(--muted);text-decoration:none}
+
+.topbar-user{display:flex;align-items:center;gap:10px}
+.topbar-avatar{width:40px;height:40px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,0.04)}
+.topbar-name{font-weight:700;color:#fff}
+
+.chat-wrap{display:flex;gap:16px;align-items:stretch;max-width:1200px;margin:12px auto}
+.chat-list{width:340px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));padding:18px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);box-sizing:border-box}
+.list-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.list-header .search-wrap{flex:1;margin-left:12px}
+.list-search{width:100%;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.04);background:rgba(255,255,255,0.02);color:#fff}
+.conversations{list-style:none;padding:0;margin:0}
+.conv-item{display:flex;align-items:flex-start;gap:12px;padding:12px;border-radius:8px;color:#ddd;position:relative}
+.conv-item + .conv-item{margin-top:10px}
+.conv-item{transition:background 160ms ease, transform 160ms ease, box-shadow 160ms ease}
+.conv-item:hover{background:rgba(255,255,255,0.02);transform:translateX(4px)}
+.conv-item.active{background:linear-gradient(90deg, rgba(255,140,90,0.06), rgba(255,255,255,0.01));box-shadow:inset 4px 0 0 0 var(--accent);transform:none}
+.conv-avatar{width:48px;height:48px;border-radius:8px;object-fit:cover;border:2px solid rgba(255,255,255,0.03)}
+.conv-meta{flex:1}
+.conv-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.conv-name{color:#fff;font-weight:700}
+.conv-time{color:var(--muted);font-size:12px}
+.conv-snippet{color:var(--muted);font-size:13px;margin-top:6px}
+.conv-badge{background:#ff6b6b;color:#fff;padding:6px 10px;border-radius:999px;font-weight:700;position:absolute;right:12px;top:18px;animation:badge-pulse 2200ms infinite;box-shadow:0 6px 18px rgba(255,80,80,0.12)}
+
+@keyframes badge-pulse{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+  100%{transform:scale(1)}
+}
+
+.chat-panel{flex:1;display:flex;flex-direction:column;gap:8px;padding:18px;border-left:1px solid rgba(255,255,255,0.02);box-sizing:border-box}
+.panel-header{display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:linear-gradient(90deg, rgba(255,255,255,0.02), transparent);border:1px solid rgba(255,255,255,0.03)}
+.panel-status{color:var(--muted);font-size:13px;margin-left:auto;padding-right:8px}
+.panel-avatar{width:56px;height:56px;border-radius:8px;object-fit:cover;background:#e6e6e6}
+.panel-user .panel-name{font-size:18px;font-weight:800;color:#fff}
+.panel-user .panel-username{color:var(--muted);font-size:13px}
+
+.panel-messages{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.01), rgba(0,0,0,0.02));border:1px solid rgba(255,255,255,0.03);border-radius:10px;padding:18px;overflow:auto;box-shadow:inset 0 1px 0 rgba(255,255,255,0.02)}
+.panel-messages .message{margin-bottom:14px;max-width:72%}
+.panel-messages .message.me{margin-left:auto}
+.panel-messages .message .bubble{padding:12px;border-radius:6px;line-height:1.4}
+.panel-messages .message.me .bubble{background:#ffe9d8;color:#111}
+.panel-messages .message.other .bubble{background:transparent;border:1px solid rgba(255,255,255,0.03);color:#fff}
+.panel-messages .meta{font-size:12px;color:var(--muted);margin-top:6px}
+
+.panel-messages .message{opacity:0;transform:translateY(8px);transition:all 260ms cubic-bezier(.16,.8,.26,1)}
+.panel-messages .message.appear{opacity:1;transform:translateY(0)}
+
+.panel-composer{display:flex;align-items:flex-end;gap:12px;margin-top:14px;position:relative;padding:8px 0}
+.panel-composer .composer-box{flex:1;background:#fff;border-radius:18px;padding:12px 18px;box-sizing:border-box;min-height:74px;box-shadow:0 12px 40px rgba(3,8,10,0.6)}
+.panel-composer .composer-box textarea{width:100%;border:none;background:transparent;resize:none;min-height:56px;font-size:15px;color:#111;outline:none;padding:6px 0}
+.panel-composer .send-btn{position:absolute;right:18px;bottom:18px;width:56px;height:56px;border-radius:14px;background:linear-gradient(180deg,var(--accent),#ff7043);border:none;color:#fff;font-weight:800;cursor:pointer;box-shadow:0 18px 40px rgba(255,110,70,0.22);display:flex;align-items:center;justify-content:center}
+
+@media (max-width:900px){
+  .chat-list{display:none}
+  .chat-panel{padding:12px}
+}
+
+/* helper for empty state */
+.panel-messages.empty{display:flex;align-items:center;justify-content:center;color:var(--muted)}

@@ -1,11 +1,51 @@
-<div class="unified-box">
-  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px;">
-    <div style="display:flex;gap:12px;align-items:center;">
-      <div style="width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;">📚</div>
-      <div>
-        <div style="font-weight:900;color:#fff;font-size:18px;">SwapABook</div>
-        <div style="font-size:13px;color:rgba(255,255,255,0.95);">แลกเปลี่ยนหนังสือออนไลน์</div>
+<footer class="site-footer">
+  <div class="container">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+      <!-- Left: Branding -->
+      <div style="display:flex;gap:12px;align-items:center;">
+        <div style="width:56px;height:56px;border-radius:10px;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;color:#fff;">📚</div>
+        <div>
+          <div style="font-weight:900;color:#fff;font-size:18px;">SwapABook</div>
+          <div style="font-size:13px;color:rgba(255,255,255,0.9);">แลกเปลี่ยนหนังสือออนไลน์</div>
+        </div>
+      </div>
+
+      <!-- Center: Logged-in chip -->
+      <% if (typeof user !== 'undefined' && user && user.username) { %>
+        <div style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.15);padding:12px 20px;border-radius:25px;backdrop-filter:blur(10px);">
+          <img src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.svg') %>" alt="Profile" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" onerror="this.src='/images/profile-placeholder.svg'" />
+          <div>
+            <div style="color:#fff;font-weight:700;font-size:14px;"><%= user.full_name || user.username %></div>
+            <div style="color:rgba(255,255,255,0.85);font-size:12px;">🎯 ผู้ใช้งานระบบ • <%= user.location || 'ไม่ระบุที่อยู่' %></div>
+          </div>
+          <a href="/user" style="background:rgba(255,255,255,0.2);color:#fff;padding:6px 8px;border-radius:6px;text-decoration:none;font-size:12px;">✏️</a>
+        </div>
+      <% } %>
+
+      <!-- Right: Copyright -->
+      <div style="text-align:right;">
+        <div style="color:#fff;font-weight:700;font-size:14px;margin-bottom:4px;">© <%= new Date().getFullYear() %> SwapABook</div>
+        <div style="color:rgba(255,255,255,0.85);font-size:12px;">By Weerapat Tapaothong</div>
       </div>
     </div>
-<!-- footer_unified removed during revert -->
-    <div style="display:flex;align-items:center;gap:12px;">
+
+    <!-- Bottom links -->
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.25);">
+      <div style="display:flex;justify-content:center;align-items:center;gap:24px;flex-wrap:wrap;">
+        <a href="/dashboard" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">🏠 <span>หน้าแรก</span></a>
+        <a href="/books" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">📚 <span>รายการทั้งหมด</span></a>
+        <% if (typeof user !== 'undefined' && user && user.id) { %>
+          <a href="/books/new" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">➕ <span>เพิ่มใหม่</span></a>
+        <% } %>
+        <a href="/user" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">👤 <span>โปรไฟล์</span></a>
+      </div>
+    </div>
+
+    <style>
+      @media (max-width: 768px) {
+        .site-footer [style*="justify-content:space-between"] { flex-direction: column; text-align: center; gap: 20px; }
+        .site-footer [style*="text-align:right"] { text-align: center !important; }
+      }
+    </style>
+  </div>
+</footer>

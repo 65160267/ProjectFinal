@@ -1,0 +1,114 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>ข้อความของฉัน</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      /* use global site variables for a consistent light/orange theme */
+      :root { --msgs-bg: var(--bg); --msgs-panel: var(--card); --msgs-muted: var(--muted); --msgs-accent: var(--accent); }
+      html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial;background:var(--msgs-bg);color:var(--text)}
+      .inbox-shell{height:calc(100vh - 48px);display:flex;gap:20px;align-items:flex-start}
+      aside{width:320px;background:var(--msgs-panel);padding:14px;border:1px solid rgba(0,0,0,0.03);border-radius:12px;overflow:auto}
+  .conv{display:flex;gap:12px;align-items:center;padding:12px;border-radius:12px;margin-bottom:12px;text-decoration:none;color:inherit;border:1px solid rgba(0,0,0,0.03);background:linear-gradient(180deg, rgba(255,255,255,0.6), rgba(255,255,255,0.6));box-shadow:0 1px 2px rgba(0,0,0,0.03)}
+  .conv:hover{transform:translateY(-1px);transition:all .12s ease;border-color:rgba(0,0,0,0.04)}
+  .conv.selected{background:linear-gradient(90deg, rgba(246,169,122,0.06), rgba(246,169,122,0.02));box-shadow:0 4px 12px rgba(246,169,122,0.06);border-left:6px solid var(--msgs-accent);padding-left:10px}
+  .conv .avatar{width:56px;height:56px;border-radius:12px;overflow:hidden;border:1px solid rgba(0,0,0,0.04);flex-shrink:0;background:linear-gradient(180deg,#fff,#fbfbfb);display:flex;align-items:center;justify-content:center}
+  .conv .avatar img{width:100%;height:100%;object-fit:cover}
+      .conv .meta{flex:1;min-width:0}
+      .conv .meta .name{font-weight:700;color:var(--muted)}
+      .conv .meta .last{font-size:13px;color:var(--msgs-muted);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      main{flex:1;display:flex;flex-direction:column}
+      .chat-header{display:flex;align-items:center;gap:12px;padding:12px;border-bottom:1px solid rgba(0,0,0,0.04);background:transparent}
+      .chat-main{flex:1;display:flex;flex-direction:column}
+      #chatWindow{flex:1;overflow:auto;padding:18px;display:flex;flex-direction:column;gap:12px;background:var(--msgs-panel);border:1px solid rgba(0,0,0,0.04);border-radius:12px}
+      .ts-center{text-align:center;color:var(--msgs-muted);font-size:12px;margin:8px 0}
+      .message{max-width:72%;padding:12px 16px;border-radius:14px;line-height:1.3;word-wrap:break-word;background:#fff;border:1px solid rgba(0,0,0,0.03)}
+      .message.me{margin-left:auto;background:linear-gradient(180deg,var(--msgs-accent),var(--accent-600));color:#fff;border:none}
+      .message.other{margin-right:auto;background:#fbf6f2;color:var(--text);display:flex;gap:10px;align-items:flex-start}
+      .message.other .avatar-mini{width:36px;height:36px;border-radius:8px;overflow:hidden;flex-shrink:0;border:1px solid rgba(0,0,0,0.04)}
+      .muted{font-size:12px;color:var(--msgs-muted);margin-top:6px}
+      .composer{display:flex;gap:8px;padding:12px;border-top:1px solid rgba(0,0,0,0.04);align-items:center;background:transparent;margin-top:12px}
+      .composer .left-actions{display:flex;gap:8px}
+      .composer .icon-btn{width:40px;height:40px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;background:transparent;border:1px solid rgba(0,0,0,0.04);color:var(--msgs-muted);font-size:18px}
+      #msgInput{flex:1;background:#fff;border-radius:14px;padding:12px 16px;border:1px solid var(--input-border);color:var(--text)}
+      #msgInput::placeholder{color:var(--msgs-muted)}
+      #sendBtn{background:linear-gradient(180deg,var(--msgs-accent),var(--accent-600));border:none;color:#fff;padding:10px 16px;border-radius:12px}
+      /* scrollbar */
+      #chatWindow::-webkit-scrollbar{width:10px}
+      #chatWindow::-webkit-scrollbar-thumb{background:rgba(0,0,0,0.06);border-radius:10px}
+    </style>
+  </head>
+  <body>
+    <div class="inbox-shell">
+      <aside>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <h3 style="margin:0">แชท</h3>
+          <a href="/chat" style="color:var(--muted);text-decoration:none;font-size:13px">ดูทั้งหมด</a>
+        </div>
+        <div id="conversations">
+          <% if (convos && convos.length) { %>
+            <% convos.forEach(function(c){ %>
+              <a href="/messages?open=<%= c.otherId %>" class="conv" data-room="<%= c.room %>" data-other-id="<%= c.otherId %>">
+                <div class="avatar">
+                  <img src="<%= c.other && c.other.avatar ? (c.other.avatar.startsWith('/')? c.other.avatar : ('/uploads/' + c.other.avatar)) : '/images/profile-placeholder.svg' %>" alt="avatar" />
+                </div>
+                <div class="meta">
+                  <div class="name"><%= c.other && (c.other.full_name || c.other.username) ? (c.other.full_name || c.other.username) : ('User ' + c.otherId) %></div>
+                  <div class="last"><%= c.last && c.last.message ? c.last.message : '' %></div>
+                </div>
+                <% if (c.unread_count && c.unread_count>0) { %>
+                  <div style="background:#ff4d4f;color:#fff;padding:6px 8px;border-radius:12px;font-weight:700;font-size:12px"><%= c.unread_count>99? '99+': c.unread_count %></div>
+                <% } %>
+              </a>
+            <% }) %>
+          <% } else { %>
+            <div style="opacity:0.7;color:var(--muted);padding:12px">ยังไม่มีการสนทนา</div>
+          <% } %>
+        </div>
+      </aside>
+      <main>
+        <div class="chat-header">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="width:44px;height:44px;border-radius:50%;overflow:hidden"><img id="otherAvatar" src="/images/profile-placeholder.svg" style="width:100%;height:100%;object-fit:cover"/></div>
+            <div>
+              <div id="otherName" style="font-weight:700">เลือกการสนทนา</div>
+              <div id="otherUsername" style="font-size:13px;color:var(--muted)"></div>
+            </div>
+          </div>
+        </div>
+        <div class="chat-main">
+          <div id="chatWindow">
+            <!-- Empty state shown while no conversation is selected -->
+            <div class="empty-state" style="display:flex;flex-direction:column;gap:18px;align-items:center;padding:24px">
+              <div style="display:flex;align-items:center;gap:12px;width:100%">
+                <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;background:#fff;border:1px solid rgba(0,0,0,0.04)"><img src="/images/profile-placeholder.svg" style="width:100%;height:100%;object-fit:cover"/></div>
+                <div style="flex:1">
+                  <div style="font-weight:700;color:var(--muted)">เลือกการสนทนา</div>
+                  <div style="font-size:13px;color:var(--muted);margin-top:4px">เลือกชื่อจากคอลัมน์ซ้ายเพื่อเริ่มการสนทนา</div>
+                </div>
+              </div>
+
+              <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);opacity:0.95">
+                <div style="text-align:center">
+                  <div style="font-size:20px;font-weight:700;margin-bottom:8px">เริ่มการสนทนา</div>
+                  <div style="max-width:520px">เลือกผู้ใช้จากคอลัมน์ซ้ายหรือคลิก "💬 แชทกับเจ้าของ" บนหน้าสินค้าเพื่อเริ่มการสนทนา</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- composer removed per user request -->
+        </div>
+      </main>
+    </div>
+    <script>
+      // current session user info (may be null)
+      window.__ME__ = <%- JSON.stringify(me || null) %>;
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat-new.js"></script>
+    <%- include('../partials/footer_unified') %>
+    <%- include('../partials/report_footer') %>
+  </body>
+</html>

@@ -6,6 +6,13 @@
     <title>Swap A Book — Dashboard</title>
     <link rel="stylesheet" href="/css/style.css" />
     <link rel="stylesheet" href="/css/performance.css" />
+    <style>
+      /* Ensure cards have consistent heights and actions sit at the bottom */
+      .product-grid { align-items: stretch; }
+      .product-card { display: flex; flex-direction: column; height: 100%; }
+      .product-body { display: flex; flex-direction: column; flex: 1; }
+      .product-actions { margin-top: auto; display: flex; justify-content: center; padding-top: 6px; }
+    </style>
   </head>
   <body>
     <% 
@@ -29,6 +36,7 @@
         </form>
         <nav class="header-actions">
           <a href="/books" title="Cart">🛍️</a>
+          <a href="/messages" title="Messages">💬</a>
           <% if (typeof user !== 'undefined' && user && user.username) { %>
             <a href="/user" class="header-user" title="Your profile">
               <img class="user-avatar" 
@@ -101,23 +109,7 @@
         </ul>
 
         <!-- Quick Stats -->
-        <div style="margin-top: 20px; padding: 12px; background: #f8f9fa; border-radius: 8px;">
-          <h4 style="color: var(--muted); font-size: 14px; margin-bottom: 8px;">📊 สถิติของคุณ</h4>
-          <div style="display: flex; justify-content: space-between; text-align: center;">
-            <div>
-              <div style="font-weight: 700; color: var(--accent-700);">0</div>
-              <div style="font-size: 11px; color: var(--muted);">รายการ</div>
-            </div>
-            <div>
-              <div style="font-weight: 700; color: var(--success-700);">0</div>
-              <div style="font-size: 11px; color: var(--muted);">แลกสำเร็จ</div>
-            </div>
-            <div>
-              <div style="font-weight: 700; color: #0277bd;">0</div>
-              <div style="font-size: 11px; color: var(--muted);">เข้าชม</div>
-            </div>
-          </div>
-        </div>
+        <%- include('partials/user_stats') %>
       </aside>
 
       <section class="market-content">
@@ -187,10 +179,10 @@
                     </div>
                     
                     <!-- Action Button -->
-                    <div style="text-align: center;">
+                    <div class="product-actions">
                       <a class="btn btn-primary" href="/books/<%= b.id %>" 
                          title="ดูรายละเอียด <%= b.title %>"
-                         style="width: 100%; font-size: 13px; padding: 8px 12px; background: linear-gradient(135deg, var(--accent), var(--accent-600));">
+                         style="display: inline-block; font-size: 13px; padding: 10px 16px; border-radius: 10px;">
                         👀 ดูรายละเอียด
                       </a>
                     </div>
@@ -214,95 +206,7 @@
       </section>
     </main>
 
-    <!-- Enhanced Footer with Profile -->
-    <footer class="site-footer" style="background: linear-gradient(135deg, var(--accent), var(--accent-600)); margin-top: 40px; padding: 24px 0;">
-      <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
-          
-          <!-- Left Section: Branding -->
-          <div style="display: flex; align-items: center; gap: 12px;">
-            <div style="background: rgba(255,255,255,0.2); padding: 12px; border-radius: 12px;">
-              <span style="font-size: 24px;">📚</span>
-            </div>
-            <div>
-              <div style="color: white; font-weight: 800; font-size: 18px;">SwapABook</div>
-              <div style="color: rgba(255,255,255,0.8); font-size: 13px;">แลกเปลี่ยนหนังสือออนไลน์</div>
-            </div>
-          </div>
-
-          <!-- Center Section: User Profile (if logged in) -->
-          <% if (typeof user !== 'undefined' && user && user.username) { %>
-            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.15); padding: 12px 20px; border-radius: 25px; backdrop-filter: blur(10px);">
-              <img src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.svg') %>" 
-                   alt="Profile" 
-                   style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;" 
-                   onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23f0f0f0%22/%3E%3Ccircle cx=%2275%22 cy=%2260%22 r=%2225%22 fill=%22%23ddd%22/%3E%3Cpath d=%22M30 130 Q30 100 50 100 L100 100 Q120 100 120 130 Z%22 fill=%22%23ddd%22/%3E%3C/svg%3E'" />
-              <div>
-                <div style="color: white; font-weight: 700; font-size: 14px;">
-                  <%= user.full_name || user.username %>
-                </div>
-                <div style="color: rgba(255,255,255,0.8); font-size: 12px;">
-                  🎯 ผู้ใช้งานระบบ • <%= user.location || 'ไม่ระบุที่อยู่' %>
-                </div>
-              </div>
-              <a href="/user" style="background: rgba(255,255,255,0.2); color: white; padding: 6px 8px; border-radius: 6px; text-decoration: none; font-size: 12px;">
-                ✏️
-              </a>
-            </div>
-          <% } %>
-
-          <!-- Right Section: Copyright & Stats -->
-          <div style="text-align: right;">
-            <div style="color: white; font-weight: 700; font-size: 14px; margin-bottom: 4px;">
-              © <%= new Date().getFullYear() %> SwapABook
-            </div>
-            <div style="color: rgba(255,255,255,0.8); font-size: 12px;">
-              By Weerapat Tapaothong
-            </div>
-            <div style="color: rgba(255,255,255,0.7); font-size: 11px; margin-top: 4px;">
-              📈 เข้าชมวันนี้: <span style="font-weight: 600;">0</span> ครั้ง
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Bottom Row: Quick Links -->
-        <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.2);">
-          <div style="display: flex; justify-content: center; align-items: center; gap: 24px; flex-wrap: wrap;">
-            <a href="/dashboard" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-              🏠 <span>หน้าแรก</span>
-            </a>
-            <a href="/books" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-              📚 <span>รายการทั้งหมด</span>
-            </a>
-            <% if (typeof user !== 'undefined' && user && user.id) { %>
-              <a href="/books/new" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-                ➕ <span>เพิ่มใหม่</span>
-              </a>
-            <% } %>
-            <a href="/user" style="color: rgba(255,255,255,0.9); text-decoration: none; font-size: 13px; display: flex; align-items: center; gap: 6px;">
-              👤 <span>โปรไฟล์</span>
-            </a>
-          </div>
-        </div>
-
-        <!-- Mobile Responsive Adjustments -->
-        <style>
-          @media (max-width: 768px) {
-            .site-footer [style*="display: flex; justify-content: space-between"] {
-              flex-direction: column;
-              text-align: center;
-              gap: 20px;
-            }
-            
-            .site-footer [style*="text-align: right"] {
-              text-align: center !important;
-            }
-          }
-        </style>
-
-      </div>
-    </footer>
+    <%- include('partials/footer_unified') %>
 
   <%- include('partials/report_footer') %>
 

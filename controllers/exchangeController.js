@@ -310,6 +310,49 @@ exports.completeExchange = async (req, res) => {
 // แสดงประวัติการแลกเปลี่ยนสำหรับผู้ใช้ที่ล็อกอิน
 exports.getHistory = async (req, res) => {
   if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+
+  // helper: normalize thumbnail/url
+  function normalize(src) {
+    if (!src) return '/images/profile-placeholder.svg';
+    src = String(src).trim();
+    if (/^https?:\/\//i.test(src)) return src;
+    if (src.startsWith('/')) return src;
+    return '/uploads/' + src;
+  }
+
+  // fallback: synthesize history from completed exchange_requests
+  async function loadFallbackHistory(userId) {
+    try {
+      const [reqRows] = await db.pool.query(`
+   SELECT er.id as exchange_request_id,
+     er.requester_id as user1_id,
+     er.book_owner_id as user2_id,
+     er.requested_book_id as book1_id,
+     er.offered_book_id as book2_id,
+     CASE WHEN er.updated_at IS NOT NULL THEN er.updated_at ELSE er.created_at END as exchange_date,
+               u1.username as user1_username, u2.username as user2_username,
+               b1.title as book1_title, b1.thumbnail as book1_thumbnail,
+               b2.title as book2_title, b2.thumbnail as book2_thumbnail
+        FROM exchange_requests er
+        LEFT JOIN users u1 ON er.requester_id = u1.id
+        LEFT JOIN users u2 ON er.book_owner_id = u2.id
+        LEFT JOIN books b1 ON er.requested_book_id = b1.id
+        LEFT JOIN books b2 ON er.offered_book_id = b2.id
+        WHERE er.status = 'completed' AND (er.requester_id = ? OR er.book_owner_id = ?)
+        ORDER BY exchange_date DESC
+      `, [userId, userId]);
+
+      reqRows.forEach(r => {
+        r.book1_thumbnail = normalize(r.book1_thumbnail);
+        r.book2_thumbnail = normalize(r.book2_thumbnail);
+      });
+      return reqRows;
+    } catch (e) {
+      console.error('Fallback history load failed:', e && e.message);
+      return [];
+    }
+  }
+
   try {
     const [rows] = await db.pool.query(`
       SELECT eh.*, 
@@ -325,24 +368,28 @@ exports.getHistory = async (req, res) => {
       ORDER BY eh.exchange_date DESC
     `, [req.session.userId, req.session.userId]);
 
-    // normalize thumbnails to usable URLs
     rows.forEach(r => {
-      function normalize(src) {
-        if (!src) return '/images/profile-placeholder.svg';
-        src = String(src).trim();
-        if (/^https?:\/\//i.test(src)) return src;
-        if (src.startsWith('/')) return src;
-        return '/uploads/' + src;
-      }
       r.book1_thumbnail = normalize(r.book1_thumbnail);
       r.book2_thumbnail = normalize(r.book2_thumbnail);
     });
 
+    // If no rows in exchange_history, try fallback from completed requests
+    if (!rows || rows.length === 0) {
+      const fallback = await loadFallbackHistory(req.session.userId);
+      if (fallback && fallback.length > 0) {
+        return res.render('exchange/history', { history: fallback });
+      }
+    }
+
     res.render('exchange/history', { history: rows });
   } catch (err) {
     console.error('Error fetching exchange history:', err);
-    // If the exchange_history table doesn't exist, render an empty history with a friendly message
+    // If the exchange_history table doesn't exist, attempt fallback from exchange_requests
     if (err && err.code === 'ER_NO_SUCH_TABLE') {
+      const fallback = await loadFallbackHistory(req.session.userId);
+      if (fallback && fallback.length > 0) {
+        return res.render('exchange/history', { history: fallback });
+      }
       return res.render('exchange/history', { history: [], warning: 'ตาราง `exchange_history` ยังไม่มีในฐานข้อมูล — รันไฟล์ SQL `db/exchange_system_complete.sql` เพื่อสร้างตารางประวัติการแลกเปลี่ยน' });
     }
     res.status(500).send('เกิดข้อผิดพลาดในการดึงประวัติการแลกเปลี่ยน');

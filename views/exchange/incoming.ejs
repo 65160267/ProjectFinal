@@ -163,6 +163,39 @@
         margin-bottom: 20px;
         border: 1px solid #c3e6cb;
       }
+      .tabs { 
+        display: flex; 
+        gap: 12px; 
+        background: rgba(255,255,255,0.05); 
+        padding: 6px; 
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+      .tab { 
+        padding: 10px 20px; 
+        border-radius: 8px; 
+        text-decoration: none; 
+        color: var(--muted, #6b7280); 
+        background: transparent;
+        font-size: 14px; 
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid transparent;
+      }
+      .tab:hover { 
+        background: rgba(255,255,255,0.1); 
+        color: var(--dark, #1f2937);
+        transform: translateY(-1px);
+      }
+      .tab.active { 
+        background: linear-gradient(135deg, var(--accent, #ff7a59) 0%, var(--accent-600, #ff6347) 100%);
+        color: white;
+        box-shadow: 0 4px 12px rgba(255,122,89,0.4);
+        border-color: rgba(255,255,255,0.2);
+      }
     </style>
   </head>
   <body>
@@ -178,6 +211,7 @@
           <a href="/books" title="รายการหนังสือ">📚</a>
           <a href="/exchange/incoming" title="คำขอที่ได้รับ" style="background: rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px;">📥</a>
           <a href="/exchange/outgoing" title="คำขอที่ส่งไป">📤</a>
+          <a href="/exchange/history" title="ประวัติ">📜</a>
           <a href="/user" title="โปรไฟล์">👤</a>
           <a href="/auth/logout" title="ออกจากระบบ">🔓</a>
         </nav>
@@ -188,9 +222,10 @@
       <div class="exchange-container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
           <h1 style="margin: 0; color: var(--dark);">📥 คำขอแลกเปลี่ยนที่ได้รับ</h1>
-          <div style="display: flex; gap: 10px;">
-            <a href="/exchange/incoming" style="padding: 8px 16px; background: var(--accent); color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📥 ได้รับ</a>
-            <a href="/exchange/outgoing" style="padding: 8px 16px; background: #6c757d; color: white; text-decoration: none; border-radius: 6px; font-size: 14px;">📤 ส่งไป</a>
+          <div class="tabs">
+            <a class="tab active" href="/exchange/incoming">📥 ได้รับ</a>
+            <a class="tab" href="/exchange/outgoing">📤 ส่งไป</a>
+            <a class="tab" href="/exchange/history">� ประวัติ</a>
           </div>
         </div>
 
@@ -341,12 +376,7 @@
       </div>
     </main>
 
-    <footer class="site-footer">
-      <div class="container footer-bottom">
-        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
-      </div>
-    </footer>
-
+    <%- include('../partials/footer_unified') %>
   <%- include('../partials/report_footer') %>
   </body>
 </html>

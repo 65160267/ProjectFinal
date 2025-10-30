@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const indexController = require('../controllers/indexController');
 const userController = require('../controllers/userController');
+const newChatController = require('../controllers/newChatController');
 const path = require('path');
 const fs = require('fs');
 // multer setup for profile uploads
@@ -25,6 +26,8 @@ router.get('/user', userController.profile);
 router.get('/user/edit', userController.edit);
 // public user profile
 router.get('/users/:id', userController.viewPublic);
+router.get('/messages', newChatController.inbox);
+// (chat demo route removed — chat system replaced)
 // attach multer middleware to handle avatar file upload (field name: avatar)
 router.post('/user/edit', upload.single('avatar'), userController.update);
 

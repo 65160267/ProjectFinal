@@ -5,37 +5,384 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title><%= user.full_name %> - โปรไฟล์</title>
     <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/performance.css" />
     <style>
-      /* Small local styles to beautify public profile card */
-      .profile-card.custom {
+      /* Enhanced public profile styles */
+      body {
+        background: #f8f9fa;
+      }
+      
+      .profile-hero {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 30px 0 80px 0;
+        position: relative;
+        overflow: hidden;
+        min-height: 120px;
+      }
+      .profile-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 500px;
+        height: 500px;
+        background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 6s ease-in-out infinite;
+      }
+      .profile-hero::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -5%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        border-radius: 50%;
+        animation: float 8s ease-in-out infinite;
+      }
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+      }
+      .profile-card-modern {
+        background: white;
+        border-radius: 24px;
+        padding: 40px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+        position: relative;
+        z-index: 10;
+        max-width: 1000px;
+        margin: -60px auto 0;
+      }
+      .profile-header {
+        display: flex;
+        gap: 24px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+      }
+      .profile-avatar-modern {
+        position: relative;
+        flex-shrink: 0;
+      }
+      .profile-avatar-modern img {
+        width: 140px;
+        height: 140px;
+        object-fit: cover;
+        border-radius: 20px;
+        border: 5px solid white;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      }
+      .profile-avatar-modern::after {
+        content: '✓';
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #10b981;
+        color: white;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 16px;
+        border: 3px solid white;
+        box-shadow: 0 2px 8px rgba(16,185,129,0.4);
+      }
+      .profile-info-modern {
+        flex: 1;
+        min-width: 300px;
+      }
+      .profile-name-modern {
+        font-size: 32px;
+        font-weight: 800;
+        color: #1a202c;
+        margin: 0 0 8px 0;
+        letter-spacing: -0.5px;
+      }
+      .profile-username-modern {
+        color: #64748b;
+        font-size: 16px;
+        margin-bottom: 16px;
+        font-weight: 500;
+      }
+      .profile-badges {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .badge-modern {
+        padding: 8px 16px;
+        border-radius: 25px;
+        font-size: 13px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .badge-location {
+        background: #fef3c7;
+        color: #92400e;
+      }
+      .badge-verified {
+        background: #dbeafe;
+        color: #1e40af;
+      }
+      .profile-stats {
+        display: flex;
+        gap: 24px;
+        padding: 20px 0;
+        border-top: 1px solid #e5e7eb;
+        margin-top: 16px;
+      }
+      .stat-item {
+        text-align: center;
+      }
+      .stat-value {
+        font-size: 24px;
+        font-weight: 800;
+        color: #667eea;
+        display: block;
+        margin-bottom: 4px;
+      }
+      .stat-label {
+        font-size: 13px;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+      .profile-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 20px;
+        flex-wrap: wrap;
+      }
+      .btn-primary-modern {
+        padding: 12px 24px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        border: none;
+        box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+      }
+      .btn-primary-modern:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+      }
+      .btn-secondary-modern {
+        padding: 12px 24px;
+        border-radius: 12px;
+        background: white;
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 2px solid #667eea;
+        transition: all 0.3s ease;
+      }
+      .btn-secondary-modern:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+      }
+      .books-section {
+        max-width: 1200px;
+        margin: 50px auto;
+        padding: 0 20px;
+      }
+      .section-title {
+        font-size: 28px;
+        font-weight: 800;
+        color: #1a202c;
+        margin-bottom: 28px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding-bottom: 16px;
+        border-bottom: 3px solid #667eea;
+      }
+      .books-grid-modern {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 24px;
+        align-items: stretch;
+      }
+      .book-card-modern {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        text-decoration: none;
+        color: inherit;
+        display: flex;
+        flex-direction: column;
+        border: 1px solid #f0f0f0;
+        height: 100%;
+      }
+      .book-card-modern:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 50px rgba(102,126,234,0.2);
+        border-color: #667eea;
+      }
+      .book-card-image {
+        width: 100%;
+        height: 240px;
+        object-fit: cover;
+        background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      }
+      .book-card-body {
         padding: 20px;
         display: flex;
-        gap: 18px;
+        flex-direction: column;
+        flex: 1;
+        position: relative;
+      }
+      .book-card-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 8px;
+        line-height: 1.4;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        min-height: 50px;
+      }
+      .book-card-author {
+        color: #64748b;
+        font-size: 14px;
+        margin-bottom: 12px;
+        min-height: 20px;
+      }
+      .book-card-footer {
+        display: flex;
+        justify-content: space-between;
         align-items: center;
-        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
-        border-radius: 14px;
-        box-shadow: 0 10px 30px rgba(20,40,80,0.06);
-        border: 1px solid #f0f3f6;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
+        margin-top: auto;
+        margin-bottom: 12px;
       }
-      .profile-avatar img {
-        width: 96px;
-        height: 96px;
-        object-fit: cover;
-        border-radius: 12px;
-        border: 3px solid #fff;
-        box-shadow: 0 6px 18px rgba(34,60,80,0.08);
-        background: linear-gradient(135deg,#fff,#f7f9fc);
+      /* Actions area under the body to hold centered button */
+      .book-card-actions {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        padding: 0 20px 20px 20px;
+        box-sizing: border-box;
       }
-      .profile-meta .profile-name { font-size: 20px; font-weight: 800; color: #2e2e2e; margin:0; }
-      .profile-meta .profile-username { color: #7b7b7b; margin-top:6px; font-size:13px; }
-      .profile-meta .profile-location { color:#666; margin-top:6px; font-size:13px; }
-      .btn-dashboard {
-        padding: 8px 12px; border-radius: 10px; border: 1px solid #e6eef8; background: #ffffff; color: #333; text-decoration:none; display:inline-block;
+      .book-card-id {
+        font-size: 12px;
+        color: #94a3b8;
       }
-      .btn-dashboard:hover { background: #f0f8ff; border-color: #cfeeff; }
-      .user-books-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:12px; margin-top:12px; }
-      .user-book-card { padding:12px; border-radius:10px; background:#fff; border:1px solid #eef3f8; box-shadow: 0 6px 18px rgba(12,30,60,0.04); text-decoration:none; color:inherit; display:block }
-      .user-book-card img { width:64px; height:84px; object-fit:cover; border-radius:6px; }
+      .book-card-arrow {
+        color: #667eea;
+        font-size: 20px;
+      }
+      .btn-view-detail {
+        display: inline-flex !important;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 32px !important;
+        background: linear-gradient(135deg, #ff9a56, #ff6b6b) !important;
+        color: #fff !important;
+        text-align: center !important;
+        text-decoration: none !important;
+        border-radius: 10px !important;
+        font-weight: 600 !important;
+        font-size: 14px !important;
+        transition: all 0.3s ease !important;
+        box-shadow: 0 4px 12px rgba(255,154,86,0.3) !important;
+        white-space: nowrap !important;
+      }
+      .btn-view-detail:hover {
+        background: linear-gradient(135deg, #ff8a3d, #ff5252) !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(255,154,86,0.4) !important;
+      }
+      .empty-state-modern {
+        text-align: center;
+        padding: 80px 40px;
+        background: white;
+        border-radius: 20px;
+        border: 2px dashed #e5e7eb;
+        margin: 20px 0;
+      }
+      .empty-state-icon {
+        font-size: 80px;
+        margin-bottom: 20px;
+        opacity: 0.4;
+        filter: grayscale(50%);
+      }
+      .empty-state-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: #475569;
+        margin-bottom: 12px;
+      }
+      .empty-state-text {
+        font-size: 15px;
+        color: #64748b;
+        line-height: 1.6;
+      }
+      @media (max-width: 768px) {
+        .profile-hero {
+          padding: 25px 0 70px 0;
+          min-height: 100px;
+        }
+        .profile-card-modern {
+          padding: 24px;
+          margin: -50px 16px 0;
+        }
+        .profile-header {
+          flex-direction: column;
+          align-items: center;
+          text-align: center;
+        }
+        .profile-name-modern {
+          font-size: 24px;
+        }
+        .profile-stats {
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        .profile-actions {
+          justify-content: center;
+          width: 100%;
+        }
+        .btn-primary-modern,
+        .btn-secondary-modern {
+          width: 100%;
+          justify-content: center;
+        }
+        .books-grid-modern {
+          grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+          gap: 16px;
+          align-items: stretch;
+        }
+        .book-card-image {
+          height: 200px;
+        }
+        .section-title {
+          font-size: 22px;
+        }
+      }
     </style>
   </head>
   <body>
@@ -49,57 +396,121 @@
           <button type="submit">🔍</button>
         </form>
         <nav class="header-actions">
-          <a href="/books">📚</a>
-          <a href="/books/new">➕</a>
-          <a href="/auth/logout">🔓</a>
+          <a href="/books" title="รายการหนังสือ">�️</a>
+          <a href="/messages" title="ข้อความ">💬</a>
+          <a href="/dashboard" title="กลับหน้าแรก">🏠</a>
         </nav>
       </div>
     </header>
 
-    <main class="container" style="padding-top:20px; padding-bottom:40px;">
-      <div class="profile-card custom">
-        <div class="profile-avatar">
-          <img src="<%= user.avatar %>" alt="Avatar" onerror="this.src='/images/profile-placeholder.svg'" />
-        </div>
-        <div class="profile-meta" style="flex:1; min-width:0;">
-          <h2 class="profile-name"><%= user.full_name %></h2>
-          <div class="profile-username">@<%= user.username %></div>
-          <div class="profile-location">📍 <%= user.location || 'ไม่ระบุ' %></div>
-        </div>
-        <div style="flex-shrink:0;">
-          <a href="/dashboard" class="btn-dashboard">กลับหน้าแรก</a>
-        </div>
-      </div>
+    <!-- Hero Section with Gradient Background -->
+    <div class="profile-hero"></div>
 
-      <section style="margin-top:18px;">
-        <h3>📚 รายการของผู้ใช้</h3>
-        <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
-          <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap:12px; margin-top:12px;">
-            <% userBooks.forEach(function(b) { %>
-              <a href="/books/<%= b.id %>" class="card" style="display:block; padding:12px; text-decoration:none; color:inherit;">
-                <div style="display:flex; gap:12px; align-items:center;">
-                  <img src="<%= b.thumbnail %>" alt="<%= b.title %>" style="width:64px; height:84px; object-fit:cover; border-radius:6px;" />
-                  <div style="min-width:0;">
-                    <div style="font-weight:700; font-size:14px; margin-bottom:6px;"><%= b.title %></div>
-                    <% if (b.author) { %>
-                      <div style="color:#666; font-size:13px;">โดย <%= b.author %></div>
-                    <% } %>
-                    <div style="color:#999; font-size:12px; margin-top:6px;">#<%= b.id %></div>
-                  </div>
-                </div>
-              </a>
-            <% }); %>
+    <!-- Profile Card Section -->
+    <div class="container" style="margin-top: 0;">
+      <div class="profile-card-modern">
+        <div class="profile-header">
+          <!-- Avatar with Verified Badge -->
+          <div class="profile-avatar-modern">
+            <img src="<%= user.avatar %>" alt="<%= user.full_name %>" onerror="this.src='/images/profile-placeholder.svg'" />
           </div>
-        <% } else { %>
-          <div style="margin-top:12px; padding:18px; background:#fafafa; border-radius:8px; color:#666;">ผู้ใช้ยังไม่มีรายการหนังสือ</div>
-        <% } %>
-      </section>
-    </main>
 
-    <footer class="site-footer">
-      <div class="container footer-bottom">
-        <div class="copyright">Swap A Book <%= new Date().getFullYear() %></div>
+          <!-- Profile Information -->
+          <div class="profile-info-modern">
+            <h1 class="profile-name-modern"><%= user.full_name %></h1>
+            <div class="profile-username-modern">@<%= user.username %></div>
+
+            <!-- Badges -->
+            <div class="profile-badges">
+              <span class="badge-modern badge-location">
+                📍 <%= user.location || 'ไม่ระบุที่อยู่' %>
+              </span>
+              <span class="badge-modern badge-verified">
+                ✓ ผู้ใช้ยืนยันแล้ว
+              </span>
+            </div>
+
+            <!-- Statistics -->
+            <div class="profile-stats">
+              <div class="stat-item">
+                <span class="stat-value"><%= Array.isArray(userBooks) ? userBooks.length : 0 %></span>
+                <span class="stat-label">รายการ</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value"><%= (typeof userStats !== 'undefined' && userStats && userStats.exchanges) ? userStats.exchanges : 0 %></span>
+                <span class="stat-label">แลกสำเร็จ</span>
+              </div>
+              <div class="stat-item">
+                <span class="stat-value"><%= (typeof userStats !== 'undefined' && userStats && userStats.views) ? userStats.views : 0 %></span>
+                <span class="stat-label">เข้าชม</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="profile-actions">
+              <a href="/messages?open=<%= user.id %>" class="btn-primary-modern">
+                💬 ส่งข้อความ
+              </a>
+              <a href="/dashboard" class="btn-secondary-modern">
+                🏠 กลับหน้าแรก
+              </a>
+            </div>
+          </div>
+        </div>
       </div>
-    </footer>
+    </div>
+
+    <!-- Books Section -->
+    <div class="books-section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
+        <h2 class="section-title" style="margin: 0; border: none; padding: 0;">
+          📚 รายการหนังสือของ <%= user.full_name %>
+        </h2>
+        <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
+          <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+            <%= userBooks.length %> รายการ
+          </div>
+        <% } %>
+      </div>
+
+      <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
+        <div class="books-grid-modern">
+          <% userBooks.forEach(function(b) { %>
+            <div class="book-card-modern">
+              <img src="<%= b.thumbnail %>" alt="<%= b.title %>" class="book-card-image" onerror="this.src='/images/placeholder.png'" />
+              <div class="book-card-body">
+                <h3 class="book-card-title"><%= b.title %></h3>
+                <% if (b.author) { %>
+                  <div class="book-card-author">โดย <%= b.author %></div>
+                <% } else { %>
+                  <div class="book-card-author" style="opacity: 0.5;">ไม่ระบุผู้แต่ง</div>
+                <% } %>
+                <div class="book-card-footer">
+                  <span class="book-card-id">#<%= b.id %></span>
+                  <span class="book-card-arrow">→</span>
+                </div>
+              </div>
+              <div class="book-card-actions">
+                <a href="/books/<%= b.id %>" class="btn-view-detail">📖 ดูรายละเอียด</a>
+              </div>
+            </div>
+          <% }); %>
+        </div>
+      <% } else { %>
+        <div class="empty-state-modern">
+          <div class="empty-state-icon">📚</div>
+          <div class="empty-state-title">ยังไม่มีหนังสือในคลัง</div>
+          <div class="empty-state-text">
+            <%= user.full_name %> ยังไม่ได้เพิ่มหนังสือเข้าสู่ระบบ<br>
+            กลับมาตรวจสอบอีกครั้งในภายหลัง
+          </div>
+        </div>
+      <% } %>
+    </div>
+
+    <div style="height: 40px;"></div>
+
+    <%- include('../partials/footer_unified') %>
+    <%- include('../partials/report_footer') %>
   </body>
 </html>

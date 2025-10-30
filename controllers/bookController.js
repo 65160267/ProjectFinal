@@ -3,19 +3,38 @@ const bcrypt = require('bcrypt');
 const db = require('../db');
 const router = express.Router();
 
-exports.listBooks = async (req, res) => {
+// helper to build header user with normalized avatar
+async function buildHeaderUser(req) {
+  const fallback = {
+    id: req.session && req.session.userId,
+    username: (req.session && req.session.username) || null,
+    avatar: '/images/profile-placeholder.svg'
+  };
   try {
-    // Add pagination for performance with large datasets
+    if (!req.session || !req.session.userId) return fallback;
+    const [urows] = await db.pool.query('SELECT id, username, avatar FROM users WHERE id = ? LIMIT 1', [req.session.userId]);
+    const u = (urows && urows[0]) || {};
+    let avatar = u.avatar || (req.session && req.session.avatar) || null;
+    if (!avatar) avatar = '/images/profile-placeholder.svg';
+    else if (!/^https?:\/\//i.test(avatar) && !avatar.startsWith('/')) avatar = '/uploads/' + avatar;
+    return { id: u.id || fallback.id, username: u.username || fallback.username, avatar };
+  } catch (e) {
+    return fallback;
+  }
+}
+
+exports.listBooks = async (req, res) => {
+  // ปรับให้หน้า /books แสดงเฉพาะหนังสือของผู้ใช้ที่ล็อกอินเท่านั้น
+  if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+  try {
     const page = parseInt(req.query.page) || 1;
-    const limit = 12; // Show 12 books per page
+    const limit = 12; // แสดง 12 เล่มต่อหน้า
     const offset = (page - 1) * limit;
-    
-    // Get total count for pagination
-    const [[{total}]] = await db.pool.query('SELECT COUNT(*) as total FROM books');
-    const totalPages = Math.ceil(total / limit);
-    
-    // select all columns with LIMIT for pagination; compute friendly fields in JS to avoid referencing missing columns
-    const [rows] = await db.pool.query('SELECT * FROM books ORDER BY id DESC LIMIT ? OFFSET ?', [limit, offset]);
+
+    const [[{ total }]] = await db.pool.query('SELECT COUNT(*) as total FROM books WHERE owner_id = ?', [req.session.userId]);
+    const totalPages = Math.max(1, Math.ceil(total / limit));
+
+    const [rows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY id DESC LIMIT ? OFFSET ?', [req.session.userId, limit, offset]);
     rows.forEach(b => {
       const thumb = (b.image || b.thumbnail || '/images/placeholder.png');
       if (thumb && typeof thumb === 'string') {
@@ -24,10 +43,11 @@ exports.listBooks = async (req, res) => {
         b.thumbnail = '/images/placeholder.png';
       }
       b.tags = b.tags || b.category || b.wanted || '';
-      // condition and location left as-is
     });
-    res.render('books/list', { 
-      books: rows, 
+
+    const headerUser = await buildHeaderUser(req);
+    res.render('books/list', {
+      books: rows,
       pagination: {
         currentPage: page,
         totalPages: totalPages,
@@ -36,10 +56,12 @@ exports.listBooks = async (req, res) => {
         nextPage: page + 1,
         prevPage: page - 1
       },
-      pageTitle: 'รายการทั้งหมด',
-      basePath: '/books'
+      pageTitle: 'รายการของฉัน',
+      basePath: '/books',
+      user: headerUser
     });
   } catch (err) {
+    console.error('List books (mine) error:', err);
     res.status(500).send('DB error: ' + err.message);
   }
 };
@@ -66,6 +88,7 @@ exports.listUserBooks = async (req, res) => {
       b.tags = b.tags || b.category || b.wanted || '';
     });
 
+    const headerUser = await buildHeaderUser(req);
     res.render('books/list', {
       books: rows,
       pagination: {
@@ -78,7 +101,7 @@ exports.listUserBooks = async (req, res) => {
       },
       pageTitle: 'รายการของฉัน',
       basePath: '/books/mine',
-      user: { id: req.session.userId, username: req.session.username }
+      user: headerUser
     });
   } catch (err) {
     console.error('List user books error:', err);
@@ -86,8 +109,14 @@ exports.listUserBooks = async (req, res) => {
   }
 };
 
-exports.showCreateForm = (req, res) => {
-  res.render('books/new');
+exports.showCreateForm = async (req, res) => {
+  try {
+    const headerUser = await buildHeaderUser(req);
+    res.render('books/new', { user: headerUser });
+  } catch (e) {
+    // fallback render if header user fails
+    res.render('books/new');
+  }
 };
 
 exports.createBook = async (req, res) => {
@@ -265,7 +294,16 @@ exports.viewBook = async (req, res) => {
       }
     }
 
-    res.render('books/view', { book, userBooks });
+    // record a view for this book (best effort)
+    try {
+      await db.pool.query('INSERT INTO book_views (book_id, viewer_id) VALUES (?, ?)', [id, (req.session && req.session.userId) || null]);
+    } catch (e) {
+      // ignore if table not exists
+    }
+
+    // header user for avatar in header
+    const headerUser = await buildHeaderUser(req);
+    res.render('books/view', { book, userBooks, user: headerUser });
   } catch (err) {
     console.error('View book error:', err);
     res.status(500).send('เกิดข้อผิดพลาดในการแสดงรายละเอียดหนังสือ: ' + err.message);

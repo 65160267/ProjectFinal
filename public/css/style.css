@@ -263,7 +263,15 @@ body .legacy-minor{margin:20px}
 .small-thumb{width:60px;height:80px;background-size:cover;background-position:center;border-radius:6px}
 .small-meta .small-title{font-weight:700}
 
-.site-footer{background:var(--accent);margin-top:18px;padding:12px 0;border-top:3px solid rgba(0,0,0,0.06);color:#fff}
+.site-footer{
+  background: linear-gradient(135deg, var(--accent), var(--accent-600));
+  margin-top: 24px;
+  padding: 24px 0;
+  border-top: 3px solid rgba(0,0,0,0.06);
+  color:#fff;
+  position: relative;
+  z-index: 20;
+}
 .site-footer .footer-inner{display:flex;justify-content:space-between;align-items:flex-start}
 
 @media (max-width:900px){

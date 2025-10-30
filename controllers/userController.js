@@ -138,6 +138,11 @@ exports.viewPublic = async (req, res) => {
       location: raw.location || ''
     };
 
+    // normalize avatar path
+    if (user.avatar && !user.avatar.startsWith('/') && !user.avatar.startsWith('http')) {
+      user.avatar = '/uploads/' + user.avatar;
+    }
+
     // fetch this user's public books (optionally filter by availability)
     const [bookRows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY created_at DESC', [userId]);
     const userBooks = (bookRows || []).map(book => {
@@ -146,7 +151,24 @@ exports.viewPublic = async (req, res) => {
       return book;
     });
 
-    res.render('users/view', { user, userBooks });
+    // compute this user's stats (exchanges and views) for display
+    let userStats = { items: userBooks.length, exchanges: 0, views: 0 };
+    try {
+      const sql = `
+        SELECT
+          (SELECT COUNT(*) FROM exchange_requests WHERE status = 'completed' AND (requester_id = ? OR book_owner_id = ?)) AS exchanges,
+          (SELECT COUNT(*) FROM book_views v JOIN books b ON v.book_id = b.id WHERE b.owner_id = ?) AS views
+      `;
+      const [statsRows] = await db.pool.query(sql, [userId, userId, userId]);
+      if (statsRows && statsRows[0]) {
+        userStats.exchanges = statsRows[0].exchanges || 0;
+        userStats.views = statsRows[0].views || 0;
+      }
+    } catch (statsErr) {
+      console.log('Stats query error (non-fatal):', statsErr && statsErr.message);
+    }
+
+    res.render('users/view', { user, userBooks, userStats });
   } catch (err) {
     console.error('Public user view error', err);
     res.status(500).send('DB error: ' + err.message);

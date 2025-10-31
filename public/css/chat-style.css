@@ -17,7 +17,7 @@
 html,body{height:100%}
 body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, Arial}
 .chat-page{
-  min-height:calc(100vh - 200px);
+  min-height:auto;
   background:linear-gradient(135deg, #fff7ed 0%, #ffe8d6 30%, #ffd4c4 60%, #ffcbb8 100%);
   color:var(--text-color);
   padding:24px 20px 40px;
@@ -34,7 +34,7 @@ body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, A
     radial-gradient(circle at 80% 70%, rgba(255,140,105,0.12) 0%, transparent 60%),
     radial-gradient(circle at 50% 50%, rgba(255,203,184,0.08) 0%, transparent 60%);
   pointer-events:none;
-  z-index:0;
+  z-index:0; /* keep decorative overlay behind all content */
 }
 
 /* Topbar */
@@ -49,12 +49,13 @@ body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, A
   box-shadow:0 8px 32px rgba(124,90,58,0.18), 
              0 0 0 1px rgba(0,0,0,0.06),
              inset 0 1px 0 rgba(255,255,255,0.35);
-  border:1px solid rgba(255,255,255,0.25);
+  /* add visible orange frame to emphasize header */
+  border:2px solid var(--accent-700);
   backdrop-filter:blur(8px) saturate(140%);
   -webkit-backdrop-filter:blur(8px) saturate(140%);
   transition:all 0.3s ease;
   position:relative;
-  z-index:10;
+  z-index:50;
   overflow:hidden;
   color:#fff;
 }
@@ -137,7 +138,7 @@ body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, A
 }
 
 /* Layout */
-.chat-page .chat-wrap{display:flex;gap:16px;align-items:stretch;max-width:1200px;margin:12px auto}
+.chat-page .chat-wrap{display:flex;gap:16px;align-items:stretch;max-width:1200px;margin:12px auto;min-height:600px}
 
 /* Left list */
 .chat-page .chat-list{
@@ -154,6 +155,7 @@ body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, A
              inset 0 1px 0 rgba(255,255,255,0.9);
   transition:all 0.4s cubic-bezier(0.4,0,0.2,1);
   position:relative;
+  z-index:10;
 }
 .chat-page .chat-list::before{
   content:'';
@@ -303,6 +305,8 @@ body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, A
   gap:16px;
   padding:0 20px;
   box-sizing:border-box;
+  position:relative;
+  z-index:10;
 }
 .chat-page .panel-header{
   display:flex;
@@ -456,6 +460,7 @@ body{margin:0;font-family:Inter, system-ui, -apple-system, 'Segoe UI', Roboto, A
   border-bottom-right-radius:6px;
   padding:1px;
   background:linear-gradient(135deg, rgba(255,255,255,0.4), transparent);
+  mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask:linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite:xor;
   mask-composite:exclude;

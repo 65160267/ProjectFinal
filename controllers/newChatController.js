@@ -14,21 +14,51 @@ async function inbox(req, res) {
   } catch (e) {
     console.error('Failed to load user profile for messages footer:', e && e.message);
   }
-  // Try to load a list of users (possible conversation partners). If DB isn't ready, fall back to sample data.
-  let conversations = [];
-  try {
-    // select some users to show as recent conversations (exclude self)
-    const [rows] = await db.pool.query('SELECT id, username, full_name, avatar FROM users WHERE id != ? ORDER BY id DESC LIMIT 30', [me.userId]);
-    conversations = (rows || []).map(r => ({
-      id: r.id,
-      username: r.username || r.full_name || ('user' + r.id),
-      avatar: r.avatar || '/images/profile-placeholder.svg',
-      snippet: ''
-    }));
+  // Build conversation list ONLY from rooms that this user has sent a message in ("started by me").
+  // Fallback: if chat_messages table missing or empty, show an empty list.
+    let conversations = [];
+    try {
+      const [rooms] = await db.pool.query(
+        'SELECT DISTINCT room FROM chat_messages WHERE user_id = ? ORDER BY created_at DESC',
+        [me.userId]
+      );
+      const otherIds = new Set();
+      (rooms || []).forEach(r => {
+        const parts = String(r.room || '').split('_');
+        if (parts.length === 3) {
+          const a = Number(parts[1]);
+          const b = Number(parts[2]);
+          if (a && b) otherIds.add(a === Number(me.userId) ? b : a);
+        }
+      });
+      if (otherIds.size > 0) {
+        const ids = Array.from(otherIds);
+        const [users] = await db.pool.query(`SELECT id, username, full_name, avatar FROM users WHERE id IN (${ids.map(()=>'?').join(',')})`, ids);
+        conversations = (users || []).map(r => {
+          const raw = r.avatar || '';
+          const normalized = raw ? (String(raw).startsWith('/') ? String(raw) : ('/uploads/' + String(raw))) : '/images/profile-placeholder.svg';
+          return { id: r.id, username: r.username || r.full_name || ('user' + r.id), avatar: normalized, snippet: '' };
+        });
+      }
   } catch (err) {
-    console.log('Could not load users for conversations (DB may be missing):', err && err.message);
-    // fallback single sample conversation
-    conversations = [{ id: 12, username: 'weqweqweqw', avatar: '/images/profile-placeholder.svg', snippet: 'ตัวอย่างข้อความ' }];
+    console.log('Conversations limited to self-started chats; chat_messages may be missing:', err && err.message);
+    conversations = [];
+  }
+
+  // If user opens with ?open=<id>, include that user in the list so they can start a first chat
+  try {
+    const openId = req && req.query && req.query.open ? Number(req.query.open) : null;
+    if (openId && !Number.isNaN(openId) && !conversations.find(c => Number(c.id) === Number(openId))) {
+      const [uRows] = await db.pool.query('SELECT id, username, full_name, avatar FROM users WHERE id = ? LIMIT 1', [openId]);
+      if (uRows && uRows[0]) {
+        const r = uRows[0];
+        const raw = r.avatar || '';
+        const normalized = raw ? (String(raw).startsWith('/') ? String(raw) : ('/uploads/' + String(raw))) : '/images/profile-placeholder.svg';
+        conversations.unshift({ id: r.id, username: r.username || r.full_name || ('user' + r.id), avatar: normalized, snippet: '' });
+      }
+    }
+  } catch (e) {
+    // ignore errors here
   }
 
   return res.render('newchat/index', { me, conversations, user: userProfile });

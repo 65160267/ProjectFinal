@@ -23,23 +23,38 @@
   function renderMessage(m, mine){
     if (!messagesEl) return;
     const wrap = document.createElement('div');
-    wrap.className = 'message' + (mine ? ' me' : ' other');
+    wrap.className = 'message' + (mine ? ' sent' : '');
 
-    const bubble = document.createElement('div');
-    bubble.className = 'bubble';
+    const avatar = document.createElement('img');
+    avatar.className = 'message-avatar';
+    const avatarSrc = (m.user && m.user.avatar) || '/images/profile-placeholder.svg';
+    avatar.src = avatarSrc;
+    avatar.alt = 'avatar';
+
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    
+    const sender = document.createElement('div');
+    sender.className = 'message-sender';
     const who = (m.user && (m.user.username || m.user.name)) || (m.user || 'User');
-    bubble.innerHTML = '<div style="font-weight:700;margin-bottom:6px;">' + escapeHtml(who) + '</div>' + '<div>' + escapeHtml(m.text || m.message || '') + '</div>';
+    sender.textContent = who;
 
-    const meta = document.createElement('div');
-    meta.className = 'meta';
+    const text = document.createElement('div');
+    text.className = 'message-text';
+    text.textContent = m.text || m.message || '';
+
+    const time = document.createElement('div');
+    time.className = 'message-time';
     const t = m.time ? new Date(m.time) : new Date();
-    meta.textContent = t.toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit' });
+    time.textContent = t.toLocaleString('th-TH', { hour:'2-digit', minute:'2-digit' });
 
-    wrap.appendChild(bubble);
-    wrap.appendChild(meta);
+    content.appendChild(sender);
+    content.appendChild(text);
+    content.appendChild(time);
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(content);
     messagesEl.appendChild(wrap);
-    // trigger appear animation
-    requestAnimationFrame(() => wrap.classList.add('appear'));
     scrollBottom();
   }
 
@@ -125,7 +140,7 @@
   function sendMessage(){
     const text = (msgInput && msgInput.value || '').trim();
     if (!text || !currentRoom) return;
-    const payload = { room: currentRoom, user: { id: window.me && window.me.userId, username: window.me && window.me.username }, text };
+    const payload = { room: currentRoom, user: { id: window.me && window.me.userId, username: window.me && window.me.username, avatar: window.me && window.me.avatar }, text };
     socket.emit('send', payload);
     msgInput.value = '';
   }

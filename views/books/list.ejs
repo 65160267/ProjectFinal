@@ -23,10 +23,6 @@
             SwapABook
           </a>
         </div>
-        <form class="search" action="/" method="get">
-          <input name="q" placeholder="Search for books" />
-          <button type="submit">🔍</button>
-        </form>
         <nav class="header-actions">
           <a href="/books" title="Cart">🛍️</a>
           <% if (typeof user !== 'undefined' && user && user.username) { %>
@@ -71,7 +67,7 @@
                     </div>
                     <div class="product-meta" style="margin-top:6px"><%= b.location || 'Unknown' %></div>
                     <div class="product-actions">
-                      <a class="btn btn-primary" href="/books/<%= b.id %>">👀 ดูรายละเอียด</a>
+                      <a class="btn btn-primary" href="/books/<%= b.id %>">ดูรายละเอียด</a>
                     </div>
                   </div>
                 </div>

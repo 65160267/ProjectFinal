@@ -3,30 +3,43 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>Messages</title>
-  <link rel="stylesheet" href="/css/style.css?v=<%= Date.now() %>" />
-  <!-- cache-bust by appending timestamp during dev so browser fetches latest CSS -->
-  <link rel="stylesheet" href="/css/chat-style.css?v=<%= Date.now() %>" />
+    <title>Messages | SwapABook</title>
+    <link rel="stylesheet" href="/css/messages.css?v=<%= Date.now() %>" />
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
     <main class="chat-page">
-      <header class="chat-topbar">
-        <div style="display:flex;align-items:center;gap:12px">
-          <h1 class="chat-title">แชท</h1>
-          <a class="chat-all" href="/messages">ดูทั้งหมด</a>
-        </div>
-        <div class="topbar-user">
-          <img src="<%= (me && me.avatar) ? me.avatar : '/images/profile-placeholder.svg' %>" alt="avatar" class="topbar-avatar" />
-          <div class="topbar-name"><%= (me && (me.username || me.name)) || ('user:' + (me && me.userId)) %></div>
-        </div>
-      </header>
+      
 
+        <!-- Global site header (same as other pages) -->
+        <header class="site-header">
+          <div class="header-inner container">
+            <div class="brand">
+              <a href="/dashboard" class="brand">SwapABook</a>
+            </div>
+            <nav class="header-actions">
+              <a href="/books" title="Books">📚</a>
+              <a href="/messages" title="Messages">💬</a>
+              <% if (typeof user !== 'undefined' && user && user.username) { %>
+                <a href="/user" class="header-user" title="Your profile">
+                  <img class="user-avatar"
+                       src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.svg') %>"
+                       alt="Profile"
+                       onerror="this.src='/images/profile-placeholder.svg'" />
+                  <span class="username"><%= user.username %></span>
+                </a>
+                <a href="/auth/logout" title="Logout">🔓</a>
+              <% } else { %>
+                <a href="/auth/login" title="Login">🔓</a>
+              <% } %>
+            </nav>
+          </div>
+        </header>
       <section class="chat-wrap">
         <aside class="chat-list">
           <div class="list-header">
             <h3>แชท</h3>
-            <div style="display:flex;align-items:center;gap:8px">
+            <div>
               <div class="search-wrap"><input class="list-search" id="convSearch" placeholder="ค้นหาผู้ใช้งานหรือข้อความ" /></div>
               <a class="view-all" href="/messages">ดูทั้งหมด</a>
             </div>
@@ -71,8 +84,16 @@
 
     <%- include('../partials/footer_unified') %>
     <%- include('../partials/report_footer') %>
-
-  <script>window.me = JSON.parse('<%- JSON.stringify(me || {}) %>');</script>
+  
+    <script>
+      // Expose current user info to the chat client, including a normalized avatar URL
+      (function(){
+        var base = JSON.parse('<%- JSON.stringify(me || {}) %>') || {};
+        var raw = <%- JSON.stringify((user && user.avatar) || '') %>;
+        var avatar = raw ? (String(raw).startsWith('/') ? String(raw) : ('/uploads/' + String(raw))) : '/images/profile-placeholder.svg';
+        window.me = Object.assign({}, base, { avatar: avatar });
+      })();
+    </script>
     <script src="/js/newchat.js"></script>
   </body>
 </html>

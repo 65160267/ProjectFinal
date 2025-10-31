@@ -82,6 +82,32 @@ messagesNamespace.on('connection', (socket) => {
         inMemoryMessages[room] = inMemoryMessages[room] || [];
         inMemoryMessages[room].push(msg);
         messagesNamespace.to(room).emit('message', msg);
+
+        // Persist to DB so conversation list can be built from history
+        (async () => {
+            try {
+                if (!pool) return;
+                // ensure conversation row exists
+                let convId = null;
+                try {
+                    const [[existing]] = await pool.query('SELECT id FROM chat_conversations WHERE room = ? LIMIT 1', [room]);
+                    if (existing && existing.id) convId = existing.id; else {
+                        const parts = String(room || '').split('_');
+                        let a = null, b = null;
+                        if (parts.length === 3 && parts[0] === 'chat') { a = parts[1]; b = parts[2]; }
+                        const ins = await pool.query('INSERT INTO chat_conversations (room, user_a, user_b) VALUES (?, ?, ?)', [room, a || null, b || null]);
+                        convId = ins && ins[0] && ins[0].insertId ? ins[0].insertId : null;
+                    }
+                } catch (e) { /* ignore */ }
+
+                try {
+                    await pool.query(
+                        'INSERT INTO chat_messages (conversation_id, room, username, user_id, message) VALUES (?, ?, ?, ?, ?)',
+                        [convId, room, (user && (user.username || user)) || null, (user && user.id) || null, text]
+                    );
+                } catch (e) { /* ignore */ }
+            } catch (e) { /* ignore */ }
+        })();
     });
 
     socket.on('getHistory', (room) => {
@@ -379,6 +405,37 @@ async function runMigrationsAndStart() {
             console.log('Migrations: ensured book_views table exists');
         } catch (e) {
             // ignore
+        }
+        // Create chat tables used by /messages namespace
+        try {
+            const createChatConversations = `
+                CREATE TABLE IF NOT EXISTS chat_conversations (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    room VARCHAR(191) NOT NULL UNIQUE,
+                    user_a INT NULL,
+                    user_b INT NULL,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            `;
+            const createChatMessages = `
+                CREATE TABLE IF NOT EXISTS chat_messages (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    conversation_id INT NULL,
+                    room VARCHAR(191) NOT NULL,
+                    username VARCHAR(191) DEFAULT NULL,
+                    user_id INT DEFAULT NULL,
+                    message TEXT,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    INDEX idx_room (room),
+                    INDEX idx_user (user_id),
+                    FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id) ON DELETE SET NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            `;
+            await pool.query(createChatConversations);
+            await pool.query(createChatMessages);
+            console.log('Migrations: ensured chat tables exist');
+        } catch (e) {
+            console.error('Migration (chat tables) error (non-fatal):', e && e.message);
         }
     } catch (migErr) {
         console.error('Migration error (non-fatal):', migErr && migErr.message);

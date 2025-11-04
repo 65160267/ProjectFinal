@@ -9,9 +9,12 @@
     <style>
       /* Ensure cards have consistent heights and actions sit at the bottom */
       .product-grid { align-items: stretch; }
-      .product-card { display: flex; flex-direction: column; height: 100%; }
+      /* Increase the overall card height to make the white frame taller */
+      .product-card { display: flex; flex-direction: column; min-height: 420px; }
       .product-body { display: flex; flex-direction: column; flex: 1; }
       .product-actions { margin-top: auto; display: flex; justify-content: center; padding-top: 6px; }
+      /* Slightly taller thumbnail for better proportion on dashboard */
+      .product-thumb { height: 200px; }
     </style>
   </head>
   <body>

@@ -9,9 +9,12 @@
     <style>
       /* Keep cards equal height and align action buttons on the same baseline */
       .product-grid { align-items: stretch; }
-      .product-card { display: flex; flex-direction: column; height: 100%; }
+      /* Make the white card frame taller and more proportional */
+      .product-card { display: flex; flex-direction: column; min-height: 420px; }
       .product-body { display: flex; flex-direction: column; flex: 1; }
       .product-actions { margin-top: auto; display: flex; justify-content: center; padding-top: 6px; }
+      /* Slight bump for thumbnail to match Dashboard proportion */
+      .product-thumb { height: 200px; }
     </style>
   </head>
   <body>
@@ -25,6 +28,7 @@
         </div>
         <nav class="header-actions">
           <a href="/books" title="Cart">🛍️</a>
+          <a href="/messages" title="Messages">💬</a>
           <% if (typeof user !== 'undefined' && user && user.username) { %>
             <a href="/user" class="header-user" title="Your profile">
               <img class="user-avatar" 

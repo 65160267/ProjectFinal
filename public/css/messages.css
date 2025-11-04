@@ -109,126 +109,23 @@ body {
   font-size: 15px;
 }
 
-/* Site header (global nav) */
-.site-header {
-  background: linear-gradient(135deg, var(--msg-accent) 0%, var(--msg-accent-600) 100%);
-  border-radius: 12px;
-  padding: 12px 0;
-  box-shadow: 0 4px 20px rgba(255, 120, 20, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  margin-bottom: 8px;
-  position: sticky;
-  top: 0;
+/* Site header (global nav)
+   For Messages page: keep at top of document flow (not sticky/fixed) */
+.chat-page > .site-header {
+  position: static;
+  top: auto;
+  left: auto;
+  right: auto;
   z-index: 1000;
-  backdrop-filter: blur(20px);
+  margin: 0 0 8px 0;
 }
 
-.header-inner {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  max-width: 100%;
-}
+/* Restore normal spacing for content */
+/* remove special top padding so page uses base padding from .chat-page */
 
-.brand {
-  font-weight: 900;
-  font-size: 22px;
-  color: #ffffff;
-  text-decoration: none;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  letter-spacing: -0.5px;
-}
+/* Remove previous full-bleed adjustments to keep header identical to Dashboard */
 
-.brand:hover {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.search {
-  flex: 1;
-  max-width: 400px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.search input {
-  flex: 1;
-  padding: 10px 16px;
-  border-radius: 25px;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 14px;
-  outline: none;
-  transition: all 0.3s ease;
-}
-
-.search input:focus {
-  background: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.search button {
-  background: rgba(255, 255, 255, 0.2);
-  border: none;
-  color: #ffffff;
-  font-size: 18px;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.search button:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.header-actions a {
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 20px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.header-actions a:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.header-user {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 6px 14px;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 25px;
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.user-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
-.username {
-  color: #ffffff;
-  font-weight: 700;
-  font-size: 14px;
-}
+/* Header UI rules removed to inherit global look from style.css (same as Dashboard) */
 
 /* Chat wrapper - main content area */
 .chat-wrap {
@@ -776,4 +673,19 @@ body {
     bottom: 10px;
     right: 10px;
   }
+}
+
+/* Square corners on Messages page (remove rounded frames) */
+.chat-topbar,
+.chat-list,
+.chat-panel,
+.panel-header,
+.panel-composer,
+.list-search,
+.view-all,
+.conv-item,
+.message-content,
+.send-btn,
+.site-footer {
+  border-radius: 0 !important;
 }

@@ -4,7 +4,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Messages | SwapABook</title>
-    <link rel="stylesheet" href="/css/messages.css?v=<%= Date.now() %>" />
+  <!-- Use global styles first to match Dashboard header -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/performance.css" />
+  <!-- Page-specific styles -->
+  <link rel="stylesheet" href="/css/messages.css?v=<%= Date.now() %>" />
     <script src="/socket.io/socket.io.js"></script>
   </head>
   <body>
@@ -48,7 +52,7 @@
           <ul class="conversations" id="conversations">
             <% (conversations || []).forEach(function(c){ %>
               <li class="conv-item" data-user-id="<%= c.id %>" data-username="<%= c.username %>">
-                <img class="conv-avatar" src="<%= c.avatar %>" alt="avatar" />
+                <img class="conv-avatar" src="<%= c.avatar %>" alt="avatar" onerror="this.onerror=null;this.src='/images/profile-placeholder.svg'" />
                 <div class="conv-meta">
                   <div class="conv-top"><strong class="conv-name"><%= c.username %></strong> <span class="conv-time"><%= c.time || '' %></span></div>
                   <div class="conv-snippet"><%= c.snippet || '' %></div>
@@ -61,7 +65,7 @@
 
         <main class="chat-panel">
           <div class="panel-header">
-            <img class="panel-avatar" src="/images/default-avatar.png" data-default="/images/default-avatar.png" alt="avatar" />
+            <img class="panel-avatar" src="/images/profile-placeholder.svg" data-default="/images/profile-placeholder.svg" alt="avatar" onerror="this.onerror=null;this.src='/images/profile-placeholder.svg'" />
             <div class="panel-user">
               <div class="panel-name">ผู้ใช้</div>
               <div class="panel-username">@username</div>
@@ -86,11 +90,20 @@
     <%- include('../partials/report_footer') %>
   
     <script>
-      // Expose current user info to the chat client, including a normalized avatar URL
+      // Expose current user info to the chat client, including a normalized avatar URL with robust fallback
       (function(){
         var base = JSON.parse('<%- JSON.stringify(me || {}) %>') || {};
         var raw = <%- JSON.stringify((user && user.avatar) || '') %>;
-        var avatar = raw ? (String(raw).startsWith('/') ? String(raw) : ('/uploads/' + String(raw))) : '/images/profile-placeholder.svg';
+        function normalizeAvatar(v){
+          if (!v) return '/images/profile-placeholder.svg';
+          var s = String(v).trim();
+          if (!s || s.toLowerCase() === 'avatar' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '/images/profile-placeholder.svg';
+          if (s.startsWith('http')) return s;
+          if (s.startsWith('/')) return s;
+          if (s.indexOf('.') === -1) return '/images/profile-placeholder.svg';
+          return '/uploads/' + s;
+        }
+        var avatar = normalizeAvatar(raw);
         window.me = Object.assign({}, base, { avatar: avatar });
       })();
     </script>

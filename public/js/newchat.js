@@ -30,6 +30,8 @@
     const avatarSrc = (m.user && m.user.avatar) || '/images/profile-placeholder.svg';
     avatar.src = avatarSrc;
     avatar.alt = 'avatar';
+    // robust fallback if provided avatar path is invalid
+    avatar.onerror = function(){ this.onerror = null; this.src = '/images/profile-placeholder.svg'; };
 
     const content = document.createElement('div');
     content.className = 'message-content';
@@ -95,6 +97,7 @@
         }
       } catch(e){ /* ignore */ }
       const fallback = panelAvatar.getAttribute('data-default') || '/images/profile-placeholder.svg';
+      panelAvatar.onerror = function(){ this.onerror = null; this.src = fallback; };
       panelAvatar.src = src || fallback;
     }
     // mark selected conversation in list

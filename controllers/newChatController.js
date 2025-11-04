@@ -34,11 +34,21 @@ async function inbox(req, res) {
       if (otherIds.size > 0) {
         const ids = Array.from(otherIds);
         const [users] = await db.pool.query(`SELECT id, username, full_name, avatar FROM users WHERE id IN (${ids.map(()=>'?').join(',')})`, ids);
-        conversations = (users || []).map(r => {
-          const raw = r.avatar || '';
-          const normalized = raw ? (String(raw).startsWith('/') ? String(raw) : ('/uploads/' + String(raw))) : '/images/profile-placeholder.svg';
-          return { id: r.id, username: r.username || r.full_name || ('user' + r.id), avatar: normalized, snippet: '' };
-        });
+        const normalizeAvatar = (v) => {
+          if (!v) return '/images/profile-placeholder.svg';
+          const s = String(v).trim();
+          if (!s || s.toLowerCase() === 'avatar' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '/images/profile-placeholder.svg';
+          if (s.startsWith('http')) return s;
+          if (s.startsWith('/')) return s;
+          if (s.indexOf('.') === -1) return '/images/profile-placeholder.svg';
+          return '/uploads/' + s;
+        };
+        conversations = (users || []).map(r => ({
+          id: r.id,
+          username: r.username || r.full_name || ('user' + r.id),
+          avatar: normalizeAvatar(r.avatar || ''),
+          snippet: ''
+        }));
       }
   } catch (err) {
     console.log('Conversations limited to self-started chats; chat_messages may be missing:', err && err.message);
@@ -52,9 +62,16 @@ async function inbox(req, res) {
       const [uRows] = await db.pool.query('SELECT id, username, full_name, avatar FROM users WHERE id = ? LIMIT 1', [openId]);
       if (uRows && uRows[0]) {
         const r = uRows[0];
-        const raw = r.avatar || '';
-        const normalized = raw ? (String(raw).startsWith('/') ? String(raw) : ('/uploads/' + String(raw))) : '/images/profile-placeholder.svg';
-        conversations.unshift({ id: r.id, username: r.username || r.full_name || ('user' + r.id), avatar: normalized, snippet: '' });
+        const normalizeAvatar = (v) => {
+          if (!v) return '/images/profile-placeholder.svg';
+          const s = String(v).trim();
+          if (!s || s.toLowerCase() === 'avatar' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '/images/profile-placeholder.svg';
+          if (s.startsWith('http')) return s;
+          if (s.startsWith('/')) return s;
+          if (s.indexOf('.') === -1) return '/images/profile-placeholder.svg';
+          return '/uploads/' + s;
+        };
+        conversations.unshift({ id: r.id, username: r.username || r.full_name || ('user' + r.id), avatar: normalizeAvatar(r.avatar || ''), snippet: '' });
       }
     }
   } catch (e) {

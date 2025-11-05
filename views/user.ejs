@@ -238,6 +238,7 @@
         <nav class="header-actions">
           <a href="/dashboard" title="หน้าหลัก" style="padding: 8px 12px; border-radius: 8px;">🏠</a>
           <a href="/books" title="รายการหนังสือ" style="padding: 8px 12px; border-radius: 8px;">📚</a>
+          <a href="/messages" title="ข้อความ" style="padding: 8px 12px; border-radius: 8px;">💬</a>
           <a href="/books/new" title="เพิ่มหนังสือใหม่" style="padding: 8px 12px; border-radius: 8px;">➕</a>
           <% if (user && user.username) { %>
             <% if (user.isAdmin) { %>
@@ -252,7 +253,6 @@
                 <span class="username" style="color: white; font-weight: 700; font-size: 14px; line-height: 1.2;"><%= user.full_name || user.username %></span>
                 <span style="color: rgba(255,255,255,0.8); font-size: 11px; line-height: 1;">โปรไฟล์</span>
               </div>
-              <span style="color: rgba(255,255,255,0.8); font-size: 12px;">👤</span>
             </a>
             <a href="/auth/logout" title="ออกจากระบบ" style="padding: 8px 12px; border-radius: 8px; margin-left: 8px;">🔓</a>
           <% } else { %>

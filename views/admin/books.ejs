@@ -45,7 +45,7 @@
     }
     .books-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      grid-template-columns: repeat(3, 1fr); /* fixed 3 columns per row */
       gap: 20px;
       margin-bottom: 30px;
     }
@@ -55,6 +55,9 @@
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 420px;
     }
     .book-card:hover {
       transform: translateY(-5px);
@@ -63,11 +66,6 @@
     .book-image {
       height: 200px;
       background: #f8f9fa;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #6c757d;
-      font-size: 48px;
       position: relative;
       overflow: hidden;
     }
@@ -75,9 +73,15 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
+    .img-gradient { position:absolute; left:0; right:0; bottom:0; height:40px; background:linear-gradient(transparent, rgba(0,0,0,0.6)); }
+    .new-badge { position:absolute; top:8px; right:8px; background:#ff4757; color:#fff; padding:4px 8px; border-radius:12px; font-size:11px; font-weight:700; z-index:2; }
     .book-info {
       padding: 20px;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
     .book-title {
       font-size: 16px;
@@ -107,7 +111,12 @@
       display: flex;
       gap: 8px;
       flex-wrap: wrap;
+      margin-top: auto;
+      justify-content: center;
     }
+    .status-badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:12px;font-weight:700}
+    .status-active{background:#dcfce7;color:#15803d;border:1px solid #bbf7d0}
+    .status-inactive{background:#fef2f2;color:#b91c1c;border:1px solid #fecaca}
     .action-btn {
       padding: 6px 12px;
       border: none;
@@ -294,7 +303,7 @@
     <!-- Books Grid -->
     <% if (books && books.length > 0) { %>
       <div class="books-grid" id="booksGrid">
-        <% books.forEach(function(book) { %>
+        <% books.forEach(function(book, index) { %>
           <div class="book-card" data-book-id="<%= book.id %>" 
                data-title="<%= book.title %>" 
                data-author="<%= book.author || '' %>"
@@ -305,10 +314,14 @@
               <% if (book.image || book.thumbnail) { %>
                 <img src="<%= (book.image || book.thumbnail).startsWith('/') ? (book.image || book.thumbnail) : '/uploads/' + (book.image || book.thumbnail) %>" 
                      alt="<%= book.title %>" 
-                     onerror="this.style.display='none'; this.parentNode.innerHTML='📖';">
+                     onerror="this.remove(); var ph=document.createElement('div'); ph.style.cssText='width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#6c757d;background:#f8f9fa'; ph.textContent='📖'; this.parentNode.appendChild(ph);">
               <% } else { %>
-                📖
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:48px;color:#6c757d;background:#f8f9fa">📖</div>
               <% } %>
+              <% if (index < 3) { %>
+                <div class="new-badge">ใหม่</div>
+              <% } %>
+              <div class="img-gradient"></div>
             </div>
             <div class="book-info">
               <div class="book-title"><%= book.title %></div>
@@ -316,16 +329,26 @@
               <div class="book-owner">
                 เจ้าของ: <%= book.owner_username || (book.owner_id ? 'User #' + book.owner_id : 'ไม่มีเจ้าของ') %>
               </div>
+              <!-- Tags & condition row to resemble dashboard cards -->
+              <div style="display:flex;gap:6px;align-items:center;margin:6px 0 8px 0;flex-wrap:wrap;">
+                <span style="font-size:12px;color:#6c757d">🔄 แลกกับ:</span>
+                <span class="badge" style="font-size:11px;"><%= (book.tags || book.category || book.wanted || 'ไม่ระบุ') %></span>
+                <% if (book.condition) { %>
+                  <span class="pill" style="font-size:11px;">
+                    <%= (book.condition === 'new' ? '✨ ใหม่' : (book.condition === 'good' ? '👍 ดี' : '📝 ผ่านการใช้งาน')) %>
+                  </span>
+                <% } %>
+              </div>
               <div class="book-meta">
-                <span>วันที่เพิ่ม: <%= new Date(book.created_at).toLocaleDateString('th-TH') %></span>
+                <span>📍 <%= book.location || 'ไม่ทราบที่อยู่' %></span>
                 <span class="status-badge <%= book.is_available !== 0 ? 'status-active' : 'status-inactive' %>">
                   <%= book.is_available !== 0 ? 'พร้อมแลก' : 'ไม่พร้อมแลก' %>
                 </span>
               </div>
               <div class="book-actions">
-                <a href="/books/<%= book.id %>" class="action-btn btn-view">ดู</a>
-                <button class="action-btn btn-edit" onclick="editBook(<%= book.id %>)">✏️ แก้ไข</button>
-                <button class="action-btn btn-delete" onclick="deleteBook(<%= book.id %>)">🗑️ ลบ</button>
+                <a href="/books/<%= book.id %>" class="action-btn btn-view">ดูรายละเอียด</a>
+                <button class="action-btn btn-edit" onclick="editBook(<%- book.id %>)">✏️ แก้ไข</button>
+                <button class="action-btn btn-delete" onclick="deleteBook(<%- book.id %>)">🗑️ ลบ</button>
               </div>
             </div>
           </div>

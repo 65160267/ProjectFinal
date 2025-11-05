@@ -57,7 +57,9 @@
                   <div class="conv-top"><strong class="conv-name"><%= c.username %></strong> <span class="conv-time"><%= c.time || '' %></span></div>
                   <div class="conv-snippet"><%= c.snippet || '' %></div>
                 </div>
-                <div class="conv-badge"><%= c.unread || '' %></div>
+                <% if (Number(c.unread) > 0) { %>
+                  <div class="conv-badge"><%= c.unread %></div>
+                <% } %>
               </li>
             <% }) %>
           </ul>

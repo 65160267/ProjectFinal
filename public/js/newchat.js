@@ -110,6 +110,8 @@
     const statusEl = document.getElementById('panelStatus'); if (statusEl) statusEl.textContent = '';
     // focus composer
     if (msgInput) setTimeout(()=> msgInput.focus(), 160);
+    // Notify global listeners that a room has been opened so badges can clear
+    try { window.dispatchEvent(new CustomEvent('chat:roomOpened', { detail: { room: room, otherId: Number(otherId) } })); } catch(e) {}
   }
 
   // click handler for conversation items

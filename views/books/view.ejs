@@ -16,11 +16,9 @@
             SwapABook
           </a>
         </div>
-        <form class="search" action="/" method="get">
-          <input name="q" placeholder="ค้นหาหนังสือ" />
-          <button type="submit">🔍</button>
-        </form>
+        <!-- search removed per request -->
         <nav class="header-actions">
+          <a href="/dashboard" title="Home">🏠</a>
           <a href="/books" title="Cart">🛍️</a>
           <a href="/messages" title="Messages">💬</a>
           <% if (typeof user !== 'undefined' && user && user.username) { %>
@@ -144,44 +142,12 @@
                   </div>
                 </div>
 
-                <!-- ฟอร์มขอแลกเปลี่ยน -->
+                <!-- ปุ่มไปหน้าแบบฟอร์มขอแลกเปลี่ยน -->
                 <% if (book.isAvailable) { %>
-                  <form method="post" action="/exchange/request/<%= book.id %>" style="margin-top: 16px;">
-                    <div style="margin-bottom: 12px;">
-                      <label for="message" style="color: var(--muted); font-weight: 600; font-size: 14px;">💬 ข้อความถึงเจ้าของ:</label>
-                      <textarea id="message" name="message" rows="3" 
-                                placeholder="แนะนำตัวและบอกเหตุผลที่ต้องการแลกเปลี่ยน..."
-                                style="width: 100%; margin-top: 6px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-family: inherit; resize: vertical;"></textarea>
-                    </div>
-
-                    <div style="margin-bottom: 16px;">
-                      <label for="offeredBookId" style="color: var(--muted); font-weight: 600; font-size: 14px;">📚 หนังสือที่ต้องการนำมาแลก (ไม่บังคับ):</label>
-                      <select id="offeredBookId" name="offeredBookId" style="width: 100%; margin-top: 6px; padding: 8px; border: 1px solid #ddd; border-radius: 6px;">
-                        <option value="">-- ไม่เสนอหนังสือเฉพาะ --</option>
-                        <% if (typeof userBooks !== 'undefined' && userBooks && userBooks.length > 0) { %>
-                          <% userBooks.forEach(function(userBook) { %>
-                            <option value="<%= userBook.id %>">
-                              <%= userBook.title %><% if (userBook.author) { %> - <%= userBook.author %><% } %>
-                            </option>
-                          <% }); %>
-                        <% } %>
-                      </select>
-                      <small style="color: #666; font-size: 12px; margin-top: 4px; display: block;">
-                        <% if (typeof userBooks !== 'undefined' && userBooks && userBooks.length > 0) { %>
-                          หากไม่เลือก เจ้าของสามารถดูหนังสือทั้งหมดของคุณแล้วเลือกเอง
-                        <% } else { %>
-                          คุณยังไม่มีหนังสือที่พร้อมแลกเปลี่ยน กรุณา<a href="/books/new" style="color: var(--accent);">เพิ่มหนังสือ</a>ก่อน
-                        <% } %>
-                      </small>
-                    </div>
-
-                    <div style="display: flex; gap: 8px;">
-                      <button type="submit" class="btn btn-primary" style="flex: 1;">
-                        � ส่งคำขอแลกเปลี่ยน
-                      </button>
-                      <button type="button" class="btn btn-ghost" onclick="window.history.back()">← กลับ</button>
-                    </div>
-                  </form>
+                  <div style="display:flex; gap:8px; margin-top:16px;">
+                    <a href="/exchange/request/<%= book.id %>" class="btn btn-primary" style="flex:1; text-align:center; text-decoration:none;">ไปหน้าแบบฟอร์มขอแลกเปลี่ยน</a>
+                    <button type="button" class="btn btn-ghost" onclick="window.history.back()">← กลับ</button>
+                  </div>
                 <% } else { %>
                   <div class="alert" style="padding:12px; background:#ffe6e6; border:1px solid #ffcccc; border-radius:8px; color:#cc0000; margin-top: 12px;">
                     ⚠️ สินค้านี้ไม่พร้อมสำหรับการแลกเปลี่ยนในขณะนี้

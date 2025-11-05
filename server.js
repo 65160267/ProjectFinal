@@ -23,6 +23,23 @@ app.use(session({
   saveUninitialized: true,
 }));
 
+// Ensure 'user' is available to all templates when session exists (for header/footer + notify)
+app.use((req, res, next) => {
+    try {
+        if (req.session && req.session.userId) {
+            if (!res.locals.user) {
+                res.locals.user = {
+                    id: req.session.userId,
+                    username: req.session.username || undefined
+                };
+            }
+        }
+        // expose current path for conditional UI (e.g., hide profile icon on /user)
+        res.locals.currentPath = req.path;
+    } catch (e) { /* ignore */ }
+    next();
+});
+
 // Per-request user stats (items, completed exchanges, views) for templates
 app.use(async (req, res, next) => {
     try {
@@ -82,6 +99,30 @@ messagesNamespace.on('connection', (socket) => {
         inMemoryMessages[room] = inMemoryMessages[room] || [];
         inMemoryMessages[room].push(msg);
         messagesNamespace.to(room).emit('message', msg);
+
+        // Lightweight notify event for global header badge (no room join required)
+        try {
+            const parts = String(room || '').split('_');
+            let a = null, b = null;
+            if (parts.length === 3 && parts[0] === 'chat') {
+                a = Number(parts[1]);
+                b = Number(parts[2]);
+            }
+            const fromId = (user && user.id) ? Number(user.id) : null;
+            let toId = null;
+            if (fromId != null && a != null && b != null) {
+                toId = (fromId === a) ? b : (fromId === b ? a : null);
+            }
+            messagesNamespace.emit('notify', {
+                room,
+                fromId,
+                toId,
+                preview: String(text || '').slice(0, 80),
+                time: Date.now()
+            });
+        } catch (e) {
+            // ignore notify errors
+        }
 
         // Persist to DB so conversation list can be built from history
         (async () => {
@@ -196,39 +237,49 @@ app.get('/debug', async (req, res) => {
         <html>
         <head>
             <title>Debug Database</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <link rel="stylesheet" href="/css/style.css" />
             <style>
-                body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
-                .container { max-width: 1200px; margin: 0 auto; }
-                .section { margin: 20px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-                .user { background: #f0f8ff; margin: 10px 0; padding: 15px; border-radius: 5px; }
-                .book { background: #f5f5f5; margin: 5px 0; padding: 10px; border-radius: 3px; }
-                .orphan { background: #ffe4e1; }
-                table { border-collapse: collapse; width: 100%; }
-                th, td { border: 1px solid #ddd; padding: 12px; text-align: left; }
-                th { background-color: #f2f2f2; font-weight: bold; }
+                body { font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; margin:0; background:#f3f8ff; color: #1f2937; }
+                .container { max-width: 1100px; margin: 0 auto; padding: 18px; }
+                .hero { background: linear-gradient(135deg,#4f46e5,#06b6d4); color:#fff; padding: 20px 0; box-shadow: 0 6px 20px rgba(0,0,0,0.12); }
+                .hero .container { display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+                .hero-title { margin:0; font-weight:900; letter-spacing:.3px; }
+                .section { margin: 18px 0; padding: 18px; background: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(28,20,10,0.06); }
+                .user { background: #f0f8ff; margin: 10px 0; padding: 12px; border-radius: 8px; }
+                .book { background: #f9fafb; margin: 6px 0; padding: 10px; border-radius: 6px; border: 1px solid #e5e7eb; }
+                .orphan { background: #fff7ed; border: 1px solid #fde68a; }
+                table { border-collapse: collapse; width: 100%; background: #fff; border-radius: 10px; overflow: hidden; }
+                th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+                th { background: #eef2ff; font-weight: 800; color: #111827; position: sticky; top: 0; z-index: 1; }
+                tr:hover { background: #fafafa; }
                 .highlight { background: #fff3cd; }
-                .nav { margin-bottom: 20px; }
-                .nav a { display: inline-block; margin-right: 15px; padding: 8px 16px; background: #007bff; color: white; text-decoration: none; border-radius: 4px; }
-                .nav a:hover { background: #0056b3; }
+                .nav { margin: 0; display:flex; gap:12px; flex-wrap:wrap; }
+                .nav a { display: inline-flex; align-items:center; gap:8px; padding: 10px 14px; border-radius: 8px; text-decoration: none; font-weight: 700; background: linear-gradient(135deg,#4f46e5,#06b6d4); color: #fff; box-shadow: 0 8px 18px rgba(0,0,0,0.12); }
+                .nav a:hover { filter: brightness(1.05); transform: translateY(-1px); }
+                .badge { display:inline-block; padding:4px 10px; border-radius:999px; background:#e0f2fe; color:#075985; font-weight:800; font-size:12px; }
             </style>
         </head>
         <body>
-            <div class="container">
-                <h1>🔍 Database Debug Page</h1>
-                
+            <header class="hero">
+              <div class="container">
+                <h1 class="hero-title">🔍 Database Debug Page</h1>
                 <div class="nav">
-                    <a href="/">← กลับหน้าหลัก</a>
-                    <a href="/books">📚 รายการหนังสือ</a>
-                    <a href="/auth/login">🔐 เข้าสู่ระบบ</a>
-                    <a href="/books/new">➕ เพิ่มหนังสือ</a>
-                </div>
+                        <a href="/admin">← กลับหน้าหลัก</a>
+                    <a href="/auth/logout">� ออกจากระบบ</a>
+                                </div>
+                            </div>
+            </header>
+            <div class="container">
                 
                 <div class="section">
                     <h2>📊 สรุปข้อมูล</h2>
-                    <p><strong>จำนวนผู้ใช้:</strong> ${users.length} คน</p>
-                    <p><strong>จำนวนหนังสือทั้งหมด:</strong> ${books.length} เล่ม</p>
-                    <p><strong>หนังสือที่ไม่มีเจ้าของ:</strong> ${orphanBooks.length} เล่ม</p>
-                    <p><strong>Session Info:</strong> ${req.session.userId ? `Logged in as User ID: ${req.session.userId}` : 'Not logged in'}</p>
+                                        <p>
+                                            <span class="badge">👥 ผู้ใช้: ${users.length}</span>
+                                            <span class="badge" style="margin-left:8px;">📚 หนังสือทั้งหมด: ${books.length}</span>
+                                            <span class="badge" style="margin-left:8px; background:#fff1f2; color:#b91c1c;">🚫 ไม่มีเจ้าของ: ${orphanBooks.length}</span>
+                                        </p>
+                                        <p><strong>Session:</strong> ${req.session.userId ? `Logged in as User ID: ${req.session.userId}` : 'Not logged in'}</p>
                 </div>
                 
                 <div class="section">
@@ -333,7 +384,7 @@ async function runMigrationsAndStart() {
 
         await pool.query(createExchangeHistory);
         console.log('Migrations: ensured exchange_history table exists');
-        // ensure admin_reports (tickets) table exists for admin panel
+        // ensure admin_reports table exists for admin panel
         const createAdminReports = `
             CREATE TABLE IF NOT EXISTS admin_reports (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -347,35 +398,28 @@ async function runMigrationsAndStart() {
         await pool.query(createAdminReports);
         console.log('Migrations: ensured admin_reports table exists');
 
-        // lightweight tickets table (optional alternate ticketing schema)
-        const createTickets = `
-            CREATE TABLE IF NOT EXISTS tickets (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT DEFAULT NULL,
-                subject VARCHAR(255) DEFAULT NULL,
-                body TEXT,
-                status VARCHAR(32) DEFAULT 'open',
-                priority ENUM('low','medium','high') DEFAULT 'medium',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP NULL DEFAULT NULL
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        `;
-        await pool.query(createTickets);
-        console.log('Migrations: ensured tickets table exists');
-        // ticket comments for threaded replies on tickets/reports
-        const createTicketComments = `
-            CREATE TABLE IF NOT EXISTS ticket_comments (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                ticket_id INT NOT NULL,
-                user_id INT DEFAULT NULL,
-                username VARCHAR(191) DEFAULT NULL,
-                body TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-        `;
-        await pool.query(createTicketComments);
-        console.log('Migrations: ensured ticket_comments table exists');
+        // ensure core exchange_requests table exists so admin/exchanges and exchange flow can work
+        try {
+            const createExchangeRequests = `
+                CREATE TABLE IF NOT EXISTS exchange_requests (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    requester_id INT NOT NULL,
+                    book_owner_id INT NOT NULL,
+                    requested_book_id INT NOT NULL,
+                    offered_book_id INT NULL,
+                    message TEXT,
+                    status ENUM('pending','accepted','rejected','completed','cancelled') DEFAULT 'pending',
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                    completed_at TIMESTAMP NULL
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            `;
+            await pool.query(createExchangeRequests);
+            console.log('Migrations: ensured exchange_requests table exists');
+        } catch (e) {
+            console.error('Migration (exchange_requests) error (non-fatal):', e && e.message);
+        }
+
         // ensure books.owner_id exists for per-user filtering on /books
         try {
             await pool.query("ALTER TABLE books ADD COLUMN IF NOT EXISTS owner_id INT NULL");
@@ -383,12 +427,12 @@ async function runMigrationsAndStart() {
         } catch (e) {
             // ignore if table doesn't exist in minimal setups
         }
-            try {
-                await pool.query("ALTER TABLE exchange_requests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP NULL");
-                console.log('Migrations: ensured exchange_requests.completed_at exists');
-            } catch (e) {
-                // ignore
-            }
+        try {
+            await pool.query("ALTER TABLE exchange_requests ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP NULL");
+            console.log('Migrations: ensured exchange_requests.completed_at exists');
+        } catch (e) {
+            // ignore
+        }
         // track views on book detail pages
         try {
             const createBookViews = `

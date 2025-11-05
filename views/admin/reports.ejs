@@ -19,15 +19,12 @@
     </style>
   </head>
   <body>
-    <%- include('../partials/admin_header') %>
+    <%- include('../partials/admin_header', { showAdminSearch: false }) %>
 
     <main class="container reports-wrap">
       <h1>รายงานข้อผิดพลาด / ปัญหา</h1>
 
-      <section class="report-form">
-        <h3>สร้างรายงาน (ทดสอบ)</h3>
-      <%- include('../partials/admin_header', { showAdminSearch: false }) %>
-      </section>
+      
 
       <section>
         <h3>รายการรายงานล่าสุด</h3>
@@ -42,7 +39,7 @@
                 <div class="admin-controls">
                   <div class="<%= r.status === 'resolved' ? 'status-resolved' : 'status-open' %>"><%= r.status %></div>
                   <% if (r.status !== 'resolved') { %>
-                    <button class="btn btn-danger" onclick="resolveReport(<%= r.id %>, this)">Resolve</button>
+                    <button class="btn btn-danger" data-resolve-id="<%= r.id %>">Resolve</button>
                   <% } %>
                 </div>
               </div>
@@ -57,7 +54,17 @@
       </section>
     </main>
 
+  <%- include('../partials/admin_footer') %>
+
     <script>
+      // Delegated handler to avoid inline JS errors and keep markup clean
+      document.addEventListener('click', function(e){
+        const btn = e.target.closest('button[data-resolve-id]');
+        if(!btn) return;
+        const id = btn.getAttribute('data-resolve-id');
+        resolveReport(id, btn);
+      });
+
       async function resolveReport(id, btn) {
         btn.disabled = true;
         try {

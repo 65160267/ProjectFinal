@@ -1,0 +1,111 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>รายละเอียดการแลกเปลี่ยน</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/performance.css" />
+  <style>
+    .card { background:#fff; border:1px solid #eee; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.06); }
+    .grid { display:grid; gap:16px; }
+    .grid-2 { grid-template-columns: 1.2fr .8fr; }
+    .badge { padding:4px 10px; border-radius:14px; font-size:12px; font-weight:600; }
+    .badge-pending { background:#fff3cd; color:#856404; }
+    .badge-accepted { background:#d4edda; color:#155724; }
+    .badge-rejected { background:#f8d7da; color:#721c24; }
+    .badge-completed { background:#d1ecf1; color:#0c5460; }
+    .media { display:flex; gap:10px; align-items:center; }
+    .muted { color:#6b7280; }
+    .timeline { list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px; }
+    .timeline li { display:flex; align-items:center; gap:10px; }
+    .pill { background:#f3f4f6; padding:2px 8px; border-radius:999px; font-size:12px; }
+  </style>
+</head>
+<body>
+  <%- include('../partials/admin_header', { showAdminSearch: false }) %>
+  <main class="container" style="padding-top:12px">
+    <div style="margin-bottom:16px">
+      <a href="/admin/exchanges" class="action-btn btn-edit">← กลับรายการแลกเปลี่ยน</a>
+    </div>
+
+    <div class="card" style="padding:16px 20px; margin-bottom:16px;">
+      <h2 style="margin:0 0 8px 0;">รายละเอียดการแลกเปลี่ยน #<%= request.id %></h2>
+      <div class="muted" style="font-size:13px">สร้างเมื่อ <%= request.created_at ? new Date(request.created_at).toLocaleString('th-TH') : '-' %></div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card" style="padding:16px 20px;">
+        <div style="display:flex;align-items:center;gap:8px; margin-bottom:10px;">
+          <% const badgeMap = { pending: 'badge-pending', accepted: 'badge-accepted', rejected: 'badge-rejected', completed: 'badge-completed' }; %>
+          <% const statusText = { pending: 'รอดำเนินการ', accepted: 'อนุมัติ', rejected: 'ปฏิเสธ', completed: 'เสร็จสิ้น' }[request.status] || request.status; %>
+          <span class="badge <%= badgeMap[request.status] || 'badge-pending' %>"><%= statusText %></span>
+          <span class="pill">อัปเดตล่าสุด: <%= request.updated_at ? new Date(request.updated_at).toLocaleString('th-TH') : '-' %></span>
+          <span class="pill">เสร็จสิ้น: <%= request.completed_at ? new Date(request.completed_at).toLocaleString('th-TH') : '-' %></span>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="card" style="padding:10px">
+            <div class="muted" style="font-size:12px">ผู้ขอแลก</div>
+            <div style="font-weight:600"><%= request.requester_username || '-' %></div>
+          </div>
+          <div class="card" style="padding:10px">
+            <div class="muted" style="font-size:12px">เจ้าของหนังสือ</div>
+            <div style="font-weight:600"><%= request.owner_username || '-' %></div>
+          </div>
+        </div>
+
+        <div class="grid" style="grid-template-columns:1fr 1fr; gap:12px; margin-top:12px;">
+          <div class="card" style="padding:10px">
+            <div class="media">
+              <img src="<%= request.requested_book_thumbnail || '/images/placeholder.png' %>" width="64" height="64" style="object-fit:cover;border-radius:8px;border:1px solid #eee"/>
+              <div>
+                <div class="muted" style="font-size:12px">หนังสือที่ขอ</div>
+                <div style="font-weight:600"><%= request.requested_book_title || '-' %></div>
+              </div>
+            </div>
+          </div>
+          <div class="card" style="padding:10px">
+            <div class="media">
+              <img src="<%= request.offered_book_thumbnail || '/images/placeholder.png' %>" width="64" height="64" style="object-fit:cover;border-radius:8px;border:1px solid #eee"/>
+              <div>
+                <div class="muted" style="font-size:12px">หนังสือที่เสนอ</div>
+                <div style="font-weight:600"><%= request.offered_book_title || 'ไม่ระบุ' %></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <% if (request.message) { %>
+          <div class="card" style="padding:10px; margin-top:12px;">
+            <div class="muted" style="font-size:12px; margin-bottom:6px;">ข้อความจากผู้ขอ</div>
+            <div><%= (request.message+'').replace(/</g, '&lt;') %></div>
+          </div>
+        <% } %>
+      </div>
+
+      <div class="card" style="padding:16px 20px;">
+        <h3 style="margin:0 0 10px 0;">ไทม์ไลน์</h3>
+        <ol class="timeline">
+          <% (timeline || []).sort((a,b)=> new Date(a.at) - new Date(b.at)).forEach(function(item){ %>
+            <li>
+              <span>
+                <% if (item.type === 'created') { %>📝<% } else if (item.type === 'accepted') { %>✅<% } else if (item.type === 'rejected') { %>❌<% } else if (item.type === 'completed') { %>🎉<% } else { %>📚<% } %>
+              </span>
+              <span style="flex:1"><%= item.label %></span>
+              <span class="muted" style="font-size:12px"><%= item.at ? new Date(item.at).toLocaleString('th-TH') : '' %></span>
+            </li>
+          <% }); %>
+        </ol>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer" style="background:linear-gradient(135deg,#4f46e5,#06b6d4); color:white; margin-top:24px; padding:18px 0;">
+    <div class="container footer-bottom" style="display:flex; justify-content:space-between; align-items:center;">
+      <div>Admin Panel - SwapABook</div>
+      <div class="muted" style="opacity:.9">รายละเอียดการแลกเปลี่ยน</div>
+    </div>
+  </footer>
+</body>
+</html>

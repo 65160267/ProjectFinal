@@ -150,7 +150,8 @@ exports.sendRequest = async (req, res) => {
       [req.session.userId, book.owner_id, bookId, offeredBookId || null, message || '']
     );
 
-    res.redirect(`/books/${bookId}?success=request_sent`);
+  // หลังส่งคำขอแล้ว กลับไปยังหน้าแบบฟอร์มและแสดง popup สำเร็จ
+  res.redirect(`/exchange/request/${bookId}?success=request_sent`);
   } catch (error) {
     console.error('Error sending exchange request:', error);
     res.status(500).send('เกิดข้อผิดพลาดในการส่งคำขอแลกเปลี่ยน');
@@ -393,6 +394,54 @@ exports.getHistory = async (req, res) => {
       return res.render('exchange/history', { history: [], warning: 'ตาราง `exchange_history` ยังไม่มีในฐานข้อมูล — รันไฟล์ SQL `db/exchange_system_complete.sql` เพื่อสร้างตารางประวัติการแลกเปลี่ยน' });
     }
     res.status(500).send('เกิดข้อผิดพลาดในการดึงประวัติการแลกเปลี่ยน');
+  }
+};
+
+// หน้าแบบฟอร์มขอแลกเปลี่ยน (GET)
+exports.getRequestPage = async (req, res) => {
+  if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+  const bookId = req.params.bookId;
+  try {
+    const [rows] = await db.pool.query(`
+      SELECT b.*, u.id as owner_id, u.username as owner_username, u.full_name as owner_full_name, u.avatar as owner_avatar, u.location as owner_location
+      FROM books b
+      LEFT JOIN users u ON b.owner_id = u.id
+      WHERE b.id = ?
+    `, [bookId]);
+    if (!rows || rows.length === 0) return res.status(404).send('ไม่พบหนังสือ');
+    const book = rows[0];
+    // normalize thumbnail
+    const thumb = (book.image || book.thumbnail || '/images/placeholder.png');
+    book.thumbnail = (thumb && (thumb.startsWith('/') || thumb.startsWith('http'))) ? thumb : ('/uploads/' + thumb);
+    book.ownerName = book.owner_full_name || book.owner_username || 'ไม่ระบุ';
+    // normalize owner avatar and build ownerUser object for footer override
+    function normalizeAvatar(v){
+      if (!v) return '/images/profile-placeholder.svg';
+      const s = String(v).trim();
+      if (!s || s.toLowerCase() === 'avatar' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '/images/profile-placeholder.svg';
+      if (s.startsWith('http')) return s;
+      if (s.startsWith('/')) return s;
+      if (s.indexOf('.') === -1) return '/images/profile-placeholder.svg';
+      return '/uploads/' + s;
+    }
+    const ownerUser = {
+      id: book.owner_id || null,
+      username: book.owner_username || null,
+      full_name: book.owner_full_name || null,
+      location: book.owner_location || null,
+      avatar: normalizeAvatar(book.owner_avatar)
+    };
+    // load my books to offer
+    let userBooks = [];
+    try {
+      const [myRows] = await db.pool.query('SELECT id, title, author FROM books WHERE owner_id = ? AND is_available = 1', [req.session.userId]);
+      userBooks = myRows || [];
+    } catch(e) {}
+  const success = req.query && req.query.success ? String(req.query.success) : '';
+  return res.render('exchange/request', { book, userBooks, success, ownerUser });
+  } catch (e) {
+    console.error('getRequestPage error', e && e.message);
+    return res.status(500).send('เกิดข้อผิดพลาด');
   }
 };
 

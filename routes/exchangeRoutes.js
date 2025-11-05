@@ -11,6 +11,9 @@ router.get('/outgoing', exchangeController.getOutgoingRequests);
 // ประวัติการแลกเปลี่ยนของผู้ล็อกอิน
 router.get('/history', exchangeController.getHistory);
 
+// หน้าแบบฟอร์มขอแลกเปลี่ยน (GET)
+router.get('/request/:bookId', exchangeController.getRequestPage);
+
 // ส่งคำขอแลกเปลี่ยน
 router.post('/request/:bookId', exchangeController.sendRequest);
 

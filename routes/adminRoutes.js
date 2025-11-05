@@ -11,11 +11,11 @@ router.get('/dashboard', adminController.dashboard);
 router.get('/users', adminController.users);
 router.get('/books', adminController.books);
 router.get('/exchanges', adminController.exchanges);
+// Detail JSON for a specific exchange (used by modal)
+router.get('/exchanges/:id.json', adminController.exchangeDetail);
+// Full page view of a specific exchange
+router.get('/exchanges/:id', adminController.exchangeDetailPage);
 router.get('/settings', adminController.settings);
-router.get('/tickets', adminController.ticketsList);
-router.get('/tickets/:id', adminController.ticketView);
-router.post('/tickets/:id/comments', adminController.postTicketComment);
-router.post('/tickets/:id/close', adminController.closeTicket);
 router.post('/books/assign-orphans', adminController.assignOrphansToAdmin);
 router.get('/reports', adminController.reports);
 router.post('/reports', adminController.createReport);

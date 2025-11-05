@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>ขอแลกเปลี่ยน • <%= book && book.title %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/performance.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="header-inner container">
+        <div class="brand">
+          <a href="/dashboard" class="brand">SwapABook</a>
+        </div>
+        <nav class="header-actions">
+          <a href="/books" title="Books">📚</a>
+          <a href="/messages" title="Messages">💬</a>
+          <a href="/exchange/outgoing" title="Outgoing">📤</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="card" style="max-width:760px;margin:18px auto;">
+        <h2 style="margin-top:0;color:var(--muted);">🔄 ส่งคำขอแลกเปลี่ยน</h2>
+        <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-top:10px;">
+          <div style="width:160px;height:160px;background:#fff;border:1px solid #eee;border-radius:10px;background-image:url('<%= book.thumbnail %>');background-size:cover;background-position:center;"></div>
+          <div style="flex:1;min-width:240px;">
+            <div style="font-weight:800;color:var(--muted);font-size:18px;margin-bottom:6px;">📖 <%= book.title %></div>
+            <div style="color:#666;font-size:13px;margin-bottom:6px;">👤 เจ้าของ: <%= book.ownerName %></div>
+            <div style="color:#777;font-size:13px;">รหัส: #<%= book.id %></div>
+          </div>
+        </div>
+
+        <form method="post" action="/exchange/request/<%= book.id %>" style="margin-top:16px;">
+          <div class="field">
+            <label for="message">💬 ข้อความถึงเจ้าของ</label>
+            <textarea id="message" name="message" rows="4" placeholder="แนะนำตัวและเหตุผลที่ต้องการแลกเปลี่ยน..." style="resize:vertical"></textarea>
+          </div>
+
+          <div class="field">
+            <label for="offeredBookId">📚 หนังสือที่ต้องการนำมาแลก (ไม่บังคับ)</label>
+            <select id="offeredBookId" name="offeredBookId">
+              <option value="">-- ไม่เสนอหนังสือเฉพาะ --</option>
+              <% (userBooks||[]).forEach(function(b){ %>
+                <option value="<%= b.id %>"><%= b.title %><% if (b.author) { %> - <%= b.author %><% } %></option>
+              <% }) %>
+            </select>
+            <small class="muted">หากไม่เลือก เจ้าของสามารถดูหนังสือทั้งหมดของคุณแล้วเลือกเอง</small>
+          </div>
+
+          <div style="display:flex;gap:8px;">
+            <button type="submit" class="btn btn-primary" style="flex:1;">ส่งคำขอแลกเปลี่ยน</button>
+            <a href="/books/<%= book.id %>" class="btn btn-ghost">← กลับ</a>
+          </div>
+        </form>
+      </div>
+    </main>
+
+    <!-- Popup: ส่งคำขอสำเร็จ -->
+    <div id="reqSuccessOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center;">
+      <div style="background:#fff;border-radius:12px;max-width:420px;width:92%;padding:18px;box-shadow:0 20px 50px rgba(0,0,0,0.25);text-align:center;">
+        <div style="font-size:40px;">✅</div>
+        <h3 style="margin:8px 0 6px 0;color:var(--muted);">ส่งคำขอแลกเปลี่ยนเรียบร้อย</h3>
+        <p class="muted" style="margin:0 0 12px 0;">เราส่งคำขอของคุณให้เจ้าของเรียบร้อยแล้ว</p>
+        <div style="display:flex;gap:8px;justify-content:center;">
+          <a href="/exchange/outgoing" class="btn btn-primary" style="text-decoration:none;">ดูคำขอที่ส่ง</a>
+          <button id="reqSuccessClose" class="btn btn-ghost">ปิด</button>
+        </div>
+      </div>
+    </div>
+
+  <% /* ใช้ avatar ของเจ้าของหนังสือใน footer โดย override ตัวแปร user เป็น ownerUser */ %>
+  <%- include('../partials/footer_unified', { user: (typeof ownerUser !== 'undefined' ? ownerUser : user) }) %>
+    <%- include('../partials/report_footer') %>
+
+    <script>
+      (function(){
+        var successFlag = <%- JSON.stringify(typeof success !== 'undefined' ? success : '') %>;
+        if (successFlag === 'request_sent') {
+          var ov = document.getElementById('reqSuccessOverlay');
+          var btn = document.getElementById('reqSuccessClose');
+          if (ov) {
+            ov.style.display = 'flex';
+            // ปิดเมื่อคลิกปุ่ม
+            if (btn) btn.addEventListener('click', function(){ ov.style.display='none'; history.replaceState({}, '', location.pathname); });
+            // ปิดเมื่อคลิกนอกกล่อง
+            ov.addEventListener('click', function(e){ if (e.target === ov) { ov.style.display='none'; history.replaceState({}, '', location.pathname); } });
+          }
+        }
+      })();
+    </script>
+  </body>
+</html>

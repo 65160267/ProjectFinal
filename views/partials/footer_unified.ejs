@@ -40,7 +40,10 @@
         <% if (typeof user !== 'undefined' && user && user.id) { %>
           <a href="/books/new" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">➕ <span>เพิ่มใหม่</span></a>
         <% } %>
-        <a href="/user" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">👤 <span>โปรไฟล์</span></a>
+        <% const __onUserPage = (typeof currentPath !== 'undefined' && currentPath === '/user'); %>
+        <a href="/user" style="color:rgba(255,255,255,0.95);text-decoration:none;font-size:13px;display:flex;align-items:center;gap:6px;">
+          <% if (!__onUserPage) { %>👤 <% } %><span>โปรไฟล์</span>
+        </a>
       </div>
     </div>
 
@@ -68,3 +71,19 @@
     </style>
   </div>
 </footer>
+
+<script>
+  // Expose minimal user info for global scripts (if available)
+  try {
+    <% if (typeof user !== 'undefined' && user && user.id) { %>
+      window.__ME__ = {
+        id: <%- JSON.stringify(user.id) %>,
+        username: <%- JSON.stringify(user.username || '') %>
+      };
+    <% } %>
+  } catch (e) {}
+</script>
+<!-- Socket.IO client (for notifications and real-time features) -->
+<script src="/socket.io/socket.io.js"></script>
+<!-- Global chat notification badge handler -->
+<script src="/js/chat-notify.js"></script>

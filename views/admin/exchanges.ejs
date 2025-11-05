@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/performance.css" />
   <style>
+  /* Make this page wider than default container */
+  .container.container-wide { max-width: 1280px; }
     .admin-header {
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       color: white;
@@ -49,6 +51,12 @@
       overflow: hidden;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
+    .exchange-table table tr {
+      transition: background 0.2s ease, transform 0.08s ease;
+    }
+    .exchange-table table tr:hover {
+      background: #f3f7ff;
+    }
     .table-header {
       padding: 20px 25px;
       background: #f8f9fa;
@@ -80,22 +88,32 @@
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
+    th:nth-child(1) { width: 80px; }
+    th:nth-child(2), th:nth-child(3) { width: 14%; }
+  th:nth-child(4), th:nth-child(5) { width: 22%; }
+  th:nth-child(6) { width: 12%; }
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap; /* keep Thai words like "เสร็จสิ้น" on one line */
+        line-height: 1; /* keep pill height compact */
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+  /* prevent wrapping in status column */
+  td:nth-child(6), th:nth-child(6) { white-space: nowrap; }
     tr:hover {
       background: #f8f9fa;
     }
-    .status-badge {
-      padding: 4px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+    
     .status-pending {
       background: #fff3cd;
       color: #856404;
     }
-    .status-approved {
+    .status-approved, .status-accepted {
       background: #d4edda;
       color: #155724;
     }
@@ -179,12 +197,29 @@
       margin: 10px 0;
       overflow-x: auto;
     }
+    .chips { display:flex; gap:8px; flex-wrap:wrap; }
+    .chip { background:#eef2ff; color:#3730a3; border:1px solid #e0e7ff; padding:6px 10px; border-radius:999px; font-size:12px; cursor:pointer; transition: all .2s ease; }
+    .chip:hover { background:#e0e7ff; }
+    .chip.active { background:#4338ca; color:#fff; border-color:#4338ca; }
+    .action-btn { border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-size:13px; }
+    .action-btn.btn-view { background:linear-gradient(135deg,#4f46e5,#06b6d4); color:#fff; }
+    .action-btn.btn-edit { background:#f3f4f6; color:#111827; border:1px solid #e5e7eb; }
+    .pagination a { border:1px solid #e5e7eb; padding:8px 12px; border-radius:8px; background:#fff; color:#111827; text-decoration:none; }
+    .pagination a.active { background:#4f46e5; color:#fff; border-color:#4f46e5; }
+    .pagination { display:flex; gap:8px; justify-content:center; padding:16px; }
   </style>
 </head>
 <body>
   <%- include('../partials/admin_header', { showAdminSearch: false }) %>
 
-  <main class="container">
+  <main class="container container-wide">
+    <% if (typeof currentFilterUserId !== 'undefined' && currentFilterUserId) { %>
+      <div class="placeholder-info" style="margin-top: -10px; margin-bottom: 20px;">
+        <h3>📜 กำลังดูประวัติการแลกเปลี่ยนของผู้ใช้: ID <%= currentFilterUserId %></h3>
+        <p>แสดงทุกคำขอที่ผู้ใช้นี้เป็นผู้ขอหรือเป็นเจ้าของหนังสือ</p>
+        <a class="action-btn btn-edit" href="/admin/exchanges" style="margin-top:8px; display:inline-block">ล้างตัวกรอง</a>
+      </div>
+    <% } %>
     <% if (!exchanges || exchanges.length === 0) { %>
       <!-- Placeholder when no exchange system exists -->
       <div class="placeholder-info">
@@ -256,6 +291,15 @@ CREATE TABLE exchange_requests (
       <div class="exchange-table">
         <div class="table-header">
           <h2 class="table-title">รายการการแลกเปลี่ยน</h2>
+          <div class="table-filters">
+            <div class="chips" id="status-chips">
+              <button class="chip active" data-filter="all">ทั้งหมด</button>
+              <button class="chip" data-filter="pending">รอดำเนินการ</button>
+              <button class="chip" data-filter="accepted">อนุมัติ</button>
+              <button class="chip" data-filter="rejected">ปฏิเสธ</button>
+              <button class="chip" data-filter="completed">เสร็จสิ้น</button>
+            </div>
+          </div>
         </div>
         
         <table>
@@ -273,25 +317,22 @@ CREATE TABLE exchange_requests (
           </thead>
           <tbody>
             <% exchanges.forEach(function(exchange) { %>
-              <tr>
+              <tr data-status="<%= exchange.status %>">
                 <td>#<%= exchange.id %></td>
-                <td><%= exchange.requester_username %></td>
-                <td><%= exchange.owner_username %></td>
-                <td><%= exchange.requested_book_title %></td>
-                <td><%= exchange.offered_book_title || 'ไม่ระบุ' %></td>
+                <td><span class="truncate" title="<%= exchange.requester_username %>"><%= exchange.requester_username %></span></td>
+                <td><span class="truncate" title="<%= exchange.owner_username %>"><%= exchange.owner_username %></span></td>
+                <td><span class="truncate" title="<%= exchange.requested_book_title %>"><%= exchange.requested_book_title %></span></td>
+                <td><span class="truncate" title="<%= exchange.offered_book_title || 'ไม่ระบุ' %>"><%= exchange.offered_book_title || 'ไม่ระบุ' %></span></td>
                 <td>
-                  <span class="status-badge status-<%= exchange.status %>">
-                    <%= exchange.status === 'pending' ? 'รอดำเนินการ' :
-                        exchange.status === 'approved' ? 'อนุมัติ' :
-                        exchange.status === 'rejected' ? 'ปฏิเสธ' :
-                        exchange.status === 'completed' ? 'เสร็จสิ้น' : exchange.status %>
-                  </span>
+                  <% const _statusText = (s => s==='pending'?'รอดำเนินการ': s==='accepted'?'อนุมัติ': s==='rejected'?'ปฏิเสธ': s==='completed'?'เสร็จสิ้น': s)(exchange.status); %>
+                  <% const _statusClass = exchange.status === 'accepted' ? 'status-approved' : ('status-' + exchange.status); %>
+                  <span class="status-badge <%= _statusClass %>"><%= _statusText %></span>
                 </td>
-                <td><%= new Date(exchange.created_at).toLocaleDateString('th-TH') %></td>
-                <td>
-                  <button class="action-btn btn-view" onclick="viewExchange(<%= exchange.id %>)">
-                    ดู
-                  </button>
+                <td><%= new Date(exchange.created_at).toLocaleString('th-TH') %></td>
+                <td style="display:flex; gap:8px; align-items:center;">
+      <button class="action-btn btn-view" data-view-exchange="<%= exchange.id %>">ดู</button>
+          <a class="action-btn btn-edit" href="/admin/exchanges?userId=<%= exchange.requester_id %>">ประวัติผู้ขอ</a>
+          <a class="action-btn btn-edit" href="/admin/exchanges?userId=<%= exchange.book_owner_id %>">ประวัติเจ้าของ</a>
                 </td>
               </tr>
             <% }); %>
@@ -299,19 +340,24 @@ CREATE TABLE exchange_requests (
         </table>
       </div>
 
+      <div id="filter-empty" class="no-exchanges" style="display:none;">
+        <h3>ไม่พบรายการตามตัวกรอง</h3>
+        <p>ลองเลือกสถานะอื่น หรือกด "ทั้งหมด" เพื่อแสดงทุกรายการ</p>
+      </div>
+
       <!-- Pagination -->
       <% if (totalPages > 1) { %>
         <div class="pagination">
           <% if (currentPage > 1) { %>
-            <a href="?page=<%= currentPage - 1 %>">← ก่อนหน้า</a>
+            <a href="?page=<%= currentPage - 1 %><%= currentFilterUserId ? '&userId=' + currentFilterUserId : '' %>">← ก่อนหน้า</a>
           <% } %>
           
           <% for (let i = 1; i <= totalPages; i++) { %>
-            <a href="?page=<%= i %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
+            <a href="?page=<%= i %><%= currentFilterUserId ? '&userId=' + currentFilterUserId : '' %>" class="<%= i === currentPage ? 'active' : '' %>"><%= i %></a>
           <% } %>
           
           <% if (currentPage < totalPages) { %>
-            <a href="?page=<%= currentPage + 1 %>">ถัดไป →</a>
+            <a href="?page=<%= currentPage + 1 %><%= currentFilterUserId ? '&userId=' + currentFilterUserId : '' %>">ถัดไป →</a>
           <% } %>
         </div>
       <% } %>
@@ -331,22 +377,167 @@ CREATE TABLE exchange_requests (
   <script>
     // View exchange details
     function viewExchange(exchangeId) {
-      alert('ดูรายละเอียดการแลกเปลี่ยน ID: ' + exchangeId);
-      // TODO: Implement exchange details modal or page
+      // Fetch JSON then populate and open modal
+      fetch(`/admin/exchanges/${exchangeId}.json`, { credentials: 'same-origin' })
+        .then(res => res.json())
+        .then(data => {
+          if (!data || !data.success) {
+            alert('ไม่สามารถโหลดรายละเอียดได้');
+            return;
+          }
+          renderExchangeModal(data.request, data.timeline, data.history);
+        })
+        .catch(() => alert('เกิดข้อผิดพลาดในการโหลดรายละเอียด'));
     }
 
-    // Add some quick stats if exchanges exist
-    <% if (exchanges && exchanges.length > 0) { %>
-      const exchanges = <%- JSON.stringify(exchanges) %>;
-      
-      // Count by status
-      const statusCounts = exchanges.reduce((acc, ex) => {
-        acc[ex.status] = (acc[ex.status] || 0) + 1;
-        return acc;
-      }, {});
-      
-      console.log('Exchange Statistics:', statusCounts);
-    <% } %>
+    // Attach click handlers without inline JS to avoid linter warnings
+    document.querySelectorAll('[data-view-exchange]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.getAttribute('data-view-exchange'), 10);
+        if (!Number.isNaN(id)) viewExchange(id);
+      });
+    });
+
+    // Modal rendering
+    function ensureModal() {
+      let modal = document.getElementById('exchange-modal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'exchange-modal';
+        modal.innerHTML = `
+<div class="modal-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;z-index:9998"></div>
+<div class="modal" style="position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:9999">
+  <div class="modal-card" style="background:#fff;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.2);width:min(900px,92vw);max-height:85vh;display:flex;flex-direction:column;">
+    <div class="modal-header" style="padding:16px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <h3 id="ex-title" style="margin:0;font-size:18px;color:#111827;flex:1">รายละเอียดการแลกเปลี่ยน</h3>
+      <a id="ex-open-full" href="#" class="action-btn btn-view" style="text-decoration:none">เปิดหน้าเต็ม</a>
+      <button id="ex-close" class="action-btn" style="background:#e5e7eb;color:#111827;border:none;padding:8px 12px;border-radius:8px;cursor:pointer">ปิด</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;overflow:auto">
+      <div id="ex-summary" style="display:grid;grid-template-columns:1.2fr .8fr;gap:16px;align-items:start"></div>
+      <div style="margin-top:16px">
+        <h4 style="margin:0 0 8px 0;font-size:16px">ไทม์ไลน์</h4>
+        <ol id="ex-timeline" style="list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px"></ol>
+      </div>
+    </div>
+  </div>
+</div>`;
+        document.body.appendChild(modal);
+        const close = () => { modal.querySelector('.modal').style.display='none'; modal.querySelector('.modal-backdrop').style.display='none'; };
+        modal.querySelector('#ex-close').addEventListener('click', close);
+        modal.querySelector('.modal-backdrop').addEventListener('click', close);
+      }
+      return modal;
+    }
+
+    function renderExchangeModal(req, timeline, history) {
+      const modal = ensureModal();
+      const m = modal.querySelector('.modal');
+      const b = modal.querySelector('.modal-backdrop');
+      modal.querySelector('#ex-title').textContent = `รายละเอียดการแลกเปลี่ยน #${req.id}`;
+      const openFull = modal.querySelector('#ex-open-full');
+      openFull.setAttribute('href', `/admin/exchanges/${req.id}`);
+
+      const statusMap = {
+        pending: 'รอดำเนินการ',
+        accepted: 'อนุมัติ',
+        rejected: 'ปฏิเสธ',
+        completed: 'เสร็จสิ้น'
+      };
+
+      // Summary two-column
+      const left = `
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
+          <span class="status-badge status-${req.status || 'pending'}">${statusMap[req.status] || req.status}</span>
+          <span style="font-size:12px;color:#6b7280">สร้างเมื่อ: ${req.created_at ? new Date(req.created_at).toLocaleString('th-TH') : '-'}</span>
+        </div>
+        <div style="display:flex;gap:12px">
+          <div style="flex:1;background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px;">
+            <div style="font-weight:600;margin-bottom:6px">ผู้ขอแลก</div>
+            <div style="font-size:14px;color:#111827">${req.requester_username || '-'}</div>
+          </div>
+          <div style="flex:1;background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px;">
+            <div style="font-weight:600;margin-bottom:6px">เจ้าของหนังสือ</div>
+            <div style="font-size:14px;color:#111827">${req.owner_username || '-'}</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:12px;margin-top:12px">
+          <div style="flex:1;border:1px solid #eee;border-radius:8px;padding:10px;display:flex;gap:10px;align-items:center">
+            <img src="${req.requested_book_thumbnail || '/images/placeholder.png'}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb"/>
+            <div>
+              <div style="font-size:12px;color:#6b7280">หนังสือที่ขอ</div>
+              <div style="font-weight:600">${req.requested_book_title || '-'}</div>
+            </div>
+          </div>
+          <div style="flex:1;border:1px solid #eee;border-radius:8px;padding:10px;display:flex;gap:10px;align-items:center">
+            <img src="${req.offered_book_thumbnail || '/images/placeholder.png'}" alt="" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid #e5e7eb"/>
+            <div>
+              <div style="font-size:12px;color:#6b7280">หนังสือที่เสนอ</div>
+              <div style="font-weight:600">${req.offered_book_title || 'ไม่ระบุ'}</div>
+            </div>
+          </div>
+        </div>
+
+        ${req.message ? `<div style="margin-top:12px"><div style="font-size:12px;color:#6b7280">ข้อความ</div><div>${(req.message+'').replace(/</g,'&lt;')}</div></div>` : ''}
+      </div>`;
+
+      const right = `
+      <div>
+        <div style="background:#f9fafb;border:1px solid #eee;border-radius:8px;padding:10px">
+          <div style="font-size:12px;color:#6b7280">อัปเดตล่าสุด</div>
+          <div style="font-weight:600">${req.updated_at ? new Date(req.updated_at).toLocaleString('th-TH') : '-'}</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:6px">เสร็จสิ้นเมื่อ</div>
+          <div style="font-weight:600">${req.completed_at ? new Date(req.completed_at).toLocaleString('th-TH') : '-'}</div>
+        </div>
+      </div>`;
+
+      modal.querySelector('#ex-summary').innerHTML = left + right;
+
+      // Timeline
+      const tl = modal.querySelector('#ex-timeline');
+      const icon = t => ({
+        created: '📝', accepted: '✅', rejected: '❌', completed: '🎉', history: '📚'
+      })[t] || '•';
+      tl.innerHTML = '';
+      (timeline || []).sort((a,b)=> new Date(a.at)-new Date(b.at)).forEach(item => {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.gap = '8px';
+        li.style.alignItems = 'center';
+        li.innerHTML = `<span style="width:20px;text-align:center">${icon(item.type)}</span>
+                        <span style="flex:1">${item.label}</span>
+                        <span style="font-size:12px;color:#6b7280">${item.at ? new Date(item.at).toLocaleString('th-TH') : ''}</span>`;
+        tl.appendChild(li);
+      });
+
+      m.style.display = 'flex';
+      b.style.display = 'block';
+    }
+
+    // Client-side status filter (visual only)
+    (function(){
+      const chips = document.querySelectorAll('#status-chips .chip');
+      const rows = Array.from(document.querySelectorAll('tbody tr[data-status]'));
+      const empty = document.getElementById('filter-empty');
+      function applyFilter(st){
+        let visible = 0;
+        rows.forEach(r => {
+          const ok = (st === 'all') || (r.getAttribute('data-status') === st);
+          r.style.display = ok ? '' : 'none';
+          if (ok) visible++;
+        });
+        if (empty) empty.style.display = visible === 0 ? 'block' : 'none';
+      }
+      chips.forEach(ch => ch.addEventListener('click', () => {
+        chips.forEach(c => c.classList.remove('active'));
+        ch.classList.add('active');
+        applyFilter(ch.getAttribute('data-filter'));
+      }));
+      // initial filter is 'all'
+      applyFilter('all');
+    })();
 
     console.log('Admin Exchange Management loaded');
   </script>

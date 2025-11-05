@@ -137,12 +137,16 @@ exports.exchanges = async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = 20;
     const offset = (page - 1) * limit;
+    const filterUserId = req.query.userId ? parseInt(req.query.userId) : null;
     
     // Check if exchange_requests table exists
     let exchanges = [];
     let totalPages = 1;
     
     try {
+      // Build WHERE clause when filtering by a specific user (as requester or owner)
+      const where = filterUserId ? 'WHERE er.requester_id = ? OR er.book_owner_id = ?' : '';
+      const params = filterUserId ? [filterUserId, filterUserId, limit, offset] : [limit, offset];
       const [exchangeData] = await db.pool.query(`
         SELECT er.*, 
                rb.title as requested_book_title,
@@ -153,15 +157,21 @@ exports.exchanges = async (req, res) => {
         LEFT JOIN books rb ON er.requested_book_id = rb.id
         LEFT JOIN books ob ON er.offered_book_id = ob.id
         LEFT JOIN users ru ON er.requester_id = ru.id
-        LEFT JOIN users ou ON er.owner_id = ou.id
+        LEFT JOIN users ou ON er.book_owner_id = ou.id
+        ${where}
         ORDER BY er.created_at DESC 
         LIMIT ? OFFSET ?
-      `, [limit, offset]);
-      
+      `, params);
+
       exchanges = exchangeData;
-      
-      const [totalCount] = await db.pool.query('SELECT COUNT(*) as count FROM exchange_requests');
-      totalPages = Math.ceil(totalCount[0].count / limit);
+
+      // Count for pagination with the same filter
+      const countSql = filterUserId 
+        ? 'SELECT COUNT(*) as count FROM exchange_requests er WHERE er.requester_id = ? OR er.book_owner_id = ?'
+        : 'SELECT COUNT(*) as count FROM exchange_requests';
+      const countParams = filterUserId ? [filterUserId, filterUserId] : [];
+      const [totalCount] = await db.pool.query(countSql, countParams);
+      totalPages = Math.ceil((totalCount[0]?.count || 0) / limit);
     } catch (tableErr) {
       console.log('Exchange requests table not found, showing empty data');
     }
@@ -174,7 +184,8 @@ exports.exchanges = async (req, res) => {
       },
       exchanges,
       currentPage: page,
-      totalPages
+      totalPages,
+      currentFilterUserId: filterUserId
     });
   } catch (err) {
     console.error('Admin exchanges error:', err);
@@ -347,72 +358,175 @@ exports.assignOrphansToAdmin = async (req, res) => {
   }
 };
 
-// Tickets list (separate from admin_reports)
-exports.ticketsList = async (req, res) => {
+// Tickets feature removed per request
+
+// Admin: Get detail for a specific exchange request (JSON for modal)
+exports.exchangeDetail = async (req, res) => {
   try {
-    const [tickets] = await db.pool.query('SELECT t.*, u.username as owner_username FROM tickets t LEFT JOIN users u ON t.user_id = u.id ORDER BY t.created_at DESC LIMIT 200');
-    res.render('admin/tickets', {
-      user: {
-        id: req.session.userId,
-        username: req.session.username,
-        isAdmin: req.session.isAdmin
+    const id = parseInt(req.params.id);
+    if (!id) return res.status(400).json({ success: false, error: 'Invalid id' });
+
+    // Try the detailed view first for consistent fields
+    let request = null;
+    try {
+      const [rows] = await db.pool.query('SELECT * FROM exchange_requests_detailed WHERE id = ? LIMIT 1', [id]);
+      if (rows && rows.length) request = rows[0];
+    } catch (e) {
+      // view may not exist; fallback to manual join
+    }
+
+    if (!request) {
+      const [rows] = await db.pool.query(`
+        SELECT er.*, 
+               ru.username as requester_username,
+               ou.username as owner_username,
+               rb.title as requested_book_title, rb.thumbnail as requested_book_thumbnail, rb.image as requested_book_image,
+               ob.title as offered_book_title, ob.thumbnail as offered_book_thumbnail, ob.image as offered_book_image
+        FROM exchange_requests er
+        LEFT JOIN users ru ON er.requester_id = ru.id
+        LEFT JOIN users ou ON er.book_owner_id = ou.id
+        LEFT JOIN books rb ON er.requested_book_id = rb.id
+        LEFT JOIN books ob ON er.offered_book_id = ob.id
+        WHERE er.id = ?
+        LIMIT 1
+      `, [id]);
+      if (rows && rows.length) request = rows[0];
+    }
+
+    if (!request) return res.status(404).json({ success: false, error: 'Not found' });
+
+    // Normalize thumbnails for frontend rendering
+    function normalize(src) {
+      if (!src) return '/images/placeholder.png';
+      src = String(src).trim();
+      if (/^https?:\/\//i.test(src)) return src;
+      if (src.startsWith('/')) return src;
+      return '/uploads/' + src;
+    }
+    request.requested_book_thumbnail = normalize(request.requested_book_thumbnail || request.requested_book_image);
+    request.offered_book_thumbnail = normalize(request.offered_book_thumbnail || request.offered_book_image);
+
+    // History timeline from exchange_history (if exists)
+    let history = [];
+    try {
+      const [hrows] = await db.pool.query(`
+        SELECT eh.*, 
+               u1.username as user1_username, u2.username as user2_username,
+               b1.title as book1_title, b2.title as book2_title
+        FROM exchange_history eh
+        LEFT JOIN users u1 ON eh.user1_id = u1.id
+        LEFT JOIN users u2 ON eh.user2_id = u2.id
+        LEFT JOIN books b1 ON eh.book1_id = b1.id
+        LEFT JOIN books b2 ON eh.book2_id = b2.id
+        WHERE eh.exchange_request_id = ?
+        ORDER BY eh.exchange_date ASC
+      `, [id]);
+      history = hrows || [];
+    } catch (e) {
+      // table may not exist; ignore
+    }
+
+    // Build simple timeline from request fields + history
+    const timeline = [];
+    if (request.created_at) timeline.push({ type: 'created', label: 'ส่งคำขอ', at: request.created_at });
+    if (request.status === 'accepted' && request.updated_at) timeline.push({ type: 'accepted', label: 'อนุมัติคำขอ', at: request.updated_at });
+    if (request.status === 'rejected' && request.updated_at) timeline.push({ type: 'rejected', label: 'ปฏิเสธคำขอ', at: request.updated_at });
+    if (request.completed_at) timeline.push({ type: 'completed', label: 'แลกเปลี่ยนสำเร็จ', at: request.completed_at });
+    if (history && history.length) {
+      history.forEach(h => {
+        timeline.push({ type: 'history', label: 'บันทึกลงประวัติ', at: h.exchange_date });
+      });
+    }
+
+    return res.json({ success: true, request, history, timeline });
+  } catch (err) {
+    console.error('exchangeDetail error:', err);
+    return res.status(500).json({ success: false, error: 'Server error' });
+  }
+};
+
+// Admin: Full page detail render
+exports.exchangeDetailPage = async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    if (!id) return res.redirect('/admin/exchanges');
+
+    // Reuse the logic from exchangeDetail
+    // Try detailed view first
+    let request = null;
+    try {
+      const [rows] = await db.pool.query('SELECT * FROM exchange_requests_detailed WHERE id = ? LIMIT 1', [id]);
+      if (rows && rows.length) request = rows[0];
+    } catch (e) {}
+
+    if (!request) {
+      const [rows] = await db.pool.query(`
+        SELECT er.*, 
+               ru.username as requester_username,
+               ou.username as owner_username,
+               rb.title as requested_book_title, rb.thumbnail as requested_book_thumbnail, rb.image as requested_book_image,
+               ob.title as offered_book_title, ob.thumbnail as offered_book_thumbnail, ob.image as offered_book_image
+        FROM exchange_requests er
+        LEFT JOIN users ru ON er.requester_id = ru.id
+        LEFT JOIN users ou ON er.book_owner_id = ou.id
+        LEFT JOIN books rb ON er.requested_book_id = rb.id
+        LEFT JOIN books ob ON er.offered_book_id = ob.id
+        WHERE er.id = ?
+        LIMIT 1
+      `, [id]);
+      if (rows && rows.length) request = rows[0];
+    }
+
+    if (!request) return res.redirect('/admin/exchanges');
+
+    function normalize(src) {
+      if (!src) return '/images/placeholder.png';
+      src = String(src).trim();
+      if (/^https?:\/\//i.test(src)) return src;
+      if (src.startsWith('/')) return src;
+      return '/uploads/' + src;
+    }
+    request.requested_book_thumbnail = normalize(request.requested_book_thumbnail || request.requested_book_image);
+    request.offered_book_thumbnail = normalize(request.offered_book_thumbnail || request.offered_book_image);
+
+    let history = [];
+    try {
+      const [hrows] = await db.pool.query(`
+        SELECT eh.*, 
+               u1.username as user1_username, u2.username as user2_username,
+               b1.title as book1_title, b2.title as book2_title
+        FROM exchange_history eh
+        LEFT JOIN users u1 ON eh.user1_id = u1.id
+        LEFT JOIN users u2 ON eh.user2_id = u2.id
+        LEFT JOIN books b1 ON eh.book1_id = b1.id
+        LEFT JOIN books b2 ON eh.book2_id = b2.id
+        WHERE eh.exchange_request_id = ?
+        ORDER BY eh.exchange_date ASC
+      `, [id]);
+      history = hrows || [];
+    } catch (e) {}
+
+    const timeline = [];
+    if (request.created_at) timeline.push({ type: 'created', label: 'ส่งคำขอ', at: request.created_at });
+    if (request.status === 'accepted' && request.updated_at) timeline.push({ type: 'accepted', label: 'อนุมัติคำขอ', at: request.updated_at });
+    if (request.status === 'rejected' && request.updated_at) timeline.push({ type: 'rejected', label: 'ปฏิเสธคำขอ', at: request.updated_at });
+    if (request.completed_at) timeline.push({ type: 'completed', label: 'แลกเปลี่ยนสำเร็จ', at: request.completed_at });
+    if (history && history.length) {
+      history.forEach(h => timeline.push({ type: 'history', label: 'บันทึกลงประวัติ', at: h.exchange_date }));
+    }
+
+    return res.render('admin/exchange_view', {
+      user: { 
+        id: req.session.userId, 
+        username: req.session.username, 
+        isAdmin: req.session.isAdmin 
       },
-      tickets
+      request,
+      timeline,
+      history
     });
   } catch (err) {
-    console.error('Admin tickets error:', err);
-    res.status(500).render('error', { error: 'Database Error', message: err.message });
-  }
-};
-
-// Ticket detail and comments
-exports.ticketView = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (!id) return res.redirect('/admin/tickets');
-
-    const [[ticketRows]] = await db.pool.query('SELECT t.*, u.username as owner_username FROM tickets t LEFT JOIN users u ON t.user_id = u.id WHERE t.id = ?', [id]);
-    const [comments] = await db.pool.query('SELECT tc.*, u.username FROM ticket_comments tc LEFT JOIN users u ON tc.user_id = u.id WHERE tc.ticket_id = ? ORDER BY tc.created_at ASC', [id]);
-
-    res.render('admin/ticket_view', {
-      user: { id: req.session.userId, username: req.session.username, isAdmin: req.session.isAdmin },
-      ticket: ticketRows || null,
-      comments
-    });
-  } catch (err) {
-    console.error('Ticket view error:', err);
-    res.status(500).render('error', { error: 'Error', message: err.message });
-  }
-};
-
-// Post a comment on a ticket
-exports.postTicketComment = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    const body = (req.body.body || '').toString();
-    const userId = req.session && req.session.userId ? req.session.userId : null;
-    const username = req.session && req.session.username ? req.session.username : (req.body.username || 'anonymous');
-
-    if (!id || !body) return res.status(400).json({ error: 'Invalid' });
-
-    await db.pool.query('INSERT INTO ticket_comments (ticket_id, user_id, username, body) VALUES (?, ?, ?, ?)', [id, userId, username, body]);
-
-    res.redirect('/admin/tickets/' + id);
-  } catch (err) {
-    console.error('Post ticket comment error:', err);
-    res.status(500).render('error', { error: 'Error', message: err.message });
-  }
-};
-
-// Close ticket
-exports.closeTicket = async (req, res) => {
-  try {
-    const id = parseInt(req.params.id);
-    if (!id) return res.status(400).json({ error: 'Invalid ticket id' });
-    await db.pool.query('UPDATE tickets SET status = ? WHERE id = ?', ['closed', id]);
-    res.json({ success: true });
-  } catch (err) {
-    console.error('Close ticket error:', err);
-    res.status(500).json({ error: err.message });
+    console.error('exchangeDetailPage error:', err);
+    return res.redirect('/admin/exchanges');
   }
 };

@@ -72,17 +72,15 @@
   </div>
 </footer>
 
-<script>
-  // Expose minimal user info for global scripts (if available)
-  try {
-    <% if (typeof user !== 'undefined' && user && user.id) { %>
-      window.__ME__ = {
-        id: <%- JSON.stringify(user.id) %>,
-        username: <%- JSON.stringify(user.username || '') %>
-      };
-    <% } %>
-  } catch (e) {}
-</script>
+<% if (typeof user !== 'undefined' && user && user.id) { %>
+  <script id="me-data-global" type="application/json"><%- JSON.stringify({ id: user.id, username: user.username || '' }) %></script>
+  <script>
+    // Expose minimal user info for global scripts (if available)
+    try {
+      window.__ME__ = JSON.parse(document.getElementById('me-data-global').textContent || 'null');
+    } catch (e) { /* no-op */ }
+  </script>
+<% } %>
 <!-- Socket.IO client (for notifications and real-time features) -->
 <script src="/socket.io/socket.io.js"></script>
 <!-- Global chat notification badge handler -->

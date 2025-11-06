@@ -347,8 +347,7 @@
               </div>
               <div class="book-actions">
                 <a href="/books/<%= book.id %>" class="action-btn btn-view">ดูรายละเอียด</a>
-                <button class="action-btn btn-edit" onclick="editBook(<%- book.id %>)">✏️ แก้ไข</button>
-                <button class="action-btn btn-delete" onclick="deleteBook(<%- book.id %>)">🗑️ ลบ</button>
+                <button class="action-btn btn-delete" data-action="delete" data-book-id="<%= book.id %>">🗑️ ลบ</button>
               </div>
             </div>
           </div>
@@ -447,11 +446,7 @@
       cards.forEach(card => grid.appendChild(card));
     }
 
-    // Edit book function
-    function editBook(bookId) {
-      alert('ฟีเจอร์แก้ไขหนังสือกำลังพัฒนา Book ID: ' + bookId);
-      // TODO: Implement edit book modal or redirect to edit page
-    }
+    /* removed: editBook feature and button */
 
     // Delete book function
     async function deleteBook(bookId) {
@@ -506,6 +501,22 @@
     }
 
     console.log('Admin Books Management loaded');
+
+    // Delegated click handling for edit/delete actions to avoid inline handlers
+    document.addEventListener('click', function(ev){
+      var btn = ev.target.closest && ev.target.closest('.book-actions .action-btn');
+      if (!btn) return;
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-book-id');
+      if (!id) {
+        var card = btn.closest('.book-card');
+        if (card) id = card.getAttribute('data-book-id');
+      }
+      if (!id) return;
+      if (action === 'delete') {
+        deleteBook(Number(id));
+      }
+    });
   </script>
 </body>
 </html>

@@ -168,7 +168,14 @@ exports.viewPublic = async (req, res) => {
       console.log('Stats query error (non-fatal):', statsErr && statsErr.message);
     }
 
-    res.render('users/view', { user, userBooks, userStats });
+    // Pass the logged-in user's data (if available) to the template for the header
+    const sessionUser = req.session && req.session.userId ? {
+      id: req.session.userId,
+      username: req.session.username,
+      avatar: req.session.avatar
+    } : undefined;
+
+    res.render('users/view', { user, userBooks, userStats, sessionUser });
   } catch (err) {
     console.error('Public user view error', err);
     res.status(500).send('DB error: ' + err.message);

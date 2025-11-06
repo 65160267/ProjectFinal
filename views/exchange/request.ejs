@@ -75,9 +75,11 @@
   <%- include('../partials/footer_unified', { user: (typeof ownerUser !== 'undefined' ? ownerUser : user) }) %>
     <%- include('../partials/report_footer') %>
 
+    <script id="exchange-success-flag" type="application/json"><%- JSON.stringify(typeof success !== 'undefined' ? success : '') %></script>
     <script>
       (function(){
-        var successFlag = <%- JSON.stringify(typeof success !== 'undefined' ? success : '') %>;
+        var successFlag = '';
+        try { successFlag = JSON.parse(document.getElementById('exchange-success-flag').textContent || '""') || ''; } catch(e) {}
         if (successFlag === 'request_sent') {
           var ov = document.getElementById('reqSuccessOverlay');
           var btn = document.getElementById('reqSuccessClose');

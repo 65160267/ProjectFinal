@@ -273,8 +273,8 @@ body .legacy-minor{margin:20px}
   position: relative;
   z-index: 1000; /* ensure above any chat overlay */
   clear: both;
-  /* visible orange frame */
-  box-shadow: inset 0 0 0 2px var(--accent-700), 0 4px 20px rgba(255,120,20,0.18);
+  /* remove orange frame around footer; keep subtle elevation only */
+  box-shadow: 0 4px 20px rgba(0,0,0,0.12);
 }
 .site-footer, .site-footer * { isolation: isolate; }
 .site-footer .footer-inner{display:flex;justify-content:space-between;align-items:flex-start}

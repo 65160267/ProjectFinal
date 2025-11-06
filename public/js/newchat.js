@@ -81,6 +81,10 @@
     socket.emit('join', room);
     socket.emit('getHistory', room);
     // update panel header if available
+    const panelProfileLink = document.getElementById('panelProfileLink');
+    if (panelProfileLink) {
+      panelProfileLink.href = '/users/' + otherId;
+    }
   const panelName = document.querySelector('.panel-name');
   const panelUsername = document.querySelector('.panel-username');
   const panelAvatar = document.querySelector('.panel-avatar');

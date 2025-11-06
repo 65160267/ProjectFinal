@@ -67,11 +67,13 @@
 
         <main class="chat-panel">
           <div class="panel-header">
-            <img class="panel-avatar" src="/images/profile-placeholder.svg" data-default="/images/profile-placeholder.svg" alt="avatar" onerror="this.onerror=null;this.src='/images/profile-placeholder.svg'" />
-            <div class="panel-user">
-              <div class="panel-name">ผู้ใช้</div>
-              <div class="panel-username">@username</div>
-            </div>
+            <a id="panelProfileLink" href="#" style="display: flex; align-items: center; gap: 16px; text-decoration: none; color: inherit; flex-grow: 1;">
+              <img class="panel-avatar" src="/images/profile-placeholder.svg" data-default="/images/profile-placeholder.svg" alt="avatar" onerror="this.onerror=null;this.src='/images/profile-placeholder.svg'" />
+              <div class="panel-user">
+                <div class="panel-name">ผู้ใช้</div>
+                <div class="panel-username">@username</div>
+              </div>
+            </a>
             <div class="panel-status" id="panelStatus"></div>
           </div>
 
@@ -91,11 +93,15 @@
     <%- include('../partials/footer_unified') %>
     <%- include('../partials/report_footer') %>
   
+    <script id="me-base-json" type="application/json"><%- JSON.stringify(me || {}) %></script>
+    <script id="avatar-raw" type="application/json"><%- JSON.stringify((user && user.avatar) || '') %></script>
     <script>
       // Expose current user info to the chat client, including a normalized avatar URL with robust fallback
       (function(){
-        var base = JSON.parse('<%- JSON.stringify(me || {}) %>') || {};
-        var raw = <%- JSON.stringify((user && user.avatar) || '') %>;
+        var base = {};
+        try { base = JSON.parse(document.getElementById('me-base-json').textContent || '{}') || {}; } catch(e) {}
+        var raw = '';
+        try { raw = JSON.parse(document.getElementById('avatar-raw').textContent || '""') || ''; } catch(e) {}
         function normalizeAvatar(v){
           if (!v) return '/images/profile-placeholder.svg';
           var s = String(v).trim();

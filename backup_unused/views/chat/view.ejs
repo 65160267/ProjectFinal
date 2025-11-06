@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Chat with <%= other.full_name || other.username %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      .chat-wrapper { max-width: 760px; margin: 24px auto; padding: 12px; }
+      .chat-header { display:flex; gap:12px; align-items:center; padding:12px; background:#fff; border-radius:10px; border:1px solid #eef3f8; }
+      .chat-avatar { width:56px; height:56px; border-radius:8px; overflow:hidden; }
+      .chat-window { border:1px solid #eee; height:360px; padding:12px; overflow:auto; background:#fff; border-radius:8px; margin-top:12px }
+      .chat-controls { display:flex; gap:8px; margin-top:8px }
+      .chat-controls input[type="text"] { flex:1; padding:10px 12px; border-radius:8px; border:1px solid #e6eef8 }
+      .chat-controls button { padding:10px 14px; border-radius:8px; background: linear-gradient(135deg,#ffb27a,#ff8a5b); color:white; border:none }
+      .message { margin-bottom:8px; padding:8px 10px; border-radius:8px; max-width:70%; }
+      .message.me { background: linear-gradient(180deg,#e8f8ff,#d9f0ff); margin-left:auto; }
+      .message.other { background:#f6f6f8; }
+      .muted { color:#777; font-size:12px }
+    </style>
+  </head>
+  <body>
+    <div class="chat-wrapper">
+      <div class="chat-header">
+        <div class="chat-avatar"><img src="<%= other.avatar || '/images/profile-placeholder.svg' %>" alt="avatar" style="width:100%;height:100%;object-fit:cover"/></div>
+        <div>
+          <div style="font-weight:700"><%= other.full_name || other.username %></div>
+          <div class="muted">@<%= other.username %></div>
+        </div>
+        <div style="margin-left:auto">
+          <a href="/dashboard" class="btn btn-ghost">กลับหน้าแรก</a>
+        </div>
+      </div>
+
+      <div id="chatWindow" class="chat-window">
+        <% if (Array.isArray(messages) && messages.length) { %>
+          <% messages.forEach(function(m){ %>
+            <div class="message <%= (m.username === me.username ? 'me' : 'other') %>">
+              <div style="font-size:13px; font-weight:600"><%= m.username %></div>
+              <div style="margin-top:6px"><%= m.message %></div>
+              <div class="muted" style="margin-top:6px"><%= new Date(m.created_at).toLocaleString() %></div>
+            </div>
+          <% }); %>
+        <% } else { %>
+          <div class="muted">ยังไม่มีข้อความ เริ่มต้นการสนทนาได้เลย</div>
+        <% } %>
+      </div>
+
+      <div class="chat-controls">
+        <input id="chatUser" type="hidden" value="<%= me.username %>" />
+        <input id="chatMsg" type="text" placeholder="พิมพ์ข้อความ..." />
+        <button id="chatSend">ส่ง</button>
+      </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat.js"></script>
+    <script>
+      // set room and user id and scroll
+      window.room = '<%= room %>';
+  window.meId = JSON.parse('<%- JSON.stringify(me && me.id) %>');
+      // focus input
+      document.getElementById('chatMsg').focus();
+      // scroll to bottom
+      const cw = document.getElementById('chatWindow');
+      cw.scrollTop = cw.scrollHeight;
+    </script>
+    <%- include('../partials/footer_unified') %>
+    <%- include('../partials/report_footer') %>
+  </body>
+  </html>

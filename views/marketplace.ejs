@@ -36,10 +36,22 @@
     <main class="container marketplace-main">
       <aside class="market-sidebar card">
         <h3>Marketplace</h3>
-        <ul class="muted">
-          <li>🏠 หน้าหลัก</li>
-          <li>➕ เพิ่มสินค้าใหม่</li>
-          <li>📄 รายการของฉัน</li>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <li style="margin-bottom: 8px;">
+            <a href="/dashboard" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-decoration: none; border-radius: 8px; font-weight: 600; color: var(--accent-700);">
+              🏠 <span>หน้าหลัก</span>
+            </a>
+          </li>
+          <li style="margin-bottom: 8px;">
+            <a href="/books" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-decoration: none; border-radius: 8px; font-weight: 600; color: var(--muted);">
+              📚 <span>รายการของฉัน</span>
+            </a>
+          </li>
+          <li style="margin-bottom: 8px;">
+              <a href="/books/new" style="display: flex; align-items: center; gap: 10px; padding: 10px 12px; text-decoration: none; border-radius: 8px; font-weight: 600; color: #667eea;">
+                ➕ <span>เพิ่มรายการใหม่</span>
+              </a>
+            </li>
         </ul>
       </aside>
 

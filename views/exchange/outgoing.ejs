@@ -241,14 +241,18 @@
             SwapABook
           </a>
         </div>
-        <nav class="header-actions">
+        <nav class="header-actions" style="display:flex;align-items:center;gap:14px;">
           <a href="/dashboard" title="หน้าหลัก">🏠</a>
           <a href="/books" title="รายการหนังสือ">📚</a>
-          <a href="/exchange/incoming" title="คำขอที่ได้รับ">📥</a>
-          <a href="/exchange/outgoing" title="คำขอที่ส่งไป" style="background: rgba(255,255,255,0.1); border-radius: 6px; padding: 6px 10px;">📤</a>
-          <a href="/exchange/history" title="ประวัติ">📜</a>
-          <a href="/user" title="โปรไฟล์">👤</a>
-          <a href="/auth/logout" title="ออกจากระบบ">🔓</a>
+          <% if (typeof user !== 'undefined' && user && user.username) { %>
+            <a href="/user" class="header-user" title="โปรไฟล์ของฉัน" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:4px 10px;border:1px solid rgba(255,255,255,0.4);border-radius:30px;background:rgba(255,255,255,0.18);backdrop-filter:blur(4px);">
+              <img src="<%= user.avatar || '/images/profile-placeholder.svg' %>" alt="avatar" style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 2px rgba(255,255,255,0.3);background:#fff;" onerror="this.src='/images/profile-placeholder.svg'" />
+              <span style="font-size:13px;font-weight:600;color:#fff;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= user.username %></span>
+            </a>
+            <a href="/auth/logout" title="ออกจากระบบ">🔓</a>
+          <% } else { %>
+            <a href="/auth/login" title="เข้าสู่ระบบ">🔓</a>
+          <% } %>
         </nav>
       </div>
     </header>

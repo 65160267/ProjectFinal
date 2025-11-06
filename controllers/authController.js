@@ -26,7 +26,7 @@ exports.login = async (req, res) => {
     if (tables && tables.length > 0) {
       // normalize username lookup to lower-case to avoid case mismatch
       const lookup = username.toLowerCase();
-      const [rows] = await db.pool.query('SELECT id, password_hash, role, is_active, username FROM users WHERE LOWER(username) = ?', [lookup]);
+  const [rows] = await db.pool.query('SELECT id, password_hash, role, is_active, username, avatar FROM users WHERE LOWER(username) = ?', [lookup]);
       if (rows && rows.length > 0) {
         const user = rows[0];
         if (user.is_active === 0) return res.render('auth/login', { error: 'บัญชีถูกระงับ', message: null });
@@ -37,6 +37,19 @@ exports.login = async (req, res) => {
     req.session.userId = user.id;
     req.session.username = user.username;
     req.session.isAdmin = (user.role === 'admin');
+    // set avatar into session so headers can display it immediately
+    try {
+      const raw = user.avatar;
+      if (raw && typeof raw === 'string') {
+        const s = raw.trim();
+        if (s.startsWith('http') || s.startsWith('/')) req.session.avatar = s; 
+        else req.session.avatar = '/uploads/' + s;
+      } else {
+        req.session.avatar = undefined;
+      }
+    } catch (e) {
+      req.session.avatar = undefined;
+    }
     console.log(`User logged in: id=${user.id} username=${user.username} isAdmin=${req.session.isAdmin}`);
     // Redirect admins to admin panel, others to dashboard
     if (req.session.isAdmin) return res.redirect('/admin');

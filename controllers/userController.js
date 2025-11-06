@@ -138,10 +138,20 @@ exports.viewPublic = async (req, res) => {
       location: raw.location || ''
     };
 
-    // normalize avatar path
-    if (user.avatar && !user.avatar.startsWith('/') && !user.avatar.startsWith('http')) {
-      user.avatar = '/uploads/' + user.avatar;
-    }
+    // helper to normalize avatar values from DB or session
+    const normalizeAvatar = (v) => {
+      if (!v) return '/images/profile-placeholder.svg';
+      const s = String(v).trim();
+      if (!s || s.toLowerCase() === 'avatar' || s.toLowerCase() === 'null' || s.toLowerCase() === 'undefined') return '/images/profile-placeholder.svg';
+      if (s.startsWith('http')) return s;
+      if (s.startsWith('/')) return s;
+      // if value has no extension it's probably invalid -> placeholder
+      if (s.indexOf('.') === -1) return '/images/profile-placeholder.svg';
+      return '/uploads/' + s;
+    };
+
+    // normalize avatar path for the public profile user
+    user.avatar = normalizeAvatar(user.avatar);
 
     // fetch this user's public books (optionally filter by availability)
     const [bookRows] = await db.pool.query('SELECT * FROM books WHERE owner_id = ? ORDER BY created_at DESC', [userId]);
@@ -169,11 +179,20 @@ exports.viewPublic = async (req, res) => {
     }
 
     // Pass the logged-in user's data (if available) to the template for the header
-    const sessionUser = req.session && req.session.userId ? {
+    const sessionUser = (req.session && req.session.userId) ? {
       id: req.session.userId,
       username: req.session.username,
-      avatar: req.session.avatar
+      avatar: normalizeAvatar(req.session.avatar)
     } : undefined;
+
+    // If viewing your own public page, prefer the session avatar (latest) for display
+    try {
+      if (sessionUser && Number(sessionUser.id) === Number(user.id)) {
+        // Prefer the freshest avatar from session, but also backfill session from DB if missing
+        if (!sessionUser.avatar && user.avatar) sessionUser.avatar = user.avatar;
+        user.avatar = sessionUser.avatar || user.avatar;
+      }
+    } catch (e) { /* ignore compare errors */ }
 
     res.render('users/view', { user, userBooks, userStats, sessionUser });
   } catch (err) {

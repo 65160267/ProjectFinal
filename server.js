@@ -24,17 +24,38 @@ app.use(session({
 }));
 
 // Ensure 'user' is available to all templates when session exists (for header/footer + notify)
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
     try {
+        const normalizeAvatar = (v) => {
+            if (!v) return undefined;
+            const s = String(v).trim();
+            if (!s || ['avatar','null','undefined'].includes(s.toLowerCase())) return undefined;
+            if (s.startsWith('http')) return s;
+            if (s.startsWith('/')) return s;
+            if (s.indexOf('.') === -1) return undefined;
+            return '/uploads/' + s;
+        };
         if (req.session && req.session.userId) {
-            if (!res.locals.user) {
-                res.locals.user = {
-                    id: req.session.userId,
-                    username: req.session.username || undefined
-                };
+            if (!res.locals.user) res.locals.user = {};
+            res.locals.user.id = req.session.userId;
+            res.locals.user.username = req.session.username || undefined;
+            // First try existing session avatar
+            let avatar = normalizeAvatar(req.session.avatar);
+            // If missing, attempt to load from users table (only if column exists)
+            if (!avatar) {
+                try {
+                    const [cols] = await pool.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='users' AND COLUMN_NAME='avatar'");
+                    if (cols && cols.length > 0) {
+                        const [[row]] = await pool.query('SELECT avatar FROM users WHERE id = ? LIMIT 1', [req.session.userId]);
+                        if (row && row.avatar) {
+                            avatar = normalizeAvatar(row.avatar);
+                            if (avatar) req.session.avatar = avatar; // cache into session
+                        }
+                    }
+                } catch (e) { /* ignore db avatar load errors */ }
             }
+            res.locals.user.avatar = avatar || '/images/profile-placeholder.svg';
         }
-        // expose current path for conditional UI (e.g., hide profile icon on /user)
         res.locals.currentPath = req.path;
     } catch (e) { /* ignore */ }
     next();

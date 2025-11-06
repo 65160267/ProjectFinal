@@ -13,7 +13,7 @@
       }
       
       .profile-hero {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #ffddab 0%, #ffc284 100%);
         padding: 30px 0 80px 0;
         position: relative;
         overflow: hidden;
@@ -129,8 +129,8 @@
         color: #92400e;
       }
       .badge-verified {
-        background: #dbeafe;
-        color: #1e40af;
+        background: #fff5e6;
+        color: #c05621;
       }
       .profile-stats {
         display: flex;
@@ -145,7 +145,7 @@
       .stat-value {
         font-size: 24px;
         font-weight: 800;
-        color: #667eea;
+        color: #e59c60;
         display: block;
         margin-bottom: 4px;
       }
@@ -164,7 +164,7 @@
       .btn-primary-modern {
         padding: 12px 24px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #667eea, #764ba2);
+        background: linear-gradient(135deg, #e59c60, #d88c51);
         color: white;
         text-decoration: none;
         font-weight: 600;
@@ -173,27 +173,27 @@
         gap: 8px;
         transition: all 0.3s ease;
         border: none;
-        box-shadow: 0 4px 12px rgba(102,126,234,0.3);
+        box-shadow: 0 4px 12px rgba(229, 156, 96, 0.3);
       }
       .btn-primary-modern:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(102,126,234,0.4);
+        box-shadow: 0 6px 20px rgba(229, 156, 96, 0.4);
       }
       .btn-secondary-modern {
         padding: 12px 24px;
         border-radius: 12px;
         background: white;
-        color: #667eea;
+        color: #e59c60;
         text-decoration: none;
         font-weight: 600;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        border: 2px solid #667eea;
+        border: 2px solid #e59c60;
         transition: all 0.3s ease;
       }
       .btn-secondary-modern:hover {
-        background: #667eea;
+        background: #e59c60;
         color: white;
         transform: translateY(-2px);
       }
@@ -211,7 +211,7 @@
         align-items: center;
         gap: 12px;
         padding-bottom: 16px;
-        border-bottom: 3px solid #667eea;
+        border-bottom: 3px solid #ffc284;
       }
       .books-grid-modern {
         display: grid;
@@ -234,8 +234,8 @@
       }
       .book-card-modern:hover {
         transform: translateY(-4px);
-        box-shadow: 0 20px 50px rgba(102,126,234,0.2);
-        border-color: #667eea;
+        box-shadow: 0 20px 50px rgba(229, 156, 96, 0.2);
+        border-color: #e59c60;
       }
       .book-card-image {
         width: 100%;
@@ -391,25 +391,24 @@
         <div class="brand">
           <a href="/dashboard" class="brand">SwapABook</a>
         </div>
-        <form class="search" action="/" method="get">
-          <input name="q" placeholder="🔍 ค้นหาหนังสือ..." />
-          <button type="submit">🔍</button>
-        </form>
-        <nav class="header-actions">
-          <a href="/books" title="รายการหนังสือ">📚</a>
-          <a href="/messages" title="ข้อความ">💬</a>
-          <a href="/dashboard" title="กลับหน้าแรก">🏠</a>
-          <% if (typeof sessionUser !== 'undefined' && sessionUser && sessionUser.username) { %>
-            <a href="/user" class="header-user" title="Your profile">
+        <nav class="header-actions" style="display:flex;align-items:center;gap:14px;">
+          <a href="/books" title="รายการหนังสือ" style="text-decoration:none;">📚</a>
+          <a href="/messages" title="ข้อความ" style="text-decoration:none;">💬</a>
+          <a href="/dashboard" title="กลับหน้าแรก" style="text-decoration:none;">🏠</a>
+          <% if (sessionUser && sessionUser.username) { %>
+            <a href="/user" class="header-user" title="โปรไฟล์ของฉัน" style="display:inline-flex;align-items:center;gap:6px;text-decoration:none;padding:4px 10px;border:1px solid rgba(255,255,255,0.4);border-radius:30px;background:rgba(255,255,255,0.18);backdrop-filter:blur(4px);">
               <img class="user-avatar" 
-                   src="<%= (sessionUser.avatar && sessionUser.avatar.startsWith('/')) ? sessionUser.avatar : (sessionUser.avatar ? '/uploads/' + sessionUser.avatar : '/images/profile-placeholder.svg') %>" 
-                   alt="Profile" 
-                   onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23f0f0f0%22/%3E%3Ccircle cx=%2275%22 cy=%2260%22 r=%2225%22 fill=%22%23ddd%22/%3E%3Cpath d=%22M30 130 Q30 100 50 100 L100 100 Q120 100 120 130 Z%22 fill=%22%23ddd%22/%3E%3C/svg%3E'" />
-              <span class="username"><%= sessionUser.username %></span>
+                   src="<%= (sessionUser && sessionUser.avatar && sessionUser.avatar.startsWith('/')) ? sessionUser.avatar : (sessionUser && sessionUser.avatar ? '/uploads/' + sessionUser.avatar : '/images/profile-placeholder.svg') %>" 
+                   alt="avatar" 
+                   style="width:32px;height:32px;border-radius:50%;object-fit:cover;border:2px solid #fff;box-shadow:0 0 0 2px rgba(255,255,255,0.3);background:#fff;" 
+                   onerror="this.src='/images/profile-placeholder.svg'" />
+              <% if (sessionUser && sessionUser.username && isNaN(Number(sessionUser.username))) { %>
+                <span class="username" style="font-size:13px;font-weight:600;color:#fff;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><%= sessionUser.username %></span>
+              <% } %>
             </a>
-            <a href="/auth/logout" title="Logout">🔓</a>
+            <a href="/auth/logout" title="ออกจากระบบ" style="text-decoration:none;">🔓</a>
           <% } else { %>
-            <a href="/auth/login" title="Login">🔓</a>
+            <a href="/auth/login" title="เข้าสู่ระบบ" style="text-decoration:none;">🔓</a>
           <% } %>
         </nav>
       </div>
@@ -479,7 +478,7 @@
           📚 รายการหนังสือของ <%= user.full_name %>
         </h2>
         <% if (Array.isArray(userBooks) && userBooks.length > 0) { %>
-          <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(102,126,234,0.3);">
+          <div style="background: linear-gradient(135deg, #e59c60, #d88c51); color: white; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(229, 156, 96, 0.3);">
             <%= userBooks.length %> รายการ
           </div>
         <% } %>

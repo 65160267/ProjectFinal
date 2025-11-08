@@ -27,6 +27,8 @@ router.get('/mine', bookController.listUserBooks);
 router.get('/new', bookController.showCreateForm);
 // POST with multer middleware to handle file upload field named 'image'
 router.post('/create', upload.single('image'), bookController.createBook);
+router.get('/:id/edit', bookController.showEditForm);
+router.post('/:id/edit', upload.single('image'), bookController.updateBook);
 router.get('/:id', bookController.viewBook);
 
 module.exports = router;

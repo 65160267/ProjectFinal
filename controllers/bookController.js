@@ -121,15 +121,14 @@ exports.showCreateForm = async (req, res) => {
 
 exports.createBook = async (req, res) => {
   // defensive: avoid destructuring from undefined
-  const {
-    title = null,
-    author = null,
-    description = null,
-    category = null,
-    condition = null,
-    wanted = null,
-    location = null
-  } = req.body || {};
+  const requestBody = req.body || {};
+  const title = requestBody.title;
+  const author = requestBody.author;
+  const description = requestBody.description;
+  const category = requestBody.category;
+  const conditionValue = requestBody.condition;
+  const wanted = requestBody.wanted;
+  const location = requestBody.location;
   try {
     const imageFile = req.file ? req.file.filename : null;
 
@@ -185,6 +184,128 @@ exports.createBook = async (req, res) => {
   } catch (err) {
     console.error('Create book error', err);
     res.status(500).send('DB error: ' + err.message);
+  }
+};
+
+exports.showEditForm = async (req, res) => {
+  if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+  const id = req.params.id;
+  try {
+    const [rows] = await db.pool.query('SELECT * FROM books WHERE id = ? LIMIT 1', [id]);
+    if (!rows.length) return res.status(404).send('ไม่พบหนังสือที่ต้องการแก้ไข');
+    const book = rows[0];
+
+    if (book.owner_id && book.owner_id !== req.session.userId) {
+      return res.status(403).send('คุณไม่มีสิทธิ์แก้ไขรายการนี้');
+    }
+
+    const normalize = (val, fallback = '') => (val === null || typeof val === 'undefined' ? fallback : val);
+    const thumb = book.image || book.thumbnail || '/images/placeholder.png';
+    book.thumbnail = (typeof thumb === 'string' && (thumb.startsWith('/') || thumb.startsWith('http')))
+      ? thumb
+      : '/uploads/' + thumb;
+
+    book.title = normalize(book.title);
+    book.author = normalize(book.author);
+    book.category = normalize(book.category);
+    book.condition = normalize(book.condition, 'good');
+    book.description = normalize(book.description);
+    book.wanted = normalize(book.wanted || book.tags);
+    book.location = normalize(book.location);
+
+    const headerUser = await buildHeaderUser(req);
+    res.render('books/edit', { book, user: headerUser });
+  } catch (err) {
+    console.error('Show edit book error:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการเปิดหน้าแก้ไข: ' + err.message);
+  }
+};
+
+exports.updateBook = async (req, res) => {
+  if (!req.session || !req.session.userId) return res.redirect('/auth/login');
+  const id = req.params.id;
+  const requestBody = req.body || {};
+  const title = requestBody.title;
+  const author = requestBody.author;
+  const description = requestBody.description;
+  const category = requestBody.category;
+  const conditionValue = requestBody.condition;
+  const wanted = requestBody.wanted;
+  const location = requestBody.location;
+
+  try {
+    const [rows] = await db.pool.query('SELECT * FROM books WHERE id = ? LIMIT 1', [id]);
+    if (!rows.length) return res.status(404).send('ไม่พบหนังสือที่ต้องการแก้ไข');
+    const book = rows[0];
+
+    if (book.owner_id && book.owner_id !== req.session.userId) {
+      return res.status(403).send('คุณไม่มีสิทธิ์แก้ไขรายการนี้');
+    }
+
+    const [cols] = await db.pool.query("SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='books'");
+    const colSet = new Set(cols.map(c => c.COLUMN_NAME));
+
+    const updates = [];
+    const values = [];
+    const hasField = (name) => Object.prototype.hasOwnProperty.call(requestBody, name);
+    const normalizeValue = (val) => {
+      if (typeof val === 'string') {
+        const trimmed = val.trim();
+        return trimmed.length ? trimmed : null;
+      }
+      if (typeof val === 'undefined') return null;
+      return val;
+    };
+    const pushUpdate = (column, value) => {
+      if (!colSet.has(column)) return;
+      updates.push('`' + column + '` = ?');
+      values.push(normalizeValue(value));
+    };
+
+    if (hasField('title')) pushUpdate('title', title);
+    if (hasField('author')) pushUpdate('author', author);
+    if (hasField('description')) pushUpdate('description', description);
+
+    if (hasField('wanted') || hasField('category')) {
+      const tagsValue = (hasField('wanted') ? wanted : null) || (hasField('category') ? category : null);
+      if (colSet.has('tags')) pushUpdate('tags', tagsValue);
+      if (colSet.has('category') && hasField('category')) pushUpdate('category', category);
+      if (colSet.has('wanted') && hasField('wanted')) pushUpdate('wanted', wanted);
+    }
+
+    if (hasField('condition')) pushUpdate('condition', conditionValue);
+    if (hasField('location')) pushUpdate('location', location);
+
+    if (req.file) {
+      const storedPath = '/uploads/' + req.file.filename;
+      if (colSet.has('thumbnail')) pushUpdate('thumbnail', storedPath);
+      else if (colSet.has('image')) pushUpdate('image', storedPath);
+    }
+
+    if (colSet.has('updated_at')) {
+      updates.push('`updated_at` = CURRENT_TIMESTAMP');
+    }
+
+    if (!updates.length) {
+      return res.redirect('/books');
+    }
+
+    let sql = 'UPDATE books SET ' + updates.join(', ') + ' WHERE id = ?';
+    values.push(id);
+    if (colSet.has('owner_id')) {
+      sql += ' AND owner_id = ?';
+      values.push(req.session.userId);
+    }
+
+    const [result] = await db.pool.query(sql, values);
+    if (!result.affectedRows) {
+      return res.status(403).send('ไม่สามารถบันทึกการแก้ไขได้');
+    }
+
+  res.redirect('/books');
+  } catch (err) {
+    console.error('Update book error:', err);
+    res.status(500).send('เกิดข้อผิดพลาดในการบันทึก: ' + err.message);
   }
 };
 

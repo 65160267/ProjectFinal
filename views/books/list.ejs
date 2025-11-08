@@ -12,9 +12,60 @@
       /* Make the white card frame taller and more proportional */
       .product-card { display: flex; flex-direction: column; min-height: 420px; }
       .product-body { display: flex; flex-direction: column; flex: 1; }
-      .product-actions { margin-top: auto; display: flex; justify-content: center; padding-top: 6px; }
+      .product-actions { margin-top: auto; display: flex; justify-content: center; padding-top: 6px; gap: 10px; }
       /* Slight bump for thumbnail to match Dashboard proportion */
       .product-thumb { height: 200px; }
+
+      .btn-action-primary {
+        background: linear-gradient(135deg, #ffb37b, #ff8a4d);
+        color: #fff;
+        padding: 10px 18px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 700;
+        box-shadow: 0 8px 24px rgba(255,138,77,0.3);
+        border: none;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-action-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(255,138,77,0.35);
+      }
+
+      .btn-action-secondary {
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--muted);
+        padding: 10px 18px;
+        border-radius: 14px;
+        text-decoration: none;
+        font-weight: 700;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .btn-action-secondary:hover {
+        background: rgba(255, 255, 255, 1);
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+      }
+
+      @media (max-width: 600px) {
+        .product-actions {
+          flex-direction: column;
+        }
+        .btn-action-primary,
+        .btn-action-secondary {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -84,7 +135,8 @@
                     </div>
                     <div class="product-meta" style="margin-top:6px"><%= b.location || 'Unknown' %></div>
                     <div class="product-actions">
-                      <a class="btn btn-primary" href="/books/<%= b.id %>">ดูรายละเอียด</a>
+                      <a class="btn-action-primary" href="/books/<%= b.id %>">ดูรายละเอียด</a>
+                      <a class="btn-action-secondary" href="/books/<%= b.id %>/edit">แก้ไข</a>
                     </div>
                   </div>
                 </div>

@@ -8,11 +8,8 @@ const requireAdmin = (req, res, next) => {
   }
   next();
 };
-
-// Admin Dashboard
 exports.dashboard = async (req, res) => {
   try {
-    // Get statistics
     const [userCount] = await db.pool.query('SELECT COUNT(*) as count FROM users');
     const [bookCount] = await db.pool.query('SELECT COUNT(*) as count FROM books');
     const [exchangeCount] = await db.pool.query('SELECT COUNT(*) as count FROM exchange_requests WHERE 1=1');
@@ -277,7 +274,20 @@ exports.reports = async (req, res) => {
     // Try to read from admin_reports table if exists
     let reports = [];
     try {
-      const [rows] = await db.pool.query(`SELECT id, reporter_username, title, description, status, created_at FROM admin_reports ORDER BY created_at DESC LIMIT 200`);
+      const [rows] = await db.pool.query(`
+        SELECT 
+          ar.id,
+          ar.reporter_id,
+          COALESCE(u.username, ar.reporter_username) AS reporter_username,
+          ar.title,
+          ar.description,
+          ar.status,
+          ar.created_at
+        FROM admin_reports ar
+        LEFT JOIN users u ON ar.reporter_id = u.id
+        ORDER BY ar.created_at DESC
+        LIMIT 200
+      `);
       reports = rows;
     } catch (err) {
       // Table might not exist yet — show empty list
@@ -306,7 +316,10 @@ exports.createReport = async (req, res) => {
     const description = req.body.description || '';
 
     try {
-      await db.pool.query('INSERT INTO admin_reports (reporter_username, title, description, status, created_at) VALUES (?, ?, ?, ?, NOW())', [reporter, title, description, 'open']);
+      await db.pool.query(
+        'INSERT INTO admin_reports (reporter_id, reporter_username, title, description, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+        [req.session && req.session.userId ? req.session.userId : null, reporter, title, description, 'open']
+      );
     } catch (err) {
       // If table doesn't exist, log and continue
       console.log('Could not insert report (table may be missing):', err.message);
@@ -455,7 +468,7 @@ exports.exchangeDetailPage = async (req, res) => {
     // Try detailed view first
     let request = null;
     try {
-      const [rows] = await db.pool.query('SELECT * FROM exchange_requests_detailed WHERE id = ? LIMIT 1', [id]);
+          const [rows] = await db.pool.query('SELECT * FROM exchange_requests_detailed_mv WHERE id = ? LIMIT 1', [id]);
       if (rows && rows.length) request = rows[0];
     } catch (e) {}
 

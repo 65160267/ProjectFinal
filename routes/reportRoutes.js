@@ -5,13 +5,17 @@ const db = require('../db');
 // Public endpoint to create a report (used by footer modal)
 router.post('/', async (req, res) => {
   try {
-    const { title, description } = req.body || {};
-    const reporter = req.session && req.session.username ? req.session.username : (req.body.reporter_username || 'anonymous');
+  const { title, description } = req.body || {};
+  const reporterId = req.session && req.session.userId ? req.session.userId : null;
+  const reporter = req.session && req.session.username ? req.session.username : (req.body.reporter_username || 'anonymous');
 
     if (!title || !description) return res.status(400).json({ error: 'Missing title or description' });
 
     try {
-      await db.pool.query('INSERT INTO admin_reports (reporter_username, title, description, status, created_at) VALUES (?, ?, ?, ?, NOW())', [reporter, title, description, 'open']);
+      await db.pool.query(
+        'INSERT INTO admin_reports (reporter_id, reporter_username, title, description, status, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
+        [reporterId, reporter, title, description, 'open']
+      );
       return res.json({ success: true });
     } catch (err) {
       console.log('admin_reports table insert failed:', err.message);

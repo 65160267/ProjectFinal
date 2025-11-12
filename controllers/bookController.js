@@ -153,7 +153,7 @@ exports.createBook = async (req, res) => {
     if (colSet.has('tags')) { insertCols.push('tags'); insertPlaceholders.push('?'); insertValues.push(tagsValue); }
     else if (colSet.has('category')) { insertCols.push('category'); insertPlaceholders.push('?'); insertValues.push(category || null); }
 
-    if (colSet.has('condition')) { insertCols.push('condition'); insertPlaceholders.push('?'); insertValues.push(condition || null); }
+    if (colSet.has('condition')) { insertCols.push('condition'); insertPlaceholders.push('?'); insertValues.push(conditionValue || null); }
     if (colSet.has('location')) { insertCols.push('location'); insertPlaceholders.push('?'); insertValues.push(location || null); }
 
     // save image into 'thumbnail' if exists, otherwise 'image'

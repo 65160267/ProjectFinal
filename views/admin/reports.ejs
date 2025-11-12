@@ -6,8 +6,15 @@
     <title>Admin Reports</title>
     <link rel="stylesheet" href="/css/style.css" />
     <style>
-      .reports-wrap { max-width: 1100px; margin: 24px auto; }
-      .report-card { background: #fff; border: 1px solid #e9ecef; padding: 12px; border-radius: 8px; margin-bottom: 12px; }
+    .reports-wrap { max-width: 1100px; margin: 24px auto; }
+      .report-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+      @media (max-width: 960px) {
+        .report-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (max-width: 640px) {
+        .report-grid { grid-template-columns: 1fr; }
+      }
+    .report-card { background: #fff; border: 1px solid #e9ecef; padding: 12px; border-radius: 8px; }
       .report-meta { font-size: 12px; color: #6c757d; }
       .status-open { color: #856404; background: #fff3cd; padding: 4px 8px; border-radius: 12px; font-weight: 700; }
       .status-resolved { color: #155724; background: #d4edda; padding: 4px 8px; border-radius: 12px; font-weight: 700; }
@@ -29,23 +36,25 @@
       <section>
         <h3>รายการรายงานล่าสุด</h3>
         <% if (Array.isArray(reports) && reports.length > 0) { %>
-          <% reports.forEach(function(r) { %>
-            <div class="report-card">
-              <div style="display:flex; justify-content:space-between; align-items:center;">
-                <div>
-                  <strong><%= r.title %></strong>
-                  <div class="report-meta">โดย <%= r.reporter_username %> • <%= r.created_at ? new Date(r.created_at).toLocaleString('th-TH') : '' %></div>
+          <div class="report-grid">
+            <% reports.forEach(function(r) { %>
+              <div class="report-card">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div>
+                    <strong><%= r.title %></strong>
+                    <div class="report-meta">โดย <%= r.reporter_username %> • <%= r.created_at ? new Date(r.created_at).toLocaleString('th-TH') : '' %></div>
+                  </div>
+                  <div class="admin-controls">
+                    <div class="<%= r.status === 'resolved' ? 'status-resolved' : 'status-open' %>"><%= r.status %></div>
+                    <% if (r.status !== 'resolved') { %>
+                      <button class="btn btn-danger" data-resolve-id="<%= r.id %>">Resolve</button>
+                    <% } %>
+                  </div>
                 </div>
-                <div class="admin-controls">
-                  <div class="<%= r.status === 'resolved' ? 'status-resolved' : 'status-open' %>"><%= r.status %></div>
-                  <% if (r.status !== 'resolved') { %>
-                    <button class="btn btn-danger" data-resolve-id="<%= r.id %>">Resolve</button>
-                  <% } %>
-                </div>
+                <p style="margin-top:8px"><%= r.description %></p>
               </div>
-              <p style="margin-top:8px"><%= r.description %></p>
-            </div>
-          <% }); %>
+            <% }); %>
+          </div>
         <% } else { %>
           <div class="report-card">
             <p class="muted">ยังไม่มีรายงาน (หรือตาราง admin_reports ยังไม่ได้ถูกสร้าง)</p>

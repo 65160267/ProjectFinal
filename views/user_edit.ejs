@@ -5,6 +5,44 @@
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <title>Edit Profile</title>
     <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      .form-error {
+        display: none;
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(248, 113, 113, 0.4);
+        background: linear-gradient(135deg, rgba(254, 226, 226, 0.95), rgba(248, 113, 113, 0.1));
+        color: #991b1b;
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgba(248, 113, 113, 0.12);
+      }
+      .form-error span {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .form-error-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #ef4444;
+        color: #fff;
+        font-size: 16px;
+        box-shadow: 0 6px 18px rgba(239, 68, 68, 0.28);
+      }
+      .input-error {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2;
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+      }
+      .field input {
+        transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+      }
+    </style>
   </head>
   <body>
     <header class="site-header">
@@ -23,7 +61,7 @@
                    alt="Profile" 
                    onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23f0f0f0%22/%3E%3Ccircle cx=%2275%22 cy=%2260%22 r=%2225%22 fill=%22%23ddd%22/%3E%3Cpath d=%22M30 130 Q30 100 50 100 L100 100 Q120 100 120 130 Z%22 fill=%22%23ddd%22/%3E%3C/svg%3E'" />
             </a>
-            <a href="/auth/logout" title="Logout">�</a>
+            <a href="/auth/logout" title="Logout" aria-label="Logout" style="display:inline-flex;align-items:center;">🔓</a>
           <% } else { %>
             <a href="/auth/login" title="Login">🔓</a>
           <% } %>
@@ -34,14 +72,15 @@
     <main class="container">
       <div class="card" style="max-width:720px;margin:24px auto;padding:18px">
         <h2>แก้ไขโปรไฟล์</h2>
-        <form action="/user/edit" method="post" enctype="multipart/form-data">
+        <form id="editProfileForm" action="/user/edit" method="post" enctype="multipart/form-data" novalidate>
           <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px;">
             <img id="avatarPreview" src="<%= (user.avatar && user.avatar.startsWith('/')) ? user.avatar : (user.avatar ? '/uploads/' + user.avatar : '/images/profile-placeholder.svg') %>" alt="avatar" style="width:72px;height:72px;border-radius:50%;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.15);" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22 viewBox=%220 0 150 150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23f0f0f0%22/%3E%3Ccircle cx=%2275%22 cy=%2260%22 r=%2225%22 fill=%22%23ddd%22/%3E%3Cpath d=%22M30 130 Q30 100 50 100 L100 100 Q120 100 120 130 Z%22 fill=%22%23ddd%22/%3E%3C/svg%3E'" />
             <div class="muted">รูปโปรไฟล์ปัจจุบัน</div>
           </div>
+          <div id="formError" class="form-error" role="alert"></div>
           <div class="field">
             <label>ชื่อ - นามสกุล</label>
-            <input name="full_name" value="<%= user.full_name %>" />
+            <input name="full_name" value="<%= user.full_name %>" required />
           </div>
           <div class="field">
             <label>อัปโหลดรูปโปรไฟล์</label>
@@ -49,11 +88,11 @@
           </div>
           <div class="field">
             <label>username</label>
-            <input name="username" value="<%= user.username %>" />
+            <input name="username" value="<%= user.username %>" required />
           </div>
           <div class="field">
             <label>ที่อยู่</label>
-            <input name="location" value="<%= user.location %>" />
+            <input name="location" value="<%= user.location %>" required />
           </div>
           <div style="display:flex;gap:8px">
             <button class="btn btn-primary" type="submit">บันทึก</button>
@@ -73,6 +112,69 @@
       const img = document.getElementById('avatarPreview');
       if (img) img.src = url;
     }
+
+    (function () {
+      const form = document.getElementById('editProfileForm');
+      if (!form) return;
+      const errorBox = document.getElementById('formError');
+      const requiredFields = ['full_name', 'username', 'location'];
+
+      const showError = () => {
+        if (!errorBox) return;
+        errorBox.style.display = 'block';
+        errorBox.innerHTML = '<span><span class="form-error-icon">!</span><span>กรุณากรอกข้อมูลให้ครบถ้วนก่อนกดบันทึก</span></span>';
+      };
+
+      const hideError = () => {
+        if (!errorBox) return;
+        errorBox.style.display = 'none';
+        errorBox.innerHTML = '';
+      };
+
+      requiredFields.forEach((name) => {
+        const field = form.elements[name];
+        if (!field) return;
+        field.addEventListener('input', () => {
+          if ((field.value || '').trim()) {
+            field.classList.remove('input-error');
+            field.removeAttribute('aria-invalid');
+            const stillInvalid = requiredFields.some((key) => {
+              const ctrl = form.elements[key];
+              return ctrl && ctrl.classList.contains('input-error');
+            });
+            if (!stillInvalid) hideError();
+          }
+        });
+      });
+
+      form.addEventListener('submit', function (event) {
+        let hasError = false;
+        requiredFields.forEach((name) => {
+          const field = form.elements[name];
+          if (!field) return;
+          const value = (field.value || '').trim();
+          if (!value) {
+            hasError = true;
+            field.classList.add('input-error');
+            field.setAttribute('aria-invalid', 'true');
+          } else {
+            field.classList.remove('input-error');
+            field.removeAttribute('aria-invalid');
+          }
+        });
+
+        if (hasError) {
+          event.preventDefault();
+          showError();
+          const firstError = requiredFields
+            .map((name) => form.elements[name])
+            .find((field) => field && field.classList.contains('input-error'));
+          if (firstError) firstError.focus({ preventScroll: false });
+        } else {
+          hideError();
+        }
+      });
+    })();
   </script>
   </body>
 </html>

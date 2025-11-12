@@ -5,6 +5,7 @@ const session = require('express-session');
 const bodyParser = require('body-parser');
 
 const { pool } = require('./db');
+const { materialize } = require('./scripts/materialize-view');
 
 const app = express();
 const server = http.createServer(app);
@@ -409,15 +410,24 @@ async function runMigrationsAndStart() {
         const createAdminReports = `
             CREATE TABLE IF NOT EXISTS admin_reports (
                 id INT AUTO_INCREMENT PRIMARY KEY,
+                reporter_id INT NULL,
                 reporter_username VARCHAR(191) DEFAULT NULL,
                 title VARCHAR(255) DEFAULT NULL,
                 description TEXT,
                 status VARCHAR(32) DEFAULT 'open',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                INDEX idx_admin_reports_status (status),
+                INDEX idx_admin_reports_created (created_at)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
         `;
         await pool.query(createAdminReports);
         console.log('Migrations: ensured admin_reports table exists');
+        try {
+            await pool.query('ALTER TABLE admin_reports ADD COLUMN IF NOT EXISTS reporter_id INT NULL');
+        } catch (e) {}
+        try {
+            await pool.query('ALTER TABLE admin_reports ADD INDEX IF NOT EXISTS idx_admin_reports_reporter (reporter_id)');
+        } catch (e) {}
 
         // ensure core exchange_requests table exists so admin/exchanges and exchange flow can work
         try {
@@ -496,11 +506,279 @@ async function runMigrationsAndStart() {
                     FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id) ON DELETE SET NULL
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
             `;
+            const createChatReads = `
+                CREATE TABLE IF NOT EXISTS chat_reads (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    conversation_id INT NOT NULL,
+                    message_id INT NULL,
+                    user_id INT NOT NULL,
+                    read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE KEY uniq_chat_reads_conversation_user (conversation_id, user_id),
+                    INDEX idx_chat_reads_message (message_id)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+            `;
             await pool.query(createChatConversations);
             await pool.query(createChatMessages);
+            await pool.query(createChatReads);
             console.log('Migrations: ensured chat tables exist');
         } catch (e) {
             console.error('Migration (chat tables) error (non-fatal):', e && e.message);
+        }
+
+        // Backfill chat table schema pieces that may be missing on older databases
+        try { await pool.query('ALTER TABLE chat_conversations ADD INDEX idx_chat_conversations_user_a (user_a)'); } catch (e) { /* ignore duplicates */ }
+        try { await pool.query('ALTER TABLE chat_conversations ADD INDEX idx_chat_conversations_user_b (user_b)'); } catch (e) { /* ignore duplicates */ }
+        try { await pool.query('ALTER TABLE chat_messages ADD COLUMN IF NOT EXISTS user_id INT DEFAULT NULL'); } catch (e) { /* ignore */ }
+        try { await pool.query('ALTER TABLE chat_messages ADD INDEX idx_chat_messages_user (user_id)'); } catch (e) { /* ignore duplicates */ }
+        try { await pool.query('ALTER TABLE chat_reads ADD COLUMN IF NOT EXISTS conversation_id INT NOT NULL'); } catch (e) { /* ignore */ }
+        try { await pool.query('ALTER TABLE chat_reads ADD COLUMN IF NOT EXISTS message_id INT NULL'); } catch (e) { /* ignore */ }
+        try { await pool.query('ALTER TABLE chat_reads ADD COLUMN IF NOT EXISTS user_id INT NOT NULL'); } catch (e) { /* ignore */ }
+        try { await pool.query('ALTER TABLE chat_reads ADD COLUMN IF NOT EXISTS read_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'); } catch (e) { /* ignore */ }
+        try { await pool.query('ALTER TABLE chat_reads ADD UNIQUE KEY uniq_chat_reads_conversation_user (conversation_id, user_id)'); } catch (e) { /* ignore duplicates */ }
+        try { await pool.query('ALTER TABLE chat_reads ADD INDEX idx_chat_reads_message (message_id)'); } catch (e) { /* ignore duplicates */ }
+
+        // Clean up chat tables so FK creation succeeds without requiring manual data fixes
+        try {
+            await pool.query(`
+                UPDATE chat_conversations c
+                LEFT JOIN users u ON c.user_a = u.id
+                SET c.user_a = NULL
+                WHERE c.user_a IS NOT NULL AND u.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+        try {
+            await pool.query(`
+                DELETE cr FROM chat_reads cr
+                LEFT JOIN chat_conversations cc ON cr.conversation_id = cc.id
+                WHERE cr.conversation_id IS NOT NULL AND cc.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+        try {
+            await pool.query(`
+                UPDATE chat_reads cr
+                LEFT JOIN chat_messages cm ON cr.message_id = cm.id
+                SET cr.message_id = NULL
+                WHERE cr.message_id IS NOT NULL AND cm.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+        try {
+            await pool.query(`
+                DELETE cr FROM chat_reads cr
+                LEFT JOIN users u ON cr.user_id = u.id
+                WHERE cr.user_id IS NOT NULL AND u.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+        try {
+            await pool.query(`
+                UPDATE chat_conversations c
+                LEFT JOIN users u ON c.user_b = u.id
+                SET c.user_b = NULL
+                WHERE c.user_b IS NOT NULL AND u.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+        try {
+            await pool.query(`
+                UPDATE chat_messages m
+                LEFT JOIN chat_conversations c ON m.conversation_id = c.id
+                SET m.conversation_id = NULL
+                WHERE m.conversation_id IS NOT NULL AND c.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+        try {
+            await pool.query(`
+                UPDATE chat_messages m
+                LEFT JOIN users u ON m.user_id = u.id
+                SET m.user_id = NULL
+                WHERE m.user_id IS NOT NULL AND u.id IS NULL
+            `);
+        } catch (e) { /* ignore cleanup failures */ }
+
+        // Ensure foreign keys for ERD relationships so Workbench shows lines
+        // Helper to add FK only if it doesn't exist
+        const ensureForeignKey = async (table, constraintName, alterSql) => {
+            try {
+                const [exists] = await pool.query(
+                    `SELECT 1 FROM information_schema.TABLE_CONSTRAINTS
+                     WHERE CONSTRAINT_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?
+                     AND CONSTRAINT_TYPE = 'FOREIGN KEY' LIMIT 1`,
+                    [table, constraintName]
+                );
+                if (!exists || exists.length === 0) {
+                    try {
+                        await pool.query(alterSql);
+                        console.log(`FK added: ${constraintName} on ${table}`);
+                    } catch (fkErr) {
+                        // Likely due to orphaned rows or type mismatch — log and continue
+                        console.warn(`FK skipped (${constraintName}):`, fkErr && fkErr.message);
+                    }
+                } else {
+                    console.log(`FK exists: ${constraintName} on ${table}`);
+                }
+            } catch (checkErr) {
+                console.warn(`FK check failed (${constraintName}):`, checkErr && checkErr.message);
+            }
+        };
+
+        // books.owner_id -> users(id)
+        await ensureForeignKey(
+            'books',
+            'fk_books_owner',
+            'ALTER TABLE books ADD CONSTRAINT fk_books_owner FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE SET NULL'
+        );
+
+        // exchange_requests relationships
+        await ensureForeignKey(
+            'exchange_requests',
+            'fk_exreq_requester',
+            'ALTER TABLE exchange_requests ADD CONSTRAINT fk_exreq_requester FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_requests',
+            'fk_exreq_owner',
+            'ALTER TABLE exchange_requests ADD CONSTRAINT fk_exreq_owner FOREIGN KEY (book_owner_id) REFERENCES users(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_requests',
+            'fk_exreq_requested',
+            'ALTER TABLE exchange_requests ADD CONSTRAINT fk_exreq_requested FOREIGN KEY (requested_book_id) REFERENCES books(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_requests',
+            'fk_exreq_offered',
+            'ALTER TABLE exchange_requests ADD CONSTRAINT fk_exreq_offered FOREIGN KEY (offered_book_id) REFERENCES books(id) ON DELETE SET NULL'
+        );
+
+        // exchange_history relationships
+        await ensureForeignKey(
+            'exchange_history',
+            'fk_exh_request',
+            'ALTER TABLE exchange_history ADD CONSTRAINT fk_exh_request FOREIGN KEY (exchange_request_id) REFERENCES exchange_requests(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_history',
+            'fk_exh_user1',
+            'ALTER TABLE exchange_history ADD CONSTRAINT fk_exh_user1 FOREIGN KEY (user1_id) REFERENCES users(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_history',
+            'fk_exh_user2',
+            'ALTER TABLE exchange_history ADD CONSTRAINT fk_exh_user2 FOREIGN KEY (user2_id) REFERENCES users(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_history',
+            'fk_exh_book1',
+            'ALTER TABLE exchange_history ADD CONSTRAINT fk_exh_book1 FOREIGN KEY (book1_id) REFERENCES books(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'exchange_history',
+            'fk_exh_book2',
+            'ALTER TABLE exchange_history ADD CONSTRAINT fk_exh_book2 FOREIGN KEY (book2_id) REFERENCES books(id) ON DELETE SET NULL'
+        );
+
+        // book_views relationships
+        await ensureForeignKey(
+            'book_views',
+            'fk_bv_book',
+            'ALTER TABLE book_views ADD CONSTRAINT fk_bv_book FOREIGN KEY (book_id) REFERENCES books(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'book_views',
+            'fk_bv_viewer',
+            'ALTER TABLE book_views ADD CONSTRAINT fk_bv_viewer FOREIGN KEY (viewer_id) REFERENCES users(id) ON DELETE SET NULL'
+        );
+
+        // admin_reports reporter -> users
+        await ensureForeignKey(
+            'admin_reports',
+            'fk_admin_reports_reporter',
+            'ALTER TABLE admin_reports ADD CONSTRAINT fk_admin_reports_reporter FOREIGN KEY (reporter_id) REFERENCES users(id) ON DELETE SET NULL'
+        );
+
+        // chat schema foreign keys for ERD visibility
+        await ensureForeignKey(
+            'chat_conversations',
+            'fk_chat_conversations_user_a',
+            'ALTER TABLE chat_conversations ADD CONSTRAINT fk_chat_conversations_user_a FOREIGN KEY (user_a) REFERENCES users(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'chat_conversations',
+            'fk_chat_conversations_user_b',
+            'ALTER TABLE chat_conversations ADD CONSTRAINT fk_chat_conversations_user_b FOREIGN KEY (user_b) REFERENCES users(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'chat_messages',
+            'fk_chat_messages_user',
+            'ALTER TABLE chat_messages ADD CONSTRAINT fk_chat_messages_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL'
+        );
+        await ensureForeignKey(
+            'chat_reads',
+            'fk_chat_reads_conversation',
+            'ALTER TABLE chat_reads ADD CONSTRAINT fk_chat_reads_conversation FOREIGN KEY (conversation_id) REFERENCES chat_conversations(id) ON DELETE CASCADE'
+        );
+        await ensureForeignKey(
+            'chat_reads',
+            'fk_chat_reads_message',
+            'ALTER TABLE chat_reads ADD CONSTRAINT fk_chat_reads_message FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE SET NULL'
+        );
+        await ensureForeignKey(
+            'chat_reads',
+            'fk_chat_reads_user',
+            'ALTER TABLE chat_reads ADD CONSTRAINT fk_chat_reads_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE'
+        );
+
+        // Create or replace VIEW: exchange_requests_detailed (note: views cannot have foreign keys)
+        try {
+            const createDetailedView = `
+                CREATE OR REPLACE VIEW exchange_requests_detailed AS
+                SELECT 
+                    er.*,
+                    ru.username AS requester_username,
+                    ru.full_name AS requester_name,
+                    ou.username AS owner_username,
+                    ou.full_name AS owner_name,
+                    rb.title AS requested_book_title,
+                    rb.author AS requested_book_author,
+                    rb.thumbnail AS requested_book_thumbnail,
+                    ob.title AS offered_book_title,
+                    ob.author AS offered_book_author,
+                    ob.thumbnail AS offered_book_thumbnail
+                FROM exchange_requests er
+                LEFT JOIN users ru ON er.requester_id = ru.id
+                LEFT JOIN users ou ON er.book_owner_id = ou.id
+                LEFT JOIN books rb ON er.requested_book_id = rb.id
+                LEFT JOIN books ob ON er.offered_book_id = ob.id
+            `;
+            await pool.query(createDetailedView);
+            console.log('View ensured: exchange_requests_detailed');
+        } catch (e) {
+            console.warn('View creation failed (non-fatal): exchange_requests_detailed:', e && e.message);
+        }
+
+        // Materialize detailed exchange requests table with actual FKs
+        try {
+            await materialize();
+            await ensureForeignKey(
+                'exchange_requests_detailed_mv',
+                'fk_mv_requester',
+                'ALTER TABLE exchange_requests_detailed_mv ADD CONSTRAINT fk_mv_requester FOREIGN KEY (requester_id) REFERENCES users(id) ON DELETE CASCADE'
+            );
+            await ensureForeignKey(
+                'exchange_requests_detailed_mv',
+                'fk_mv_owner',
+                'ALTER TABLE exchange_requests_detailed_mv ADD CONSTRAINT fk_mv_owner FOREIGN KEY (book_owner_id) REFERENCES users(id) ON DELETE CASCADE'
+            );
+            await ensureForeignKey(
+                'exchange_requests_detailed_mv',
+                'fk_mv_requested_book',
+                'ALTER TABLE exchange_requests_detailed_mv ADD CONSTRAINT fk_mv_requested_book FOREIGN KEY (requested_book_id) REFERENCES books(id) ON DELETE CASCADE'
+            );
+            await ensureForeignKey(
+                'exchange_requests_detailed_mv',
+                'fk_mv_offered_book',
+                'ALTER TABLE exchange_requests_detailed_mv ADD CONSTRAINT fk_mv_offered_book FOREIGN KEY (offered_book_id) REFERENCES books(id) ON DELETE SET NULL'
+            );
+        } catch (e) {
+            console.warn('Materialized exchange detail setup failed (non-fatal):', e && e.message);
         }
     } catch (migErr) {
         console.error('Migration error (non-fatal):', migErr && migErr.message);

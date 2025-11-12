@@ -35,19 +35,59 @@ exports.profile = async (req, res) => {
     }
     // ดึงคำขอแลกเปลี่ยนที่เข้ามาหาผู้ใช้ (pending)
     let incomingRequests = [];
+    const hydrateRequests = rows => {
+      return (rows || []).map(r => {
+        const normalizeThumb = (thumb) => {
+          if (!thumb) return '/images/placeholder.png';
+          const s = String(thumb).trim();
+          if (!s) return '/images/placeholder.png';
+          if (s.startsWith('http')) return s;
+          if (s.startsWith('/')) return s;
+          return '/uploads/' + s;
+        };
+        r.requester_username = r.requester_username || r.owner_username || 'ผู้ใช้งาน';
+        r.requested_book_title = r.requested_book_title || r.title || 'ไม่ทราบชื่อหนังสือ';
+        r.requested_book_thumbnail = normalizeThumb(r.requested_book_thumbnail || r.requested_book_image);
+        return r;
+      });
+    };
+
+    // Query live data directly from exchange_requests first so status updates reflect immediately
     try {
-      const [reqRows] = await db.pool.query(`
-        SELECT id, requester_id, requester_username, requested_book_id, requested_book_title, message, status, created_at
-        FROM exchange_requests_detailed
-        WHERE book_owner_id = ? AND status = 'pending'
-        ORDER BY created_at DESC
+      const [directRows] = await db.pool.query(`
+        SELECT er.id, er.requester_id, er.book_owner_id, er.requested_book_id, er.message, er.status, er.created_at,
+               ru.username AS requester_username,
+               ru.full_name AS requester_name,
+               rb.title AS requested_book_title,
+               rb.thumbnail AS requested_book_thumbnail,
+               rb.image AS requested_book_image
+        FROM exchange_requests er
+        LEFT JOIN users ru ON er.requester_id = ru.id
+        LEFT JOIN books rb ON er.requested_book_id = rb.id
+        WHERE er.book_owner_id = ? AND er.status = 'pending'
+        ORDER BY er.created_at DESC
         LIMIT 5
       `, [req.session.userId]);
-      incomingRequests = reqRows || [];
-    } catch (reqErr) {
-      // ถ้าไม่มีตารางหรือ view นี้ ให้ไม่ขัดขวางหน้าโปรไฟล์
-      console.log('No exchange_requests_detailed view/table or error:', reqErr && reqErr.message);
-      incomingRequests = [];
+      incomingRequests = hydrateRequests(directRows);
+    } catch (directErr) {
+      console.log('Direct exchange request join failed:', directErr && directErr.message);
+    }
+
+    // ถ้าดึงโดยตรงไม่ได้ ให้ fallback ไปใช้ materialized table (อาจมีข้อมูลไม่ล่าสุดแต่ป้องกันไม่ให้หน้า error)
+    if (!incomingRequests.length) {
+      try {
+        const [reqRows] = await db.pool.query(`
+          SELECT id, requester_id, requester_username, requested_book_id, requested_book_title, requested_book_thumbnail,
+                 message, status, created_at
+          FROM exchange_requests_detailed_mv
+          WHERE book_owner_id = ? AND status = 'pending'
+          ORDER BY created_at DESC
+          LIMIT 5
+        `, [req.session.userId]);
+        incomingRequests = hydrateRequests(reqRows);
+      } catch (reqErr) {
+        console.log('Materialized exchange view unavailable:', reqErr && reqErr.message);
+      }
     }
 
     res.render('user', { user, userBooks, incomingRequests });
